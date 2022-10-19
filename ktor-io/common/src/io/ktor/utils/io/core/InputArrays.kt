@@ -1,119 +1,119 @@
 package io.ktor.utils.io.core
 
-import io.ktor.utils.io.bits.Memory
+import io.ktor.utils.io.bits.DROP_Memory
 
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-public fun Input.readFully(dst: ByteArray, offset: Int = 0, length: Int = dst.size - offset) {
+public fun DROP_Input.readFully(dst: ByteArray, offset: Int = 0, length: Int = dst.size - offset) {
     readFullyBytesTemplate(offset, length) { src, dstOffset, count ->
         src.readFully(dst, dstOffset, count)
     }.requireNoRemaining()
 }
 
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-public fun Input.readFully(dst: ShortArray, offset: Int = 0, length: Int = dst.size - offset) {
+public fun DROP_Input.readFully(dst: ShortArray, offset: Int = 0, length: Int = dst.size - offset) {
     readFullyTemplate(offset, length, 2) { src, dstOffset, count ->
         src.readFully(dst, dstOffset, count)
     }.requireNoRemaining()
 }
 
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-public fun Input.readFully(dst: IntArray, offset: Int = 0, length: Int = dst.size - offset) {
+public fun DROP_Input.readFully(dst: IntArray, offset: Int = 0, length: Int = dst.size - offset) {
     readFullyTemplate(offset, length, 4) { src, dstOffset, count ->
         src.readFully(dst, dstOffset, count)
     }.requireNoRemaining()
 }
 
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-public fun Input.readFully(dst: LongArray, offset: Int = 0, length: Int = dst.size - offset) {
+public fun DROP_Input.readFully(dst: LongArray, offset: Int = 0, length: Int = dst.size - offset) {
     readFullyTemplate(offset, length, 8) { src, dstOffset, count ->
         src.readFully(dst, dstOffset, count)
     }.requireNoRemaining()
 }
 
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-public fun Input.readFully(dst: FloatArray, offset: Int = 0, length: Int = dst.size - offset) {
+public fun DROP_Input.readFully(dst: FloatArray, offset: Int = 0, length: Int = dst.size - offset) {
     readFullyTemplate(offset, length, 4) { src, dstOffset, count ->
         src.readFully(dst, dstOffset, count)
     }.requireNoRemaining()
 }
 
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-public fun Input.readFully(dst: DoubleArray, offset: Int = 0, length: Int = dst.size - offset) {
+public fun DROP_Input.readFully(dst: DoubleArray, offset: Int = 0, length: Int = dst.size - offset) {
     readFullyTemplate(offset, length, 8) { src, dstOffset, count ->
         src.readFully(dst, dstOffset, count)
     }.requireNoRemaining()
 }
 
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-public fun Input.readFully(dst: Buffer, length: Int = dst.writeRemaining) {
+public fun DROP_Input.readFully(dst: DROP_Buffer, length: Int = dst.writeRemaining) {
     readFullyBytesTemplate(0, length) { src, _, count ->
         src.readFully(dst, count)
     }.requireNoRemaining()
 }
 
-public fun Input.readFully(destination: Memory, destinationOffset: Int, length: Int) {
+public fun DROP_Input.readFully(destination: DROP_Memory, destinationOffset: Int, length: Int) {
     readFully(destination, destinationOffset.toLong(), length.toLong())
 }
 
-public fun Input.readFully(destination: Memory, destinationOffset: Long, length: Long) {
+public fun DROP_Input.readFully(destination: DROP_Memory, destinationOffset: Long, length: Long) {
     if (readAvailable(destination, destinationOffset, length) != length) {
         prematureEndOfStream(length)
     }
 }
 
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-public fun Input.readAvailable(dst: ByteArray, offset: Int = 0, length: Int = dst.size - offset): Int {
+public fun DROP_Input.readAvailable(dst: ByteArray, offset: Int = 0, length: Int = dst.size - offset): Int {
     return length - readFullyBytesTemplate(offset, length) { src, dstOffset, count ->
         src.readFully(dst, dstOffset, count)
     }
 }
 
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-public fun Input.readAvailable(dst: ShortArray, offset: Int = 0, length: Int = dst.size - offset): Int {
+public fun DROP_Input.readAvailable(dst: ShortArray, offset: Int = 0, length: Int = dst.size - offset): Int {
     return length - readFullyTemplate(offset, length, 2) { src, dstOffset, count ->
         src.readFully(dst, dstOffset, count)
     }
 }
 
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-public fun Input.readAvailable(dst: IntArray, offset: Int = 0, length: Int = dst.size - offset): Int {
+public fun DROP_Input.readAvailable(dst: IntArray, offset: Int = 0, length: Int = dst.size - offset): Int {
     return length - readFullyTemplate(offset, length, 4) { src, dstOffset, count ->
         src.readFully(dst, dstOffset, count)
     }
 }
 
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-public fun Input.readAvailable(dst: LongArray, offset: Int = 0, length: Int = dst.size - offset): Int {
+public fun DROP_Input.readAvailable(dst: LongArray, offset: Int = 0, length: Int = dst.size - offset): Int {
     return length - readFullyTemplate(offset, length, 8) { src, dstOffset, count ->
         src.readFully(dst, dstOffset, count)
     }
 }
 
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-public fun Input.readAvailable(dst: FloatArray, offset: Int = 0, length: Int = dst.size - offset): Int {
+public fun DROP_Input.readAvailable(dst: FloatArray, offset: Int = 0, length: Int = dst.size - offset): Int {
     return length - readFullyTemplate(offset, length, 4) { src, dstOffset, count ->
         src.readFully(dst, dstOffset, count)
     }
 }
 
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-public fun Input.readAvailable(dst: DoubleArray, offset: Int = 0, length: Int = dst.size - offset): Int {
+public fun DROP_Input.readAvailable(dst: DoubleArray, offset: Int = 0, length: Int = dst.size - offset): Int {
     return length - readFullyTemplate(offset, length, 8) { src, dstOffset, count ->
         src.readFully(dst, dstOffset, count)
     }
 }
 
-public fun Input.readAvailable(dst: Buffer, length: Int = dst.writeRemaining): Int {
+public fun DROP_Input.readAvailable(dst: DROP_Buffer, length: Int = dst.writeRemaining): Int {
     return length - readFullyBytesTemplate(0, length) { src, _, count ->
         src.readFully(dst, count)
     }
 }
 
-public fun Input.readAvailable(destination: Memory, destinationOffset: Int, length: Int): Int {
+public fun DROP_Input.readAvailable(destination: DROP_Memory, destinationOffset: Int, length: Int): Int {
     return readAvailable(destination, destinationOffset.toLong(), length.toLong()).toInt()
 }
 
-public fun Input.readAvailable(destination: Memory, destinationOffset: Long, length: Long): Long {
+public fun DROP_Input.readAvailable(destination: DROP_Memory, destinationOffset: Long, length: Long): Long {
     val remaining = readFullyBytesTemplate(destinationOffset, length) { src, srcOffset, dstOffset, count ->
         src.copyTo(destination, srcOffset, count.toLong(), dstOffset)
     }
@@ -127,10 +127,10 @@ public fun Input.readAvailable(destination: Memory, destinationOffset: Long, len
 /**
  * @return number of bytes remaining or 0 if all [length] bytes were copied
  */
-private inline fun Input.readFullyBytesTemplate(
+private inline fun DROP_Input.readFullyBytesTemplate(
     initialDstOffset: Int,
     length: Int,
-    readBlock: (src: Buffer, dstOffset: Int, count: Int) -> Unit
+    readBlock: (src: DROP_Buffer, dstOffset: Int, count: Int) -> Unit
 ): Int {
     var remaining = length
     var dstOffset = initialDstOffset
@@ -150,10 +150,10 @@ private inline fun Input.readFullyBytesTemplate(
 /**
  * @return number of bytes remaining or 0 if all [length] bytes were copied
  */
-private inline fun Input.readFullyBytesTemplate(
+private inline fun DROP_Input.readFullyBytesTemplate(
     initialDstOffset: Long,
     length: Long,
-    readBlock: (src: Memory, srcOffset: Long, dstOffset: Long, count: Int) -> Unit
+    readBlock: (src: DROP_Memory, srcOffset: Long, dstOffset: Long, count: Int) -> Unit
 ): Long {
     var remaining = length
     var dstOffset = initialDstOffset
@@ -174,11 +174,11 @@ private inline fun Input.readFullyBytesTemplate(
 /**
  * @return number of elements remaining or 0 if all [length] elements were copied
  */
-private inline fun Input.readFullyTemplate(
+private inline fun DROP_Input.readFullyTemplate(
     offset: Int,
     length: Int,
     componentSize: Int,
-    readBlock: (src: Buffer, dstOffset: Int, count: Int) -> Unit
+    readBlock: (src: DROP_Buffer, dstOffset: Int, count: Int) -> Unit
 ): Int {
     var remaining = length
     var dstOffset = offset

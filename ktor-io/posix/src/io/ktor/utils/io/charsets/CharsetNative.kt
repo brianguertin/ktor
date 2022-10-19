@@ -82,7 +82,7 @@ private fun checkErrors(iconvOpenResults: COpaquePointer?, charset: String) {
 public actual fun CharsetEncoder.encodeToByteArray(input: CharSequence, fromIndex: Int, toIndex: Int): ByteArray =
     encodeToByteArrayImpl1(input, fromIndex, toIndex)
 
-internal actual fun CharsetEncoder.encodeImpl(input: CharSequence, fromIndex: Int, toIndex: Int, dst: Buffer): Int {
+internal actual fun CharsetEncoder.encodeImpl(input: CharSequence, fromIndex: Int, toIndex: Int, dst: DROP_Buffer): Int {
     val length = toIndex - fromIndex
     if (length == 0) return 0
 
@@ -123,7 +123,7 @@ internal actual fun CharsetEncoder.encodeImpl(input: CharSequence, fromIndex: In
     }
 }
 
-public actual fun CharsetEncoder.encodeUTF8(input: ByteReadPacket, dst: Output) {
+public actual fun CharsetEncoder.encodeUTF8(input: DROP_ByteReadPacket, dst: DROP_Output) {
     val cd = iconv_open(charset.name, "UTF-8")
     checkErrors(cd, "UTF-8")
 
@@ -196,7 +196,7 @@ private fun checkIconvResult(errno: Int) {
     throw IllegalStateException("Failed to call 'iconv' with error code $errno")
 }
 
-internal actual fun CharsetEncoder.encodeComplete(dst: Buffer): Boolean = true
+internal actual fun CharsetEncoder.encodeComplete(dst: DROP_Buffer): Boolean = true
 
 // ----------------------------------------------------------------------
 
@@ -207,7 +207,7 @@ public actual val CharsetDecoder.charset: Charset get() = _charset
 
 private val platformUtf16: String = if (ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN) "UTF-16BE" else "UTF-16LE"
 
-public actual fun CharsetDecoder.decode(input: Input, dst: Appendable, max: Int): Int {
+public actual fun CharsetDecoder.decode(input: DROP_Input, dst: Appendable, max: Int): Int {
     val charset = iconvCharsetName(charset.name)
     val cd = iconv_open(platformUtf16, charset)
     checkErrors(cd, charset)
@@ -275,7 +275,7 @@ public actual fun CharsetDecoder.decode(input: Input, dst: Appendable, max: Int)
 }
 
 internal actual fun CharsetDecoder.decodeBuffer(
-    input: Buffer,
+    input: DROP_Buffer,
     out: Appendable,
     lastBuffer: Boolean,
     max: Int
@@ -328,7 +328,7 @@ internal actual fun CharsetDecoder.decodeBuffer(
     }
 }
 
-public actual fun CharsetDecoder.decodeExactBytes(input: Input, inputLength: Int): String {
+public actual fun CharsetDecoder.decodeExactBytes(input: DROP_Input, inputLength: Int): String {
     if (inputLength == 0) return ""
 
     val charset = iconvCharsetName(charset.name)

@@ -930,7 +930,7 @@ class PrimitiveArraysTest {
         compareSubRange(tmp)
     }
 
-    private fun Buffer.readHex() = buildString(readRemaining * 2) {
+    private fun DROP_Buffer.readHex() = buildString(readRemaining * 2) {
         repeat(readRemaining) {
             val i = readByte().toInt() and 0xff
             val l = i shr 4
@@ -949,7 +949,7 @@ class PrimitiveArraysTest {
         else append('a' + (d - 10))
     }
 
-    private fun Buffer.writeHex(hex: CharSequence) {
+    private fun DROP_Buffer.writeHex(hex: CharSequence) {
         for (idx in 0..hex.length - 2 step 2) {
             val l = unhex(hex[idx])
             val r = unhex(hex[idx + 1])

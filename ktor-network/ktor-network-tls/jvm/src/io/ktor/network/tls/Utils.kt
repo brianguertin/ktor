@@ -8,18 +8,18 @@ import io.ktor.network.util.*
 import io.ktor.utils.io.core.*
 import java.security.*
 
-internal fun Digest(): Digest = Digest(BytePacketBuilder())
+internal fun Digest(): Digest = Digest(DROP_BytePacketBuilder())
 
 @JvmInline
-internal value class Digest(val state: BytePacketBuilder) : Closeable {
+internal value class Digest(val state: DROP_BytePacketBuilder) : Closeable {
 
-    fun update(packet: ByteReadPacket) = synchronized(state) {
+    fun update(packet: DROP_ByteReadPacket) = synchronized(state) {
         if (packet.isEmpty) return
         state.writePacket(packet.copy())
     }
 
     fun doHash(hashName: String): ByteArray = synchronized(state) {
-        state.preview { handshakes: ByteReadPacket ->
+        state.preview { handshakes: DROP_ByteReadPacket ->
             val digest = MessageDigest.getInstance(hashName)!!
 
             val buffer = DefaultByteBufferPool.borrow()

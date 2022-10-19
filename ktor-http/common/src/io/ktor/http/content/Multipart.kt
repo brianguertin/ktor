@@ -27,7 +27,7 @@ public sealed class PartData(public val dispose: () -> Unit, public val headers:
      * @property provider of content bytes
      */
     public class FileItem(
-        public val provider: () -> Input,
+        public val provider: () -> DROP_Input,
         dispose: () -> Unit,
         partHeaders: Headers
     ) : PartData(dispose, partHeaders) {
@@ -42,7 +42,7 @@ public sealed class PartData(public val dispose: () -> Unit, public val headers:
      * @property provider of content bytes
      */
     public class BinaryItem(
-        public val provider: () -> Input,
+        public val provider: () -> DROP_Input,
         dispose: () -> Unit,
         partHeaders: Headers
     ) : PartData(dispose, partHeaders)

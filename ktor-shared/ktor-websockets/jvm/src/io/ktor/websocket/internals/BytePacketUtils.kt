@@ -6,7 +6,7 @@ package io.ktor.websocket.internals
 
 import io.ktor.utils.io.core.*
 
-internal fun ByteReadPacket.endsWith(data: ByteArray): Boolean {
+internal fun DROP_ByteReadPacket.endsWith(data: ByteArray): Boolean {
     copy().apply {
         discard(remaining - data.size)
         return readBytes().contentEquals(data)

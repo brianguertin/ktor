@@ -6,7 +6,7 @@ import io.ktor.utils.io.bits.*
  * Discards bytes until [delimiter] occurred
  * @return number of bytes discarded
  */
-public fun Input.discardUntilDelimiter(delimiter: Byte): Long {
+public fun DROP_Input.discardUntilDelimiter(delimiter: Byte): Long {
     var discardedTotal = 0L
 
     takeWhile { chunk ->
@@ -22,7 +22,7 @@ public fun Input.discardUntilDelimiter(delimiter: Byte): Long {
  * Discards bytes until of of the specified delimiters [delimiter1] or [delimiter2] occurred
  * @return number of bytes discarded
  */
-public fun Input.discardUntilDelimiters(delimiter1: Byte, delimiter2: Byte): Long {
+public fun DROP_Input.discardUntilDelimiters(delimiter1: Byte, delimiter2: Byte): Long {
     var discardedTotal = 0L
 
     takeWhile { chunk ->
@@ -38,7 +38,7 @@ public fun Input.discardUntilDelimiters(delimiter1: Byte, delimiter2: Byte): Lon
  * Copies to [dst] array at [offset] at most [length] bytes or until the specified [delimiter] occurred.
  * @return number of bytes copied
  */
-public fun Input.readUntilDelimiter(delimiter: Byte, dst: ByteArray, offset: Int = 0, length: Int = dst.size): Int {
+public fun DROP_Input.readUntilDelimiter(delimiter: Byte, dst: ByteArray, offset: Int = 0, length: Int = dst.size): Int {
     var currentOffset = offset
     var dstRemaining = length
 
@@ -57,7 +57,7 @@ public fun Input.readUntilDelimiter(delimiter: Byte, dst: ByteArray, offset: Int
  * [delimiter1] or [delimiter2] occurred.
  * @return number of bytes copied
  */
-public fun Input.readUntilDelimiters(
+public fun DROP_Input.readUntilDelimiters(
     delimiter1: Byte,
     delimiter2: Byte,
     dst: ByteArray,
@@ -83,7 +83,7 @@ public fun Input.readUntilDelimiters(
  * Copies to [dst] output until the specified [delimiter] occurred.
  * @return number of bytes copied
  */
-public fun Input.readUntilDelimiter(delimiter: Byte, dst: Output): Long {
+public fun DROP_Input.readUntilDelimiter(delimiter: Byte, dst: DROP_Output): Long {
     var copiedTotal = 0L
     takeWhile { chunk ->
         val copied = chunk.readUntilDelimiterImpl(delimiter, dst)
@@ -99,7 +99,7 @@ public fun Input.readUntilDelimiter(delimiter: Byte, dst: Output): Long {
  * [delimiter1] or [delimiter2] occurred.
  * @return number of bytes copied
  */
-public fun Input.readUntilDelimiters(delimiter1: Byte, delimiter2: Byte, dst: Output): Long {
+public fun DROP_Input.readUntilDelimiters(delimiter1: Byte, delimiter2: Byte, dst: DROP_Output): Long {
     var copiedTotal = 0L
 
     takeWhile { chunk ->
@@ -111,9 +111,9 @@ public fun Input.readUntilDelimiters(delimiter1: Byte, delimiter2: Byte, dst: Ou
     return copiedTotal
 }
 
-internal expect fun Buffer.discardUntilDelimiterImpl(delimiter: Byte): Int
+internal expect fun DROP_Buffer.discardUntilDelimiterImpl(delimiter: Byte): Int
 
-internal fun discardUntilDelimiterImplMemory(buffer: Buffer, delimiter: Byte): Int {
+internal fun discardUntilDelimiterImplMemory(buffer: DROP_Buffer, delimiter: Byte): Int {
     val start = buffer.readPosition
     var i = start
     val limit = buffer.writePosition
@@ -128,9 +128,9 @@ internal fun discardUntilDelimiterImplMemory(buffer: Buffer, delimiter: Byte): I
     return i - start
 }
 
-internal expect fun Buffer.discardUntilDelimitersImpl(delimiter1: Byte, delimiter2: Byte): Int
+internal expect fun DROP_Buffer.discardUntilDelimitersImpl(delimiter1: Byte, delimiter2: Byte): Int
 
-internal fun discardUntilDelimitersImplMemory(buffer: Buffer, delimiter1: Byte, delimiter2: Byte): Int {
+internal fun discardUntilDelimitersImplMemory(buffer: DROP_Buffer, delimiter1: Byte, delimiter2: Byte): Int {
     val start = buffer.readPosition
     var i = start
     val limit = buffer.writePosition
@@ -146,14 +146,14 @@ internal fun discardUntilDelimitersImplMemory(buffer: Buffer, delimiter1: Byte, 
     return i - start
 }
 
-internal expect fun Buffer.readUntilDelimiterImpl(
+internal expect fun DROP_Buffer.readUntilDelimiterImpl(
     delimiter: Byte,
     dst: ByteArray,
     offset: Int,
     length: Int
 ): Int
 
-internal expect fun Buffer.readUntilDelimitersImpl(
+internal expect fun DROP_Buffer.readUntilDelimitersImpl(
     delimiter1: Byte,
     delimiter2: Byte,
     dst: ByteArray,
@@ -161,18 +161,18 @@ internal expect fun Buffer.readUntilDelimitersImpl(
     length: Int
 ): Int
 
-internal expect fun Buffer.readUntilDelimiterImpl(
+internal expect fun DROP_Buffer.readUntilDelimiterImpl(
     delimiter: Byte,
-    dst: Output
+    dst: DROP_Output
 ): Int
 
-internal expect fun Buffer.readUntilDelimitersImpl(
+internal expect fun DROP_Buffer.readUntilDelimitersImpl(
     delimiter1: Byte,
     delimiter2: Byte,
-    dst: Output
+    dst: DROP_Output
 ): Int
 
-internal inline fun Buffer.copyUntil(predicate: (Byte) -> Boolean, dst: ByteArray, offset: Int, length: Int): Int {
+internal inline fun DROP_Buffer.copyUntil(predicate: (Byte) -> Boolean, dst: ByteArray, offset: Int, length: Int): Int {
     val readPosition = readPosition
     var end = minOf(writePosition, readPosition + length)
     val memory = memory
@@ -188,7 +188,7 @@ internal inline fun Buffer.copyUntil(predicate: (Byte) -> Boolean, dst: ByteArra
     return copySize
 }
 
-internal inline fun Buffer.copyUntil(predicate: (Byte) -> Boolean, dst: Output): Int {
+internal inline fun DROP_Buffer.copyUntil(predicate: (Byte) -> Boolean, dst: DROP_Output): Int {
     var index = readPosition
     val end = writePosition
     val memory = memory

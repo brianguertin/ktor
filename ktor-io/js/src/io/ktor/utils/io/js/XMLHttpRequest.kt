@@ -6,24 +6,24 @@ import io.ktor.utils.io.core.internal.*
 import org.khronos.webgl.*
 import org.w3c.xhr.*
 
-public inline fun XMLHttpRequest.sendPacket(block: BytePacketBuilder.() -> Unit) {
+public inline fun XMLHttpRequest.sendPacket(block: DROP_BytePacketBuilder.() -> Unit) {
     sendPacket(buildPacket(block = block))
 }
 
-public fun XMLHttpRequest.sendPacket(packet: ByteReadPacket) {
+public fun XMLHttpRequest.sendPacket(packet: DROP_ByteReadPacket) {
     send(packet.readArrayBuffer())
 }
 
 @Suppress("UnsafeCastFromDynamic", "DEPRECATION")
-public fun XMLHttpRequest.responsePacket(): ByteReadPacket = when (responseType) {
-    XMLHttpRequestResponseType.ARRAYBUFFER -> ByteReadPacket(
-        ChunkBuffer(
-            Memory.of(response.asDynamic() as DataView),
+public fun XMLHttpRequest.responsePacket(): DROP_ByteReadPacket = when (responseType) {
+    XMLHttpRequestResponseType.ARRAYBUFFER -> DROP_ByteReadPacket(
+        DROP_ChunkBuffer(
+            DROP_Memory.of(response.asDynamic() as DataView),
             null,
-            ChunkBuffer.NoPool
+            DROP_ChunkBuffer.NoPool
         ),
-        ChunkBuffer.NoPoolManuallyManaged
+        DROP_ChunkBuffer.NoPoolManuallyManaged
     )
-    XMLHttpRequestResponseType.EMPTY -> ByteReadPacket.Empty
+    XMLHttpRequestResponseType.EMPTY -> DROP_ByteReadPacket.Empty
     else -> throw IllegalStateException("Incompatible type $responseType: only ARRAYBUFFER and EMPTY are supported")
 }

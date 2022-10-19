@@ -453,7 +453,7 @@ internal class TLSClientHandshake(
         }
     }
 
-    private suspend fun sendHandshakeRecord(handshakeType: TLSHandshakeType, block: BytePacketBuilder.() -> Unit) {
+    private suspend fun sendHandshakeRecord(handshakeType: TLSHandshakeType, block: DROP_BytePacketBuilder.() -> Unit) {
         val handshakeBody = buildPacket(block = block)
 
         val recordBody = buildPacket {
@@ -507,7 +507,7 @@ private fun generateECKeys(curve: NamedCurve, serverPoint: ECPoint): EncryptionI
  *         DistinguishedName certificate_authorities<0..2^16-1>;
  *     } CertificateRequest;
  */
-internal fun readClientCertificateRequest(packet: ByteReadPacket): CertificateInfo {
+internal fun readClientCertificateRequest(packet: DROP_ByteReadPacket): CertificateInfo {
     val typeCount = packet.readByte().toInt() and 0xFF
     val types = packet.readBytes(typeCount)
 

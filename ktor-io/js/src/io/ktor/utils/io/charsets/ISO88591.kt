@@ -3,7 +3,7 @@ package io.ktor.utils.io.charsets
 import io.ktor.utils.io.core.*
 import org.khronos.webgl.*
 
-internal fun encodeISO88591(input: CharSequence, fromIndex: Int, toIndex: Int, dst: Buffer): Int {
+internal fun encodeISO88591(input: CharSequence, fromIndex: Int, toIndex: Int, dst: DROP_Buffer): Int {
     if (fromIndex >= toIndex) return 0
 
     dst.writeDirect { view ->

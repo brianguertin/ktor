@@ -147,7 +147,7 @@ internal class RawWebSocketCommon(
     }
 }
 
-private fun ByteReadPacket.mask(maskKey: Int): ByteReadPacket = withMemory(4) { maskMemory ->
+private fun DROP_ByteReadPacket.mask(maskKey: Int): DROP_ByteReadPacket = withMemory(4) { maskMemory ->
     maskMemory.storeIntAt(0, maskKey)
     buildPacket {
         repeat(remaining.toInt()) { i ->

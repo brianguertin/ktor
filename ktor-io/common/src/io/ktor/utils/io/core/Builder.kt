@@ -8,12 +8,12 @@ public expect val PACKET_MAX_COPY_SIZE: Int
  * Build a byte packet in [block] lambda. Creates a temporary builder and releases it in case of failure
  */
 @OptIn(ExperimentalContracts::class)
-public inline fun buildPacket(block: BytePacketBuilder.() -> Unit): ByteReadPacket {
+public inline fun buildPacket(block: DROP_BytePacketBuilder.() -> Unit): DROP_ByteReadPacket {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
 
-    val builder = BytePacketBuilder()
+    val builder = DROP_BytePacketBuilder()
     try {
         block(builder)
         return builder.build()
@@ -27,6 +27,6 @@ public inline fun buildPacket(block: BytePacketBuilder.() -> Unit): ByteReadPack
  * Discard all written bytes and prepare to build another packet.
  */
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-public fun BytePacketBuilder.reset() {
+public fun DROP_BytePacketBuilder.reset() {
     release()
 }

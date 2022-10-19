@@ -12,26 +12,26 @@ public actual fun ByteReadPacket(
     offset: Int,
     length: Int,
     block: (ByteArray) -> Unit
-): ByteReadPacket {
+): DROP_ByteReadPacket {
     if (length == 0) {
         block(array)
-        return ByteReadPacket.Empty
+        return DROP_ByteReadPacket.Empty
     }
 
-    val pool = object : SingleInstancePool<ChunkBuffer>() {
+    val pool = object : SingleInstancePool<DROP_ChunkBuffer>() {
         private var pinned: Pinned<*>? = null
 
-        override fun produceInstance(): ChunkBuffer {
+        override fun produceInstance(): DROP_ChunkBuffer {
             check(pinned == null) { "This implementation can pin only once." }
 
             val content = array.pin()
             val base = content.addressOf(offset)
             pinned = content
 
-            return ChunkBuffer(Memory.of(base, length), null, this)
+            return DROP_ChunkBuffer(DROP_Memory.of(base, length), null, this)
         }
 
-        override fun disposeInstance(instance: ChunkBuffer) {
+        override fun disposeInstance(instance: DROP_ChunkBuffer) {
             check(pinned != null) { "The array hasn't been pinned yet" }
             block(array)
             pinned?.unpin()
@@ -39,5 +39,5 @@ public actual fun ByteReadPacket(
         }
     }
 
-    return ByteReadPacket(pool.borrow().apply { resetForRead() }, pool)
+    return DROP_ByteReadPacket(pool.borrow().apply { resetForRead() }, pool)
 }

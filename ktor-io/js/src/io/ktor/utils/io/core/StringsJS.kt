@@ -22,9 +22,9 @@ public actual fun String(bytes: ByteArray, offset: Int, length: Int, charset: Ch
     val buffer = i8.buffer.slice(bufferOffset, bufferOffset + length)
 
     @Suppress("DEPRECATION")
-    val view = ChunkBuffer(Memory.of(buffer), null, ChunkBuffer.NoPool)
+    val view = DROP_ChunkBuffer(DROP_Memory.of(buffer), null, DROP_ChunkBuffer.NoPool)
     view.resetForRead()
-    val packet = ByteReadPacket(view, ChunkBuffer.NoPoolManuallyManaged)
+    val packet = DROP_ByteReadPacket(view, DROP_ChunkBuffer.NoPoolManuallyManaged)
 
     return charset.newDecoder().decode(packet, Int.MAX_VALUE)
 }

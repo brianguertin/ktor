@@ -1,27 +1,26 @@
 package io.ktor.utils.io.core.internal
 
 import io.ktor.utils.io.bits.*
-import io.ktor.utils.io.concurrent.*
 import io.ktor.utils.io.core.*
 import io.ktor.utils.io.pool.*
 import kotlinx.atomicfu.*
 
-public open class ChunkBuffer(
-    memory: Memory,
-    origin: ChunkBuffer?,
-    internal val parentPool: ObjectPool<ChunkBuffer>?
-) : Buffer(memory) {
+public open class DROP_ChunkBuffer(
+    memory: DROP_Memory,
+    origin: DROP_ChunkBuffer?,
+    internal val parentPool: ObjectPool<DROP_ChunkBuffer>?
+) : DROP_Buffer(memory) {
     init {
         require(origin !== this) { "A chunk couldn't be a view of itself." }
     }
 
-    private val nextRef: AtomicRef<ChunkBuffer?> = atomic(null)
+    private val nextRef: AtomicRef<DROP_ChunkBuffer?> = atomic(null)
     private val refCount = atomic(1)
 
     /**
      * Reference to an origin buffer view this was copied from
      */
-    public var origin: ChunkBuffer? = origin
+    public var origin: DROP_ChunkBuffer? = origin
         private set
 
     /**
@@ -29,7 +28,7 @@ public open class ChunkBuffer(
      * @see appendNext
      * @see cleanNext
      */
-    public var next: ChunkBuffer?
+    public var next: DROP_ChunkBuffer?
         get() = nextRef.value
         set(newValue) {
             if (newValue == null) {
@@ -41,24 +40,24 @@ public open class ChunkBuffer(
 
     public val referenceCount: Int get() = refCount.value
 
-    private fun appendNext(chunk: ChunkBuffer) {
+    private fun appendNext(chunk: DROP_ChunkBuffer) {
         if (!nextRef.compareAndSet(null, chunk)) {
             throw IllegalStateException("This chunk has already a next chunk.")
         }
     }
 
-    public fun cleanNext(): ChunkBuffer? {
+    public fun cleanNext(): DROP_ChunkBuffer? {
         return nextRef.getAndSet(null)
     }
 
-    override fun duplicate(): ChunkBuffer = (origin ?: this).let { newOrigin ->
+    override fun duplicate(): DROP_ChunkBuffer = (origin ?: this).let { newOrigin ->
         newOrigin.acquire()
-        ChunkBuffer(memory, newOrigin, parentPool).also { copy ->
+        DROP_ChunkBuffer(memory, newOrigin, parentPool).also { copy ->
             duplicateTo(copy)
         }
     }
 
-    public open fun release(pool: ObjectPool<ChunkBuffer>) {
+    public open fun release(pool: ObjectPool<DROP_ChunkBuffer>) {
         if (release()) {
             val origin = origin
             if (origin != null) {
@@ -125,15 +124,15 @@ public open class ChunkBuffer(
     }
 
     public companion object {
-        public val Pool: ObjectPool<ChunkBuffer> = object : ObjectPool<ChunkBuffer> {
+        public val Pool: ObjectPool<DROP_ChunkBuffer> = object : ObjectPool<DROP_ChunkBuffer> {
             override val capacity: Int
                 get() = DefaultChunkedBufferPool.capacity
 
-            override fun borrow(): ChunkBuffer {
+            override fun borrow(): DROP_ChunkBuffer {
                 return DefaultChunkedBufferPool.borrow()
             }
 
-            override fun recycle(instance: ChunkBuffer) {
+            override fun recycle(instance: DROP_ChunkBuffer) {
                 DefaultChunkedBufferPool.recycle(instance)
             }
 
@@ -143,14 +142,14 @@ public open class ChunkBuffer(
         }
 
         /**
-         * A pool that always returns [ChunkBuffer.Empty]
+         * A pool that always returns [DROP_ChunkBuffer.Empty]
          */
-        public val EmptyPool: ObjectPool<ChunkBuffer> = object : ObjectPool<ChunkBuffer> {
+        public val EmptyPool: ObjectPool<DROP_ChunkBuffer> = object : ObjectPool<DROP_ChunkBuffer> {
             override val capacity: Int get() = 1
 
             override fun borrow() = Empty
 
-            override fun recycle(instance: ChunkBuffer) {
+            override fun recycle(instance: DROP_ChunkBuffer) {
                 require(instance === Empty) { "Only ChunkBuffer.Empty instance could be recycled." }
             }
 
@@ -158,24 +157,24 @@ public open class ChunkBuffer(
             }
         }
 
-        public val Empty: ChunkBuffer = ChunkBuffer(Memory.Empty, null, EmptyPool)
+        public val Empty: DROP_ChunkBuffer = DROP_ChunkBuffer(DROP_Memory.Empty, null, EmptyPool)
 
-        internal val NoPool: ObjectPool<ChunkBuffer> = object : NoPoolImpl<ChunkBuffer>() {
-            override fun borrow(): ChunkBuffer {
-                return ChunkBuffer(DefaultAllocator.alloc(DEFAULT_BUFFER_SIZE), null, this)
+        internal val NoPool: ObjectPool<DROP_ChunkBuffer> = object : NoPoolImpl<DROP_ChunkBuffer>() {
+            override fun borrow(): DROP_ChunkBuffer {
+                return DROP_ChunkBuffer(DefaultAllocator.alloc(DEFAULT_BUFFER_SIZE), null, this)
             }
 
-            override fun recycle(instance: ChunkBuffer) {
+            override fun recycle(instance: DROP_ChunkBuffer) {
                 DefaultAllocator.free(instance.memory)
             }
         }
 
-        internal val NoPoolManuallyManaged: ObjectPool<ChunkBuffer> = object : NoPoolImpl<ChunkBuffer>() {
-            override fun borrow(): ChunkBuffer {
+        internal val NoPoolManuallyManaged: ObjectPool<DROP_ChunkBuffer> = object : NoPoolImpl<DROP_ChunkBuffer>() {
+            override fun borrow(): DROP_ChunkBuffer {
                 throw UnsupportedOperationException("This pool doesn't support borrow")
             }
 
-            override fun recycle(instance: ChunkBuffer) {
+            override fun recycle(instance: DROP_ChunkBuffer) {
                 // do nothing: manually managed objects should be disposed manually
             }
         }
@@ -184,8 +183,8 @@ public open class ChunkBuffer(
 
 /**
  * @return `true` if and only if there are no buffer views that share the same actual buffer. This actually does
- * refcount and only work guaranteed if other views created/not created via [Buffer.duplicate] function.
+ * refcount and only work guaranteed if other views created/not created via [DROP_Buffer.duplicate] function.
  * One can instantiate multiple buffers with the same buffer and this function will return `true` in spite of
  * the fact that the buffer is actually shared.
  */
-internal fun ChunkBuffer.isExclusivelyOwned(): Boolean = referenceCount == 1
+internal fun DROP_ChunkBuffer.isExclusivelyOwned(): Boolean = referenceCount == 1

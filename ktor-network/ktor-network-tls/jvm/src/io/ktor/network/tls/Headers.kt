@@ -10,11 +10,11 @@ import io.ktor.utils.io.core.*
 internal class TLSRecord(
     val type: TLSRecordType = TLSRecordType.Handshake,
     val version: TLSVersion = TLSVersion.TLS12,
-    val packet: ByteReadPacket = ByteReadPacket.Empty
+    val packet: DROP_ByteReadPacket = DROP_ByteReadPacket.Empty
 )
 
 @Suppress("KDocMissingDocumentation")
 internal class TLSHandshake {
     var type: TLSHandshakeType = TLSHandshakeType.HelloRequest
-    var packet = ByteReadPacket.Empty
+    var packet = DROP_ByteReadPacket.Empty
 }

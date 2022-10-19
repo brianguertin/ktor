@@ -1,6 +1,6 @@
 package io.ktor.utils.io.streams
 
-import io.ktor.utils.io.bits.Memory
+import io.ktor.utils.io.bits.DROP_Memory
 import io.ktor.utils.io.bits.sliceSafe
 import io.ktor.utils.io.core.*
 import io.ktor.utils.io.core.internal.*
@@ -8,10 +8,10 @@ import io.ktor.utils.io.pool.*
 import java.io.*
 
 private class OutputStreamAdapter(
-    pool: ObjectPool<ChunkBuffer>,
+    pool: ObjectPool<DROP_ChunkBuffer>,
     private val stream: OutputStream
-) : Output(pool) {
-    override fun flush(source: Memory, offset: Int, length: Int) {
+) : DROP_Output(pool) {
+    override fun flush(source: DROP_Memory, offset: Int, length: Int) {
         val nioBuffer = source.buffer
         if (nioBuffer.hasArray() && !nioBuffer.isReadOnly) {
             stream.write(nioBuffer.array(), nioBuffer.arrayOffset() + offset, length)
@@ -38,4 +38,4 @@ private class OutputStreamAdapter(
     }
 }
 
-public fun OutputStream.asOutput(): Output = OutputStreamAdapter(ChunkBuffer.Pool, this)
+public fun OutputStream.asOutput(): DROP_Output = OutputStreamAdapter(DROP_ChunkBuffer.Pool, this)

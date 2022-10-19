@@ -5,7 +5,7 @@ import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
 import kotlin.jvm.*
 
-internal inline fun Buffer.decodeASCII(consumer: (Char) -> Boolean): Boolean {
+internal inline fun DROP_Buffer.decodeASCII(consumer: (Char) -> Boolean): Boolean {
     read { memory, start, endExclusive ->
         for (index in start until endExclusive) {
             val codepoint = memory[index].toInt() and 0xff
@@ -24,7 +24,7 @@ internal inline fun Buffer.decodeASCII(consumer: (Char) -> Boolean): Boolean {
 internal suspend fun decodeUTF8LineLoopSuspend(
     out: Appendable,
     limit: Int,
-    nextChunk: suspend (Int) -> Input?,
+    nextChunk: suspend (Int) -> DROP_Input?,
     afterRead: (Int) -> Unit
 ): Boolean {
     var decoded = 0
@@ -117,7 +117,7 @@ internal fun byteCountUtf8(firstByte: Int): Int {
  * @return number of bytes required to decode incomplete utf8 character or 0 if all bytes were processed
  * or -1 if consumer rejected loop
  */
-internal inline fun Buffer.decodeUTF8(consumer: (Char) -> Boolean): Int {
+internal inline fun DROP_Buffer.decodeUTF8(consumer: (Char) -> Boolean): Int {
     var byteCount = 0
     var value = 0
     var lastByteCount = 0
@@ -191,7 +191,7 @@ internal inline fun Buffer.decodeUTF8(consumer: (Char) -> Boolean): Int {
     return 0
 }
 
-internal fun Memory.encodeUTF8(text: CharSequence, from: Int, to: Int, dstOffset: Int, dstLimit: Int): EncodeResult {
+internal fun DROP_Memory.encodeUTF8(text: CharSequence, from: Int, to: Int, dstOffset: Int, dstLimit: Int): EncodeResult {
     // encode single-byte characters
     val lastCharIndex = minOf(to, from + UShort.MAX_VALUE.toInt())
     val resultLimit = dstLimit.coerceAtMost(UShort.MAX_VALUE.toInt())
@@ -218,7 +218,7 @@ internal fun Memory.encodeUTF8(text: CharSequence, from: Int, to: Int, dstOffset
 /**
  * Encode UTF-8 multibytes characters when we for sure have enough free space
  */
-private fun Memory.encodeUTF8Stage1(
+private fun DROP_Memory.encodeUTF8Stage1(
     text: CharSequence,
     index1: Int,
     lastCharIndex: Int,
@@ -260,7 +260,7 @@ private fun Memory.encodeUTF8Stage1(
     return EncodeResult((index - from).toUShort(), (resultPosition - dstOffset).toUShort())
 }
 
-private fun Memory.encodeUTF8Stage2(
+private fun DROP_Memory.encodeUTF8Stage2(
     text: CharSequence,
     index1: Int,
     lastCharIndex: Int,
@@ -311,7 +311,7 @@ private inline fun charactersSize(v: Int) = when (v) {
 
 // TODO optimize it, now we are simply do naive encoding here
 @Suppress("NOTHING_TO_INLINE")
-internal inline fun Memory.putUtf8Char(offset: Int, v: Int): Int = when (v) {
+internal inline fun DROP_Memory.putUtf8Char(offset: Int, v: Int): Int = when (v) {
     in 0..0x7f -> {
         storeAt(offset, v.toByte())
         1

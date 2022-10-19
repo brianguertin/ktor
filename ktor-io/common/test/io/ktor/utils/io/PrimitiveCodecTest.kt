@@ -8,7 +8,7 @@ import kotlin.test.*
 
 class PrimitiveCodecTest {
     val pool = VerifyingChunkBufferPool()
-    val builder = BytePacketBuilder(pool)
+    val builder = DROP_BytePacketBuilder(pool)
 
     @AfterTest
     fun tearDown() {
@@ -753,7 +753,7 @@ class PrimitiveCodecTest {
         assertTrue { p.isEmpty }
     }
 
-    private fun Buffer.readHex() = buildString(readRemaining * 2) {
+    private fun DROP_Buffer.readHex() = buildString(readRemaining * 2) {
         repeat(readRemaining) {
             val i = readByte().toInt() and 0xff
             val l = i shr 4

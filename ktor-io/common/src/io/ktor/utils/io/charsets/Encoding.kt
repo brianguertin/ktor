@@ -29,7 +29,7 @@ public expect val CharsetEncoder.charset: Charset
         "io.ktor.utils.io.core.writeText"
     )
 )
-public fun CharsetEncoder.encode(input: CharSequence, fromIndex: Int, toIndex: Int, dst: Output) {
+public fun CharsetEncoder.encode(input: CharSequence, fromIndex: Int, toIndex: Int, dst: DROP_Output) {
     encodeToImpl(dst, input, fromIndex, toIndex)
 }
 
@@ -52,25 +52,25 @@ public fun CharsetEncoder.encodeToByteArrayImpl(
     return encodeToByteArray(input, fromIndex, toIndex)
 }
 
-public expect fun CharsetEncoder.encodeUTF8(input: ByteReadPacket, dst: Output)
+public expect fun CharsetEncoder.encodeUTF8(input: DROP_ByteReadPacket, dst: DROP_Output)
 
 public fun CharsetEncoder.encode(
     input: CharSequence,
     fromIndex: Int = 0,
     toIndex: Int = input.length
-): ByteReadPacket = buildPacket {
+): DROP_ByteReadPacket = buildPacket {
     encodeToImpl(this, input, fromIndex, toIndex)
 }
 
-public fun CharsetEncoder.encodeUTF8(input: ByteReadPacket): ByteReadPacket = buildPacket {
+public fun CharsetEncoder.encodeUTF8(input: DROP_ByteReadPacket): DROP_ByteReadPacket = buildPacket {
     encodeUTF8(input, this)
 }
 
-public fun CharsetEncoder.encode(input: CharArray, fromIndex: Int, toIndex: Int, dst: Output) {
+public fun CharsetEncoder.encode(input: CharArray, fromIndex: Int, toIndex: Int, dst: DROP_Output) {
     var start = fromIndex
 
     if (start >= toIndex) return
-    dst.writeWhileSize(1) { view: Buffer ->
+    dst.writeWhileSize(1) { view: DROP_Buffer ->
         val rc = encodeArrayImpl(input, start, toIndex, view)
         check(rc >= 0)
         start += rc
@@ -94,14 +94,14 @@ public expect abstract class CharsetDecoder
  */
 public expect val CharsetDecoder.charset: Charset
 
-public fun CharsetDecoder.decode(input: Input, max: Int = Int.MAX_VALUE): String =
+public fun CharsetDecoder.decode(input: DROP_Input, max: Int = Int.MAX_VALUE): String =
     buildString(minOf(max.toLong(), input.sizeEstimate()).toInt()) {
         decode(input, this, max)
     }
 
-public expect fun CharsetDecoder.decode(input: Input, dst: Appendable, max: Int): Int
+public expect fun CharsetDecoder.decode(input: DROP_Input, dst: Appendable, max: Int): Int
 
-public expect fun CharsetDecoder.decodeExactBytes(input: Input, inputLength: Int): String
+public expect fun CharsetDecoder.decodeExactBytes(input: DROP_Input, inputLength: Int): String
 
 // ----------------------------- REGISTRY ------------------------------------------------------------------------------
 public expect object Charsets {
@@ -115,17 +115,17 @@ public class TooLongLineException(message: String) : MalformedInputException(mes
 
 // ----------------------------- INTERNALS -----------------------------------------------------------------------------
 
-internal fun CharsetEncoder.encodeArrayImpl(input: CharArray, fromIndex: Int, toIndex: Int, dst: Buffer): Int {
+internal fun CharsetEncoder.encodeArrayImpl(input: CharArray, fromIndex: Int, toIndex: Int, dst: DROP_Buffer): Int {
     val length = toIndex - fromIndex
     return encodeImpl(CharArraySequence(input, fromIndex, length), 0, length, dst)
 }
 
-internal expect fun CharsetEncoder.encodeImpl(input: CharSequence, fromIndex: Int, toIndex: Int, dst: Buffer): Int
+internal expect fun CharsetEncoder.encodeImpl(input: CharSequence, fromIndex: Int, toIndex: Int, dst: DROP_Buffer): Int
 
-internal expect fun CharsetEncoder.encodeComplete(dst: Buffer): Boolean
+internal expect fun CharsetEncoder.encodeComplete(dst: DROP_Buffer): Boolean
 
 internal expect fun CharsetDecoder.decodeBuffer(
-    input: Buffer,
+    input: DROP_Buffer,
     out: Appendable,
     lastBuffer: Boolean,
     max: Int = Int.MAX_VALUE
@@ -138,7 +138,7 @@ internal fun CharsetEncoder.encodeToByteArrayImpl1(
 ): ByteArray {
     var start = fromIndex
     if (start >= toIndex) return EmptyByteArray
-    val single = ChunkBuffer.Pool.borrow()
+    val single = DROP_ChunkBuffer.Pool.borrow()
 
     try {
         val rc = encodeImpl(input, start, toIndex, single)
@@ -154,16 +154,16 @@ internal fun CharsetEncoder.encodeToByteArrayImpl1(
             encodeToImpl(this, input, start, toIndex)
         }.readBytes()
     } finally {
-        single.release(ChunkBuffer.Pool)
+        single.release(DROP_ChunkBuffer.Pool)
     }
 }
 
-internal fun Input.sizeEstimate(): Long = when (this) {
-    is ByteReadPacket -> remaining
+internal fun DROP_Input.sizeEstimate(): Long = when (this) {
+    is DROP_ByteReadPacket -> remaining
     else -> maxOf(remaining, 16)
 }
 
-private fun CharsetEncoder.encodeCompleteImpl(dst: Output): Int {
+private fun CharsetEncoder.encodeCompleteImpl(dst: DROP_Output): Int {
     var size = 1
     var bytesWritten = 0
 
@@ -182,7 +182,7 @@ private fun CharsetEncoder.encodeCompleteImpl(dst: Output): Int {
 }
 
 internal fun CharsetEncoder.encodeToImpl(
-    destination: Output,
+    destination: DROP_Output,
     input: CharSequence,
     fromIndex: Int,
     toIndex: Int
@@ -192,7 +192,7 @@ internal fun CharsetEncoder.encodeToImpl(
 
     var bytesWritten = 0
 
-    destination.writeWhileSize(1) { view: Buffer ->
+    destination.writeWhileSize(1) { view: DROP_Buffer ->
         val before = view.writeRemaining
         val rc = encodeImpl(input, start, toIndex, view)
         check(rc >= 0)

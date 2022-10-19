@@ -39,7 +39,7 @@ public actual sealed class Frame actual constructor(
     ) : Frame(fin, FrameType.BINARY, data, NonDisposableHandle, rsv1, rsv2, rsv3) {
         public actual constructor(fin: Boolean, data: ByteArray) : this(fin, data, false, false, false)
 
-        public actual constructor(fin: Boolean, packet: ByteReadPacket) : this(fin, packet.readBytes())
+        public actual constructor(fin: Boolean, packet: DROP_ByteReadPacket) : this(fin, packet.readBytes())
     }
 
     /**
@@ -59,7 +59,7 @@ public actual sealed class Frame actual constructor(
     ) : Frame(fin, FrameType.TEXT, data, NonDisposableHandle, rsv1, rsv2, rsv3) {
         public actual constructor(fin: Boolean, data: ByteArray) : this(fin, data, false, false, false)
         public actual constructor(text: String) : this(true, text.toByteArray())
-        public actual constructor(fin: Boolean, packet: ByteReadPacket) : this(fin, packet.readBytes())
+        public actual constructor(fin: Boolean, packet: DROP_ByteReadPacket) : this(fin, packet.readBytes())
     }
 
     /**
@@ -76,7 +76,7 @@ public actual sealed class Frame actual constructor(
             }
         )
 
-        public actual constructor(packet: ByteReadPacket) : this(packet.readBytes())
+        public actual constructor(packet: DROP_ByteReadPacket) : this(packet.readBytes())
         public actual constructor() : this(Empty)
     }
 
@@ -87,7 +87,7 @@ public actual sealed class Frame actual constructor(
     public actual class Ping actual constructor(
         data: ByteArray
     ) : Frame(true, FrameType.PING, data, NonDisposableHandle, false, false, false) {
-        public actual constructor(packet: ByteReadPacket) : this(packet.readBytes())
+        public actual constructor(packet: DROP_ByteReadPacket) : this(packet.readBytes())
     }
 
     /**
@@ -98,7 +98,7 @@ public actual sealed class Frame actual constructor(
         data: ByteArray,
         disposableHandle: DisposableHandle
     ) : Frame(true, FrameType.PONG, data, disposableHandle, false, false, false) {
-        public actual constructor(packet: ByteReadPacket) : this(packet.readBytes(), NonDisposableHandle)
+        public actual constructor(packet: DROP_ByteReadPacket) : this(packet.readBytes(), NonDisposableHandle)
     }
 
     override fun toString(): String = "Frame $frameType (fin=$fin, buffer len = ${data.size})"

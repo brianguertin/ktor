@@ -1,6 +1,6 @@
 package io.ktor.utils.io
 
-import io.ktor.utils.io.bits.Memory
+import io.ktor.utils.io.bits.DROP_Memory
 import io.ktor.utils.io.bits.storeByteArray
 import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
@@ -157,7 +157,7 @@ class ReadTextCommonTest {
         segment1.writeByte(0xc6.toByte())
         segment2.writeByte(0x86.toByte())
 
-        val packet = ByteReadPacket(segment1, pool)
+        val packet = DROP_ByteReadPacket(segment1, pool)
         assertEquals(2, packet.remaining)
 
         assertEquals("\u0186", packet.readText())
@@ -175,7 +175,7 @@ class ReadTextCommonTest {
         segment2.writeByte(0x82.toByte())
         segment2.writeByte(0xac.toByte())
 
-        val packet = ByteReadPacket(segment1, pool)
+        val packet = DROP_ByteReadPacket(segment1, pool)
         assertEquals(3, packet.remaining)
 
         assertEquals("\u20ac", packet.readText())
@@ -196,7 +196,7 @@ class ReadTextCommonTest {
         segment2.writeByte(0x82.toByte())
         segment2.writeByte(0xac.toByte())
 
-        val packet = ByteReadPacket(segment1, pool)
+        val packet = DROP_ByteReadPacket(segment1, pool)
 
         assertEquals(5, packet.remaining)
 
@@ -220,7 +220,7 @@ class ReadTextCommonTest {
         }
         segment2.writeByte(0x86.toByte())
 
-        val packet = ByteReadPacket(segment1, pool)
+        val packet = DROP_ByteReadPacket(segment1, pool)
 
         assertEquals("\u0186", packet.readText())
         assertTrue { packet.isEmpty }
@@ -236,7 +236,7 @@ class ReadTextCommonTest {
         segment1.writeByte(0xc6.toByte())
         segment2.writeByte(0x86.toByte())
 
-        val packet = ByteReadPacket(segment1, pool)
+        val packet = DROP_ByteReadPacket(segment1, pool)
 
         assertEquals("\u0186", packet.readText(charset = Charsets.UTF_8))
         assertTrue { packet.isEmpty }
@@ -252,7 +252,7 @@ class ReadTextCommonTest {
         segment1.writeByte(0xc0.toByte()) // overlong illegal utf8 sequence
         segment2.writeByte(0x81.toByte())
 
-        val packet = ByteReadPacket(segment1, pool)
+        val packet = DROP_ByteReadPacket(segment1, pool)
 
         try {
             packet.readText(charset = Charsets.UTF_8)
@@ -266,8 +266,8 @@ class ReadTextCommonTest {
 
     @Test
     fun testDecodeWrapped2Bytes() {
-        val first = ChunkBuffer.NoPool.borrow()
-        val second = ChunkBuffer.NoPool.borrow()
+        val first = DROP_ChunkBuffer.NoPool.borrow()
+        val second = DROP_ChunkBuffer.NoPool.borrow()
 
         first.resetForWrite()
         first.reserveEndGap(8)
@@ -277,7 +277,7 @@ class ReadTextCommonTest {
         first.writeByte(0xce.toByte())
         second.writeByte(0x9b.toByte())
 
-        val pkt = ByteReadPacket(first, ChunkBuffer.NoPool)
+        val pkt = DROP_ByteReadPacket(first, DROP_ChunkBuffer.NoPool)
 
         val text = pkt.readText(Charsets.UTF_8)
         assertEquals("\u039b", text)
@@ -285,8 +285,8 @@ class ReadTextCommonTest {
 
     @Test
     fun testDecodeWrapped3bytes1() {
-        val first = ChunkBuffer.NoPool.borrow()
-        val second = ChunkBuffer.NoPool.borrow()
+        val first = DROP_ChunkBuffer.NoPool.borrow()
+        val second = DROP_ChunkBuffer.NoPool.borrow()
 
         first.resetForWrite()
         second.resetForWrite()
@@ -297,7 +297,7 @@ class ReadTextCommonTest {
         second.writeByte(0xaf.toByte())
         second.writeByte(0xb5.toByte())
 
-        val pkt = ByteReadPacket(first, ChunkBuffer.NoPool)
+        val pkt = DROP_ByteReadPacket(first, DROP_ChunkBuffer.NoPool)
 
         val text = pkt.readText(Charsets.UTF_8)
         assertEquals("\u0BF5", text)
@@ -306,8 +306,8 @@ class ReadTextCommonTest {
     @Test
     fun testDecodeWrapped3bytes2() {
         // the same but we have 2 bytes in the first chunk
-        val first = ChunkBuffer.NoPool.borrow()
-        val second = ChunkBuffer.NoPool.borrow()
+        val first = DROP_ChunkBuffer.NoPool.borrow()
+        val second = DROP_ChunkBuffer.NoPool.borrow()
 
         first.resetForWrite()
         second.resetForWrite()
@@ -318,7 +318,7 @@ class ReadTextCommonTest {
         first.writeByte(0xaf.toByte())
         second.writeByte(0xb5.toByte())
 
-        val pkt = ByteReadPacket(first, ChunkBuffer.NoPool)
+        val pkt = DROP_ByteReadPacket(first, DROP_ChunkBuffer.NoPool)
 
         val text = pkt.readText(Charsets.UTF_8)
         assertEquals("\u0BF5", text)
@@ -347,10 +347,10 @@ class ReadTextCommonTest {
             writeFully(ByteArray(8192))
         }.readBytes()
 
-        val input = object : Input() {
+        val input = object : DROP_Input() {
             private var sourceOffset = 0
 
-            override fun fill(destination: Memory, offset: Int, length: Int): Int {
+            override fun fill(destination: DROP_Memory, offset: Int, length: Int): Int {
                 if (sourceOffset >= content.size) return 0
 
                 val copySize = minOf(length, content.size - sourceOffset)
@@ -381,8 +381,8 @@ class ReadTextCommonTest {
         assertEquals("123", packet.readText(max = 3))
     }
 
-    private inline fun buildPacket(block: BytePacketBuilder.() -> Unit): ByteReadPacket {
-        val builder = BytePacketBuilder(pool)
+    private inline fun buildPacket(block: DROP_BytePacketBuilder.() -> Unit): DROP_ByteReadPacket {
+        val builder = DROP_BytePacketBuilder(pool)
         try {
             block(builder)
             return builder.build()

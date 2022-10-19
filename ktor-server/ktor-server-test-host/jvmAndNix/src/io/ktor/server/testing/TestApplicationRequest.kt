@@ -132,9 +132,9 @@ public fun TestApplicationRequest.setBody(value: ByteArray) {
 }
 
 /**
- * Set HTTP request body from [ByteReadPacket]
+ * Set HTTP request body from [DROP_ByteReadPacket]
  */
-public fun TestApplicationRequest.setBody(value: ByteReadPacket) {
+public fun TestApplicationRequest.setBody(value: DROP_ByteReadPacket) {
     bodyChannel = ByteReadChannel(value.readBytes())
 }
 

@@ -8,9 +8,9 @@ import io.ktor.utils.io.core.*
 import java.io.*
 
 /**
- * Convert io.ktor.utils.io [Input] to java [InputStream]
+ * Convert io.ktor.utils.io [DROP_Input] to java [InputStream]
  */
-public fun Input.asStream(): InputStream = object : InputStream() {
+public fun DROP_Input.asStream(): InputStream = object : InputStream() {
 
     override fun read(): Int {
         if (endOfInput) return -1

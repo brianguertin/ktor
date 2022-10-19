@@ -145,7 +145,7 @@ class ByteChannelSessionsTest : ByteChannelTestBase() {
                 val buffer = request(1)
                 if (buffer != null) {
                     var count = 0
-                    (buffer as Buffer).forEach { byte ->
+                    (buffer as DROP_Buffer).forEach { byte ->
                         assertEquals(text[bytesRead].toByte(), byte, "Broken character at index $bytesRead")
                         count++
                         bytesRead++

@@ -10,7 +10,7 @@ import io.ktor.utils.io.pool.*
  * A builder that provides ability to build byte packets with no knowledge of it's size.
  * Unlike Java's ByteArrayOutputStream it doesn't copy the whole content every time it's internal buffer overflows
  * but chunks buffers instead. Packet building via [build] function is O(1) operation and only does instantiate
- * a new [ByteReadPacket]. Once a byte packet has been built via [build] function call, the builder could be
+ * a new [DROP_ByteReadPacket]. Once a byte packet has been built via [build] function call, the builder could be
  * reused again. You also can discard all written bytes via [reset] or [release]. Please note that an instance of
  * builder need to be terminated either via [build] function invocation or via [release] call otherwise it will
  * cause byte buffer leak so that may have performance impact.
@@ -23,9 +23,9 @@ import io.ktor.utils.io.pool.*
  * }
  * ```
  */
-public class BytePacketBuilder(
-    pool: ObjectPool<ChunkBuffer> = ChunkBuffer.Pool
-) : Output(pool) {
+public class DROP_BytePacketBuilder(
+    pool: ObjectPool<DROP_ChunkBuffer> = DROP_ChunkBuffer.Pool
+) : DROP_Output(pool) {
 
     /**
      * Number of bytes written to the builder after the creation or the last reset.
@@ -46,7 +46,7 @@ public class BytePacketBuilder(
         get() = _size > 0
 
     @PublishedApi
-    internal val _pool: ObjectPool<ChunkBuffer>
+    internal val _pool: ObjectPool<DROP_ChunkBuffer>
         get() = pool
 
     /**
@@ -58,30 +58,30 @@ public class BytePacketBuilder(
     /**
      * Does nothing for memory-backed output
      */
-    final override fun flush(source: Memory, offset: Int, length: Int) {
+    final override fun flush(source: DROP_Memory, offset: Int, length: Int) {
     }
 
-    override fun append(value: Char): BytePacketBuilder {
-        return super.append(value) as BytePacketBuilder
+    override fun append(value: Char): DROP_BytePacketBuilder {
+        return super.append(value) as DROP_BytePacketBuilder
     }
 
-    override fun append(value: CharSequence?): BytePacketBuilder {
-        return super.append(value) as BytePacketBuilder
+    override fun append(value: CharSequence?): DROP_BytePacketBuilder {
+        return super.append(value) as DROP_BytePacketBuilder
     }
 
-    override fun append(value: CharSequence?, startIndex: Int, endIndex: Int): BytePacketBuilder {
-        return super.append(value, startIndex, endIndex) as BytePacketBuilder
+    override fun append(value: CharSequence?, startIndex: Int, endIndex: Int): DROP_BytePacketBuilder {
+        return super.append(value, startIndex, endIndex) as DROP_BytePacketBuilder
     }
 
     /**
      * Builds byte packet instance and resets builder's state to be able to build another one packet if needed
      */
-    public fun build(): ByteReadPacket {
+    public fun build(): DROP_ByteReadPacket {
         val size = size
 
         return when (val head = stealAll()) {
-            null -> ByteReadPacket.Empty
-            else -> ByteReadPacket(head, size.toLong(), pool)
+            null -> DROP_ByteReadPacket.Empty
+            else -> DROP_ByteReadPacket(head, size.toLong(), pool)
         }
     }
 

@@ -402,8 +402,8 @@ class BytePacketReaderWriterTest {
         assertEquals(0x1234567812345678L, packet.readLong())
     }
 
-    private inline fun buildPacket(block: BytePacketBuilder.() -> Unit): ByteReadPacket {
-        val builder = BytePacketBuilder(pool)
+    private inline fun buildPacket(block: DROP_BytePacketBuilder.() -> Unit): DROP_ByteReadPacket {
+        val builder = DROP_BytePacketBuilder(pool)
         try {
             block(builder)
             return builder.build()

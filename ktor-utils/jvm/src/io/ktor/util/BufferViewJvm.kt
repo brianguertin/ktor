@@ -13,7 +13,7 @@ import java.nio.channels.*
  * Could return `0` if the channel is non-blocking or [buffer] has no free space
  * @return number of bytes read (possibly 0) or -1 if EOF
  */
-public fun ReadableByteChannel.read(buffer: ChunkBuffer): Int {
+public fun ReadableByteChannel.read(buffer: DROP_ChunkBuffer): Int {
     if (buffer.writeRemaining == 0) return 0
     var count = 0
 
@@ -30,7 +30,7 @@ public fun ReadableByteChannel.read(buffer: ChunkBuffer): Int {
  * @return number of bytes written (possibly 0)
  */
 @InternalAPI
-public fun WritableByteChannel.write(buffer: ChunkBuffer): Int {
+public fun WritableByteChannel.write(buffer: DROP_ChunkBuffer): Int {
     var count = 0
     buffer.readDirect { bb ->
         count = write(bb)

@@ -20,7 +20,7 @@ class JvmSequentialReadPacketWithExceptionByteChannelCloseTest : ByteChannelClos
     { readPacket(Int.MAX_VALUE) }
 ) {
     override fun ByteChannel(autoFlush: Boolean): ByteChannel {
-        return ByteChannelSequentialJVM(ChunkBuffer.Empty, autoFlush)
+        return ByteChannelSequentialJVM(DROP_ChunkBuffer.Empty, autoFlush)
     }
 }
 
@@ -36,6 +36,6 @@ class JvmSequentialReadFullyWithExceptionByteChannelCloseTest : ByteChannelClose
     { readFully(ByteArray(10)) }
 ) {
     override fun ByteChannel(autoFlush: Boolean): ByteChannel {
-        return ByteChannelSequentialJVM(ChunkBuffer.Empty, autoFlush)
+        return ByteChannelSequentialJVM(DROP_ChunkBuffer.Empty, autoFlush)
     }
 }

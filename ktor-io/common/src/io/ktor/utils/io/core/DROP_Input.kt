@@ -5,12 +5,12 @@ import io.ktor.utils.io.core.internal.*
 import io.ktor.utils.io.pool.*
 
 /**
- * Usually shouldn't be implemented directly. Inherit [Input] instead.
+ * Usually shouldn't be implemented directly. Inherit [DROP_Input] instead.
  */
-public abstract class Input(
-    head: ChunkBuffer = ChunkBuffer.Empty,
+public abstract class DROP_Input(
+    head: DROP_ChunkBuffer = DROP_ChunkBuffer.Empty,
     remaining: Long = head.remainingAll(),
-    public val pool: ObjectPool<ChunkBuffer> = ChunkBuffer.Pool
+    public val pool: ObjectPool<DROP_ChunkBuffer> = DROP_ChunkBuffer.Pool
 ) : Closeable {
 
     /**
@@ -31,7 +31,7 @@ public abstract class Input(
      *
      * @return number of bytes were copied or `0` if EOF encountered
      */
-    protected abstract fun fill(destination: Memory, offset: Int, length: Int): Int
+    protected abstract fun fill(destination: DROP_Memory, offset: Int, length: Int): Int
 
     /**
      * Should close the underlying bytes source. Could do nothing or throw exceptions.
@@ -41,7 +41,7 @@ public abstract class Input(
     /**
      * Current head chunk reference
      */
-    private var _head: ChunkBuffer = head
+    private var _head: DROP_ChunkBuffer = head
         set(newHead) {
             field = newHead
             headMemory = newHead.memory
@@ -50,11 +50,11 @@ public abstract class Input(
         }
 
     @PublishedApi
-    internal val head: ChunkBuffer
+    internal val head: DROP_ChunkBuffer
         get() = _head.also { it.discardUntilIndex(headPosition) }
 
     @PublishedApi
-    internal var headMemory: Memory = head.memory
+    internal var headMemory: DROP_Memory = head.memory
 
     @PublishedApi
     internal var headPosition: Int = head.readPosition
@@ -101,7 +101,7 @@ public abstract class Input(
      * @return number of bytes copied to the [destination] possibly `0`
      */
     public fun peekTo(
-        destination: Memory,
+        destination: DROP_Memory,
         destinationOffset: Long,
         offset: Long = 0,
         min: Long = 1,
@@ -109,7 +109,7 @@ public abstract class Input(
     ): Long {
         prefetch(min + offset)
 
-        var current: ChunkBuffer = head
+        var current: DROP_ChunkBuffer = head
         var copied = 0L
         var skip = offset
         var writePosition = destinationOffset
@@ -154,7 +154,7 @@ public abstract class Input(
             }
 
             val chunkSize = next.readRemaining
-            if (tail === ChunkBuffer.Empty) {
+            if (tail === DROP_ChunkBuffer.Empty) {
                 _head = next
                 tail = next
             } else {
@@ -187,12 +187,12 @@ public abstract class Input(
 
     /**
      * Release packet. After this function invocation the packet becomes empty.
-     * If it has been copied via [ByteReadPacket.copy]
+     * If it has been copied via [DROP_ByteReadPacket.copy]
      * then the copy should be released as well.
      */
     public fun release() {
         val head = head
-        val empty = ChunkBuffer.Empty
+        val empty = DROP_ChunkBuffer.Empty
 
         if (head !== empty) {
             this._head = empty
@@ -213,9 +213,9 @@ public abstract class Input(
         closeSource()
     }
 
-    internal fun stealAll(): ChunkBuffer? {
+    internal fun stealAll(): DROP_ChunkBuffer? {
         val head = head
-        val empty = ChunkBuffer.Empty
+        val empty = DROP_ChunkBuffer.Empty
 
         if (head === empty) return null
         this._head = empty
@@ -223,10 +223,10 @@ public abstract class Input(
         return head
     }
 
-    internal fun steal(): ChunkBuffer? {
+    internal fun steal(): DROP_ChunkBuffer? {
         val head = head
         val next = head.next
-        val empty = ChunkBuffer.Empty
+        val empty = DROP_ChunkBuffer.Empty
         if (head === empty) return null
 
         if (next == null) {
@@ -241,11 +241,11 @@ public abstract class Input(
         return head
     }
 
-    internal fun append(chain: ChunkBuffer) {
-        if (chain === ChunkBuffer.Empty) return
+    internal fun append(chain: DROP_ChunkBuffer) {
+        if (chain === DROP_ChunkBuffer.Empty) return
 
         val size = chain.remainingAll()
-        if (_head === ChunkBuffer.Empty) {
+        if (_head === DROP_ChunkBuffer.Empty) {
             _head = chain
             tailRemaining = size - headRemaining
         } else {
@@ -254,7 +254,7 @@ public abstract class Input(
         }
     }
 
-    internal fun tryWriteAppend(chain: ChunkBuffer): Boolean {
+    internal fun tryWriteAppend(chain: DROP_ChunkBuffer): Boolean {
         val tail = head.findTail()
         val size = chain.readRemaining
 
@@ -333,11 +333,11 @@ public abstract class Input(
         return prepareReadLoop(1, head)?.tryPeekByte() ?: -1
     }
 
-    public fun peekTo(buffer: ChunkBuffer): Int {
+    public fun peekTo(buffer: DROP_ChunkBuffer): Int {
         val head = prepareReadHead(1) ?: return -1
 
         val size = minOf(buffer.writeRemaining, head.readRemaining)
-        (buffer as Buffer).writeFully(head, size)
+        (buffer as DROP_Buffer).writeFully(head, size)
 
         return size
     }
@@ -546,21 +546,21 @@ public abstract class Input(
         throw EOFException("Not enough data in packet ($remaining) to read $n byte(s)")
     }
 
-    internal fun prepareReadHead(minSize: Int): ChunkBuffer? = prepareReadLoop(minSize, head)
+    internal fun prepareReadHead(minSize: Int): DROP_ChunkBuffer? = prepareReadLoop(minSize, head)
 
-    internal fun ensureNextHead(current: ChunkBuffer): ChunkBuffer? = ensureNext(current)
+    internal fun ensureNextHead(current: DROP_ChunkBuffer): DROP_ChunkBuffer? = ensureNext(current)
 
     @PublishedApi
-    internal fun ensureNext(current: ChunkBuffer): ChunkBuffer? = ensureNext(
+    internal fun ensureNext(current: DROP_ChunkBuffer): DROP_ChunkBuffer? = ensureNext(
         current,
-        ChunkBuffer.Empty
+        DROP_ChunkBuffer.Empty
     )
 
-    internal fun fixGapAfterRead(current: ChunkBuffer) {
+    internal fun fixGapAfterRead(current: DROP_ChunkBuffer) {
         val next = current.next ?: return fixGapAfterReadFallback(current)
 
         val remaining = current.readRemaining
-        val overrunSize = minOf(remaining, Buffer.ReservedSize - current.endGap)
+        val overrunSize = minOf(remaining, DROP_Buffer.ReservedSize - current.endGap)
         if (next.startGap < overrunSize) {
             return fixGapAfterReadFallback(current)
         }
@@ -580,7 +580,7 @@ public abstract class Input(
         }
     }
 
-    private fun fixGapAfterReadFallback(current: ChunkBuffer) {
+    private fun fixGapAfterReadFallback(current: DROP_ChunkBuffer) {
         if (noMoreChunksAvailable && current.next == null) {
             this.headPosition = current.readPosition
             this.headEndExclusive = current.writePosition
@@ -589,13 +589,13 @@ public abstract class Input(
         }
 
         val size = current.readRemaining
-        val overrun = minOf(size, Buffer.ReservedSize - current.endGap)
+        val overrun = minOf(size, DROP_Buffer.ReservedSize - current.endGap)
 
         if (size > overrun) {
             fixGapAfterReadFallbackUnreserved(current, size, overrun)
         } else {
             val new = pool.borrow()
-            new.reserveEndGap(Buffer.ReservedSize)
+            new.reserveEndGap(DROP_Buffer.ReservedSize)
             new.next = current.cleanNext()
 
             new.writeBufferAppend(current, size)
@@ -605,15 +605,15 @@ public abstract class Input(
         current.release(pool)
     }
 
-    private fun fixGapAfterReadFallbackUnreserved(current: ChunkBuffer, size: Int, overrun: Int) {
+    private fun fixGapAfterReadFallbackUnreserved(current: DROP_ChunkBuffer, size: Int, overrun: Int) {
         // if we have a chunk with no end reservation
         // we can split it into two to fix it
 
         val chunk1 = pool.borrow()
         val chunk2 = pool.borrow()
 
-        chunk1.reserveEndGap(Buffer.ReservedSize)
-        chunk2.reserveEndGap(Buffer.ReservedSize)
+        chunk1.reserveEndGap(DROP_Buffer.ReservedSize)
+        chunk2.reserveEndGap(DROP_Buffer.ReservedSize)
         chunk1.next = chunk2
         chunk2.next = current.cleanNext()
 
@@ -624,7 +624,7 @@ public abstract class Input(
         this.tailRemaining = chunk2.remainingAll()
     }
 
-    private tailrec fun ensureNext(current: ChunkBuffer, empty: ChunkBuffer): ChunkBuffer? {
+    private tailrec fun ensureNext(current: DROP_ChunkBuffer, empty: DROP_ChunkBuffer): DROP_ChunkBuffer? {
         if (current === empty) {
             return doFill()
         }
@@ -649,13 +649,13 @@ public abstract class Input(
 
     /**
      * Reads the next chunk suitable for reading or `null` if no more chunks available. It is also allowed
-     * to return a chain of chunks linked through [ChunkBuffer.next]. The last chunk should have `null` next reference.
+     * to return a chain of chunks linked through [DROP_ChunkBuffer.next]. The last chunk should have `null` next reference.
      * Could rethrow exceptions from the underlying source.
      */
-    protected open fun fill(): ChunkBuffer? {
+    protected open fun fill(): DROP_ChunkBuffer? {
         val buffer = pool.borrow()
         try {
-            buffer.reserveEndGap(Buffer.ReservedSize)
+            buffer.reserveEndGap(DROP_Buffer.ReservedSize)
             val copied = fill(buffer.memory, buffer.writePosition, buffer.writeRemaining)
 
             if (copied == 0) {
@@ -685,7 +685,7 @@ public abstract class Input(
     /**
      * see [prefetch] for similar logic
      */
-    private fun doFill(): ChunkBuffer? {
+    private fun doFill(): DROP_ChunkBuffer? {
         if (noMoreChunksAvailable) return null
         val chunk = fill()
         if (chunk == null) {
@@ -696,9 +696,9 @@ public abstract class Input(
         return chunk
     }
 
-    private fun appendView(chunk: ChunkBuffer) {
+    private fun appendView(chunk: DROP_ChunkBuffer) {
         val tail = _head.findTail()
-        if (tail === ChunkBuffer.Empty) {
+        if (tail === DROP_ChunkBuffer.Empty) {
             _head = chunk
             require(tailRemaining == 0L) {
                 throw IllegalStateException("It should be no tail remaining bytes if current tail is EmptyBuffer")
@@ -711,26 +711,26 @@ public abstract class Input(
     }
 
     @PublishedApi
-    internal fun prepareRead(minSize: Int): ChunkBuffer? {
+    internal fun prepareRead(minSize: Int): DROP_ChunkBuffer? {
         val head = head
         if (headEndExclusive - headPosition >= minSize) return head
         return prepareReadLoop(minSize, head)
     }
 
     @PublishedApi
-    internal fun prepareRead(minSize: Int, head: ChunkBuffer): ChunkBuffer? {
+    internal fun prepareRead(minSize: Int, head: DROP_ChunkBuffer): DROP_ChunkBuffer? {
         if (headEndExclusive - headPosition >= minSize) return head
         return prepareReadLoop(minSize, head)
     }
 
-    private tailrec fun prepareReadLoop(minSize: Int, head: ChunkBuffer): ChunkBuffer? {
+    private tailrec fun prepareReadLoop(minSize: Int, head: DROP_ChunkBuffer): DROP_ChunkBuffer? {
         val headSize = headRemaining
         if (headSize >= minSize) return head
 
         val next = head.next ?: doFill() ?: return null
 
         if (headSize == 0) {
-            if (head !== ChunkBuffer.Empty) {
+            if (head !== DROP_ChunkBuffer.Empty) {
                 releaseHead(head)
             }
 
@@ -750,23 +750,23 @@ public abstract class Input(
         }
 
         if (head.readRemaining >= minSize) return head
-        if (minSize > Buffer.ReservedSize) minSizeIsTooBig(minSize)
+        if (minSize > DROP_Buffer.ReservedSize) minSizeIsTooBig(minSize)
 
         return prepareReadLoop(minSize, head)
     }
 
     private fun minSizeIsTooBig(minSize: Int): Nothing {
-        throw IllegalStateException("minSize of $minSize is too big (should be less than ${Buffer.ReservedSize})")
+        throw IllegalStateException("minSize of $minSize is too big (should be less than ${DROP_Buffer.ReservedSize})")
     }
 
-    private fun afterRead(head: ChunkBuffer) {
+    private fun afterRead(head: DROP_ChunkBuffer) {
         if (head.readRemaining == 0) {
             releaseHead(head)
         }
     }
 
-    internal fun releaseHead(head: ChunkBuffer): ChunkBuffer {
-        val next = head.cleanNext() ?: ChunkBuffer.Empty
+    internal fun releaseHead(head: DROP_ChunkBuffer): DROP_ChunkBuffer {
+        val next = head.cleanNext() ?: DROP_ChunkBuffer.Empty
         this._head = next
         this.tailRemaining -= next.readRemaining
         head.release(pool)
@@ -781,14 +781,14 @@ public abstract class Input(
  * Discard all remaining bytes.
  * @return number of bytes were discarded
  */
-public fun Input.discard(): Long {
+public fun DROP_Input.discard(): Long {
     return discard(Long.MAX_VALUE)
 }
 
 /**
  * Discard exactly [n] bytes or fail if not enough bytes in the input to be discarded.
  */
-public fun Input.discardExact(n: Long) {
+public fun DROP_Input.discardExact(n: Long) {
     val discarded = discard(n)
     if (discarded != n) {
         throw IllegalStateException("Only $discarded bytes were discarded of $n requested")
@@ -799,7 +799,7 @@ public fun Input.discardExact(n: Long) {
  * Discard exactly [n] bytes or fail if not enough bytes in the input to be discarded.
  */
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-public fun Input.discardExact(n: Int) {
+public fun DROP_Input.discardExact(n: Int) {
     discardExact(n.toLong())
 }
 
@@ -811,7 +811,7 @@ public fun Input.discardExact(n: Int) {
  * [block] function should never release provided buffer and should not write to it otherwise an undefined behaviour
  * could be observed
  */
-public inline fun Input.takeWhile(block: (Buffer) -> Boolean) {
+public inline fun DROP_Input.takeWhile(block: (DROP_Buffer) -> Boolean) {
     var release = true
     var current = prepareReadFirstHead(1) ?: return
 
@@ -840,7 +840,7 @@ public inline fun Input.takeWhile(block: (Buffer) -> Boolean) {
  * [block] function should never release provided buffer and should not write to it otherwise an undefined behaviour
  * could be observed
  */
-internal inline fun Input.takeWhileSize(initialSize: Int = 1, block: (Buffer) -> Int) {
+internal inline fun DROP_Input.takeWhileSize(initialSize: Int = 1, block: (DROP_Buffer) -> Int) {
     var release = true
     var current = prepareReadFirstHead(initialSize) ?: return
     var size = initialSize
@@ -864,7 +864,7 @@ internal inline fun Input.takeWhileSize(initialSize: Int = 1, block: (Buffer) ->
 
             val next = when {
                 after == 0 -> prepareReadNextHead(current)
-                after < size || current.endGap < Buffer.ReservedSize -> {
+                after < size || current.endGap < DROP_Buffer.ReservedSize -> {
                     completeReadHead(current)
                     prepareReadFirstHead(size)
                 }
@@ -881,7 +881,7 @@ internal inline fun Input.takeWhileSize(initialSize: Int = 1, block: (Buffer) ->
     }
 }
 
-public fun Input.peekCharUtf8(): Char {
+public fun DROP_Input.peekCharUtf8(): Char {
     val rc = tryPeek()
     if (rc and 0x80 == 0) return rc.toChar()
     if (rc == -1) throw EOFException("Failed to peek a char: end of input")
@@ -892,14 +892,14 @@ public fun Input.peekCharUtf8(): Char {
 /**
  * For every byte from this input invokes [block] function giving it as parameter.
  */
-internal inline fun Input.forEach(block: (Byte) -> Unit) {
+internal inline fun DROP_Input.forEach(block: (Byte) -> Unit) {
     takeWhile { buffer ->
         buffer.forEach(block)
         true
     }
 }
 
-private fun Input.peekCharUtf8Impl(first: Int): Char {
+private fun DROP_Input.peekCharUtf8Impl(first: Int): Char {
     var rc = '?'
     var found = false
 

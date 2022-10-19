@@ -157,7 +157,7 @@ private const val CrLfShort: Short = 0x0d0a
 private val CrLf = "\r\n".toByteArray()
 private val LastChunkBytes = "0\r\n\r\n".toByteArray()
 
-private suspend fun ByteWriteChannel.writeChunk(memory: Memory, startIndex: Int, endIndex: Int): Int {
+private suspend fun ByteWriteChannel.writeChunk(memory: DROP_Memory, startIndex: Int, endIndex: Int): Int {
     val size = endIndex - startIndex
     writeIntHex(size)
     writeShort(CrLfShort)

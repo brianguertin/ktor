@@ -1,6 +1,6 @@
 package io.ktor.utils.io
 
-import io.ktor.utils.io.bits.Memory
+import io.ktor.utils.io.bits.DROP_Memory
 import io.ktor.utils.io.core.*
 import io.ktor.utils.io.core.internal.*
 import kotlin.test.*
@@ -8,13 +8,13 @@ import kotlin.test.*
 class OutputTest {
     @Test
     fun smokeTest() {
-        val builder = BytePacketBuilder()
+        val builder = DROP_BytePacketBuilder()
 
-        val output = object : Output() {
+        val output = object : DROP_Output() {
             override fun closeDestination() {
             }
 
-            override fun flush(source: Memory, offset: Int, length: Int) {
+            override fun flush(source: DROP_Memory, offset: Int, length: Int) {
                 builder.writeFully(source, offset, length)
             }
         }
@@ -29,29 +29,29 @@ class OutputTest {
 
     @Test
     fun testCopy() {
-        val result = BytePacketBuilder()
+        val result = DROP_BytePacketBuilder()
 
-        val output = object : Output() {
+        val output = object : DROP_Output() {
             override fun closeDestination() {
             }
 
-            override fun flush(source: Memory, offset: Int, length: Int) {
+            override fun flush(source: DROP_Memory, offset: Int, length: Int) {
                 result.writeFully(source, offset, length)
             }
         }
 
-        val fromHead = ChunkBuffer.Pool.borrow()
+        val fromHead = DROP_ChunkBuffer.Pool.borrow()
         var current = fromHead
         repeat(3) {
             current.appendChars("test $it. ")
-            val next = ChunkBuffer.Pool.borrow()
+            val next = DROP_ChunkBuffer.Pool.borrow()
             current.next = next
             current = next
         }
 
         current.appendChars("end.")
 
-        val from = ByteReadPacket(fromHead, ChunkBuffer.Pool)
+        val from = DROP_ByteReadPacket(fromHead, DROP_ChunkBuffer.Pool)
 
         from.copyTo(output)
         output.flush()

@@ -16,7 +16,7 @@ public actual fun String(bytes: ByteArray, offset: Int, length: Int, charset: Ch
         val ptr = pinned.addressOf(offset)
         val view = ChunkBuffer(ptr, length, null)
         view.resetForRead()
-        val packet = ByteReadPacket(view, ChunkBuffer.NoPoolManuallyManaged)
+        val packet = DROP_ByteReadPacket(view, DROP_ChunkBuffer.NoPoolManuallyManaged)
         check(packet.remaining == length.toLong())
         charset.newDecoder().decode(packet, Int.MAX_VALUE)
     }

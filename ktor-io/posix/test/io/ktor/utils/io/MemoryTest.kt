@@ -5,12 +5,11 @@
 package io.ktor.utils.io
 
 import io.ktor.utils.io.bits.*
-import kotlinx.cinterop.*
 import kotlin.test.*
 
 class MemoryTest {
 
-    private lateinit var mem: Memory
+    private lateinit var mem: DROP_Memory
 
     @BeforeTest
     fun setup() {

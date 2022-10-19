@@ -44,7 +44,7 @@ public expect class RequestResponseBuilder() {
     /**
      * Build a packet of request/response
      */
-    public fun build(): ByteReadPacket
+    public fun build(): DROP_ByteReadPacket
 
     /**
      * Release all resources hold by the builder

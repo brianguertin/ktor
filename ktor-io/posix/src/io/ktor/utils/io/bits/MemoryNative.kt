@@ -6,7 +6,7 @@ import io.ktor.utils.io.core.internal.*
 import kotlinx.cinterop.*
 import platform.posix.*
 
-public actual class Memory constructor(
+public actual class DROP_Memory constructor(
     public val pointer: CPointer<ByteVar>,
     public actual inline val size: Long
 ) {
@@ -44,22 +44,22 @@ public actual class Memory constructor(
         pointer[assertIndex(index, 1)] = value
     }
 
-    public actual fun slice(offset: Long, length: Long): Memory {
+    public actual fun slice(offset: Long, length: Long): DROP_Memory {
         assertIndex(offset, length)
         if (offset == 0L && length == size) {
             return this
         }
 
-        return Memory(pointer.plus(offset)!!, length)
+        return DROP_Memory(pointer.plus(offset)!!, length)
     }
 
-    public actual fun slice(offset: Int, length: Int): Memory {
+    public actual fun slice(offset: Int, length: Int): DROP_Memory {
         assertIndex(offset, length)
         if (offset == 0 && length.toLong() == size) {
             return this
         }
 
-        return Memory(pointer.plus(offset)!!, length.toLong())
+        return DROP_Memory(pointer.plus(offset)!!, length.toLong())
     }
 
     /**
@@ -68,7 +68,7 @@ public actual class Memory constructor(
      * Copying bytes from a memory to itself is allowed.
      */
     @OptIn(UnsafeNumber::class)
-    public actual fun copyTo(destination: Memory, offset: Int, length: Int, destinationOffset: Int) {
+    public actual fun copyTo(destination: DROP_Memory, offset: Int, length: Int, destinationOffset: Int) {
         require(offset >= 0) { "offset shouldn't be negative: $offset" }
         require(length >= 0) { "length shouldn't be negative: $length" }
         require(destinationOffset >= 0) { "destinationOffset shouldn't be negative: $destinationOffset" }
@@ -97,7 +97,7 @@ public actual class Memory constructor(
      * Copying bytes from a memory to itself is allowed.
      */
     @OptIn(UnsafeNumber::class)
-    public actual fun copyTo(destination: Memory, offset: Long, length: Long, destinationOffset: Long) {
+    public actual fun copyTo(destination: DROP_Memory, offset: Long, length: Long, destinationOffset: Long) {
         require(offset >= 0L) { "offset shouldn't be negative: $offset" }
         require(length >= 0L) { "length shouldn't be negative: $length" }
         require(destinationOffset >= 0L) { "destinationOffset shouldn't be negative: $destinationOffset" }
@@ -121,7 +121,7 @@ public actual class Memory constructor(
     }
 
     public actual companion object {
-        public actual val Empty: Memory = Memory(nativeHeap.allocArray(0), 0L)
+        public actual val Empty: DROP_Memory = DROP_Memory(nativeHeap.allocArray(0), 0L)
     }
 }
 
@@ -129,7 +129,7 @@ public actual class Memory constructor(
  * Copies bytes from this memory range from the specified [offset] and [length]
  * to the [destination] at [destinationOffset].
  */
-public actual fun Memory.copyTo(
+public actual fun DROP_Memory.copyTo(
     destination: ByteArray,
     offset: Int,
     length: Int,
@@ -142,7 +142,7 @@ public actual fun Memory.copyTo(
 
     destination.usePinned { pinned ->
         copyTo(
-            destination = Memory(pinned.addressOf(0), destination.size.toLong()),
+            destination = DROP_Memory(pinned.addressOf(0), destination.size.toLong()),
             offset = offset,
             length = length,
             destinationOffset = destinationOffset
@@ -154,7 +154,7 @@ public actual fun Memory.copyTo(
  * Copies bytes from this memory range from the specified [offset] and [length]
  * to the [destination] at [destinationOffset].
  */
-public actual fun Memory.copyTo(
+public actual fun DROP_Memory.copyTo(
     destination: ByteArray,
     offset: Long,
     length: Int,
@@ -167,7 +167,7 @@ public actual fun Memory.copyTo(
 
     destination.usePinned { pinned ->
         copyTo(
-            destination = Memory(pinned.addressOf(0), destination.size.toLong()),
+            destination = DROP_Memory(pinned.addressOf(0), destination.size.toLong()),
             offset = offset,
             length = length.toLong(),
             destinationOffset = destinationOffset.toLong()
@@ -176,7 +176,7 @@ public actual fun Memory.copyTo(
 }
 
 @PublishedApi
-internal inline fun Memory.assertIndex(offset: Int, valueSize: Int): Int {
+internal inline fun DROP_Memory.assertIndex(offset: Int, valueSize: Int): Int {
     assert(offset in 0..size - valueSize) {
         throw IndexOutOfBoundsException("offset $offset outside of range [0; ${size - valueSize})")
     }
@@ -184,7 +184,7 @@ internal inline fun Memory.assertIndex(offset: Int, valueSize: Int): Int {
 }
 
 @PublishedApi
-internal inline fun Memory.assertIndex(offset: Long, valueSize: Long): Long {
+internal inline fun DROP_Memory.assertIndex(offset: Long, valueSize: Long): Long {
     assert(offset in 0..size - valueSize) {
         throw IndexOutOfBoundsException("offset $offset outside of range [0; ${size - valueSize})")
     }
@@ -227,7 +227,7 @@ internal inline fun Double.toBigEndian(): Double = when {
  * Fill memory range starting at the specified [offset] with [value] repeated [count] times.
  */
 @OptIn(UnsafeNumber::class)
-public actual fun Memory.fill(offset: Long, count: Long, value: Byte) {
+public actual fun DROP_Memory.fill(offset: Long, count: Long, value: Byte) {
     requirePositiveIndex(offset, "offset")
     requirePositiveIndex(count, "count")
     requireRange(offset, count, size, "fill")
@@ -242,7 +242,7 @@ public actual fun Memory.fill(offset: Long, count: Long, value: Byte) {
  * Fill memory range starting at the specified [offset] with [value] repeated [count] times.
  */
 @OptIn(UnsafeNumber::class)
-public actual fun Memory.fill(offset: Int, count: Int, value: Byte) {
+public actual fun DROP_Memory.fill(offset: Int, count: Int, value: Byte) {
     requirePositiveIndex(offset, "offset")
     requirePositiveIndex(count, "count")
     requireRange(offset.toLong(), count.toLong(), size, "fill")
@@ -258,7 +258,7 @@ public actual fun Memory.fill(offset: Int, count: Int, value: Byte) {
  * Copy content bytes to the memory addressed by the [destination] pointer with
  * the specified [destinationOffset] in bytes.
  */
-public fun Memory.copyTo(
+public fun DROP_Memory.copyTo(
     destination: CPointer<ByteVar>,
     offset: Int,
     length: Int,
@@ -272,7 +272,7 @@ public fun Memory.copyTo(
  * the specified [destinationOffset] in bytes.
  */
 @OptIn(UnsafeNumber::class)
-public fun Memory.copyTo(
+public fun DROP_Memory.copyTo(
     destination: CPointer<ByteVar>,
     offset: Long,
     length: Long,
@@ -290,7 +290,7 @@ public fun Memory.copyTo(
  * Copy [length] bytes to the [destination] at the specified [destinationOffset]
  * from the memory addressed by this pointer with [offset] in bytes.
  */
-public fun CPointer<ByteVar>.copyTo(destination: Memory, offset: Int, length: Int, destinationOffset: Int) {
+public fun CPointer<ByteVar>.copyTo(destination: DROP_Memory, offset: Int, length: Int, destinationOffset: Int) {
     copyTo(destination, offset.toLong(), length.toLong(), destinationOffset.toLong())
 }
 
@@ -299,7 +299,7 @@ public fun CPointer<ByteVar>.copyTo(destination: Memory, offset: Int, length: In
  * from the memory addressed by this pointer with [offset] in bytes.
  */
 @OptIn(UnsafeNumber::class)
-public fun CPointer<ByteVar>.copyTo(destination: Memory, offset: Long, length: Long, destinationOffset: Long) {
+public fun CPointer<ByteVar>.copyTo(destination: DROP_Memory, offset: Long, length: Long, destinationOffset: Long) {
     requirePositiveIndex(offset, "offset")
     requirePositiveIndex(length, "length")
     requirePositiveIndex(destinationOffset, "destinationOffset")

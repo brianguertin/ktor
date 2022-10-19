@@ -15,7 +15,7 @@ import kotlin.native.concurrent.*
 @RequiresOptIn(level = RequiresOptIn.Level.ERROR)
 public annotation class DangerousInternalIoApi
 
-internal fun ByteReadPacket.unsafeAppend(builder: BytePacketBuilder): Int {
+internal fun DROP_ByteReadPacket.unsafeAppend(builder: DROP_BytePacketBuilder): Int {
     val builderSize = builder.size
     val builderHead = builder.stealAll() ?: return 0
 
@@ -29,20 +29,20 @@ internal fun ByteReadPacket.unsafeAppend(builder: BytePacketBuilder): Int {
 }
 
 @PublishedApi
-internal fun Input.prepareReadFirstHead(minSize: Int): ChunkBuffer? = prepareReadHead(minSize)
+internal fun DROP_Input.prepareReadFirstHead(minSize: Int): DROP_ChunkBuffer? = prepareReadHead(minSize)
 
 @PublishedApi
-internal fun Input.completeReadHead(current: ChunkBuffer) {
+internal fun DROP_Input.completeReadHead(current: DROP_ChunkBuffer) {
     when {
         current === this -> return
         !current.canRead() -> ensureNext(current)
-        current.endGap < Buffer.ReservedSize -> fixGapAfterRead(current)
+        current.endGap < DROP_Buffer.ReservedSize -> fixGapAfterRead(current)
         else -> headPosition = current.readPosition
     }
 }
 
 @PublishedApi
-internal fun Input.prepareReadNextHead(current: ChunkBuffer): ChunkBuffer? {
+internal fun DROP_Input.prepareReadNextHead(current: DROP_ChunkBuffer): DROP_ChunkBuffer? {
     if (current === this) {
         return if (canRead()) this else null
     }
@@ -50,7 +50,7 @@ internal fun Input.prepareReadNextHead(current: ChunkBuffer): ChunkBuffer? {
     return ensureNextHead(current)
 }
 
-internal fun Output.prepareWriteHead(capacity: Int, current: ChunkBuffer?): ChunkBuffer {
+internal fun DROP_Output.prepareWriteHead(capacity: Int, current: DROP_ChunkBuffer?): DROP_ChunkBuffer {
     if (current != null) {
         afterHeadWrite()
     }

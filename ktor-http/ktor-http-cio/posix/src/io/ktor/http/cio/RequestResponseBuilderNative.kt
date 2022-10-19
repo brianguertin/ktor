@@ -11,7 +11,7 @@ import io.ktor.utils.io.core.*
  * Builds an HTTP request or response
  */
 public actual class RequestResponseBuilder actual constructor() {
-    private val packet = BytePacketBuilder()
+    private val packet = DROP_BytePacketBuilder()
 
     /**
      * Append response status line
@@ -77,7 +77,7 @@ public actual class RequestResponseBuilder actual constructor() {
     /**
      * Build a packet of request/response
      */
-    public actual fun build(): ByteReadPacket = packet.build()
+    public actual fun build(): DROP_ByteReadPacket = packet.build()
 
     /**
      * Release all resources hold by the builder

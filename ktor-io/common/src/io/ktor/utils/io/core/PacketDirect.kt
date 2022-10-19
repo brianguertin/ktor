@@ -4,7 +4,7 @@ import kotlin.contracts.*
 
 @OptIn(ExperimentalContracts::class)
 @PublishedApi
-internal inline fun Input.read(n: Int = 1, block: (Buffer) -> Unit) {
+internal inline fun DROP_Input.read(n: Int = 1, block: (DROP_Buffer) -> Unit) {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }

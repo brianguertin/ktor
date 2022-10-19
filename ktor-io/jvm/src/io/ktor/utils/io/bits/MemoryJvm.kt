@@ -7,7 +7,7 @@ import java.nio.*
 
 @Suppress("ACTUAL_WITHOUT_EXPECT", "EXPERIMENTAL_FEATURE_WARNING")
 @JvmInline
-public actual value class Memory constructor(public val buffer: ByteBuffer) {
+public actual value class DROP_Memory constructor(public val buffer: ByteBuffer) {
 
     /**
      * Size of memory range in bytes.
@@ -44,10 +44,10 @@ public actual value class Memory constructor(public val buffer: ByteBuffer) {
         buffer.put(index.toIntOrFail("index"), value)
     }
 
-    public actual fun slice(offset: Int, length: Int): Memory =
-        Memory(buffer.sliceSafe(offset, length))
+    public actual fun slice(offset: Int, length: Int): DROP_Memory =
+        DROP_Memory(buffer.sliceSafe(offset, length))
 
-    public actual fun slice(offset: Long, length: Long): Memory {
+    public actual fun slice(offset: Long, length: Long): DROP_Memory {
         return slice(offset.toIntOrFail("offset"), length.toIntOrFail("length"))
     }
 
@@ -56,7 +56,7 @@ public actual value class Memory constructor(public val buffer: ByteBuffer) {
      * to the [destination] at [destinationOffset].
      * Copying bytes from a memory to itself is allowed.
      */
-    public actual fun copyTo(destination: Memory, offset: Int, length: Int, destinationOffset: Int) {
+    public actual fun copyTo(destination: DROP_Memory, offset: Int, length: Int, destinationOffset: Int) {
         if (buffer.hasArray() && destination.buffer.hasArray() &&
             !buffer.isReadOnly && !destination.buffer.isReadOnly
         ) {
@@ -89,7 +89,7 @@ public actual value class Memory constructor(public val buffer: ByteBuffer) {
      * to the [destination] at [destinationOffset].
      * Copying bytes from a memory to itself is allowed.
      */
-    public actual fun copyTo(destination: Memory, offset: Long, length: Long, destinationOffset: Long) {
+    public actual fun copyTo(destination: DROP_Memory, offset: Long, length: Long, destinationOffset: Long) {
         copyTo(
             destination,
             offset.toIntOrFail("offset"),
@@ -99,7 +99,7 @@ public actual value class Memory constructor(public val buffer: ByteBuffer) {
     }
 
     public actual companion object {
-        public actual val Empty: Memory = Memory(ByteBuffer.allocate(0).order(ByteOrder.BIG_ENDIAN))
+        public actual val Empty: DROP_Memory = DROP_Memory(ByteBuffer.allocate(0).order(ByteOrder.BIG_ENDIAN))
     }
 }
 
@@ -107,7 +107,7 @@ public actual value class Memory constructor(public val buffer: ByteBuffer) {
  * Copies bytes from this memory range from the specified [offset] and [length]
  * to the [destination] at [destinationOffset].
  */
-public actual fun Memory.copyTo(
+public actual fun DROP_Memory.copyTo(
     destination: ByteArray,
     offset: Int,
     length: Int,
@@ -132,7 +132,7 @@ public actual fun Memory.copyTo(
  * Copies bytes from this memory range from the specified [offset] and [length]
  * to the [destination] at [destinationOffset].
  */
-public actual fun Memory.copyTo(
+public actual fun DROP_Memory.copyTo(
     destination: ByteArray,
     offset: Long,
     length: Int,
@@ -145,7 +145,7 @@ public actual fun Memory.copyTo(
  * Copies bytes from this memory range from the specified [offset]
  * to the [destination] buffer.
  */
-public fun Memory.copyTo(
+public fun DROP_Memory.copyTo(
     destination: ByteBuffer,
     offset: Int
 ) {
@@ -179,14 +179,14 @@ public fun Memory.copyTo(
  * Copies bytes from this memory range from the specified [offset]
  * to the [destination] buffer.
  */
-public fun Memory.copyTo(destination: ByteBuffer, offset: Long) {
+public fun DROP_Memory.copyTo(destination: ByteBuffer, offset: Long) {
     copyTo(destination, offset.toIntOrFail("offset"))
 }
 
 /**
  * Copy byte from this buffer moving it's position to the [destination] at [offset].
  */
-public fun ByteBuffer.copyTo(destination: Memory, offset: Int) {
+public fun ByteBuffer.copyTo(destination: DROP_Memory, offset: Int) {
     if (hasArray() && !isReadOnly) {
         destination.storeByteArray(offset, array(), arrayOffset() + position(), remaining())
         position(limit())
@@ -215,14 +215,14 @@ internal fun ByteBuffer.sliceSafe(offset: Int, length: Int): ByteBuffer {
 /**
  * Fill memory range starting at the specified [offset] with [value] repeated [count] times.
  */
-public actual fun Memory.fill(offset: Long, count: Long, value: Byte) {
+public actual fun DROP_Memory.fill(offset: Long, count: Long, value: Byte) {
     fill(offset.toIntOrFail("offset"), count.toIntOrFail("count"), value)
 }
 
 /**
  * Fill memory range starting at the specified [offset] with [value] repeated [count] times.
  */
-public actual fun Memory.fill(offset: Int, count: Int, value: Byte) {
+public actual fun DROP_Memory.fill(offset: Int, count: Int, value: Byte) {
     for (index in offset until offset + count) {
         buffer.put(index, value)
     }

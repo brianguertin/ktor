@@ -6,7 +6,7 @@ import io.ktor.utils.io.bits.*
 import org.khronos.webgl.*
 import kotlin.contracts.*
 
-public fun Buffer.readFully(dst: ArrayBuffer, offset: Int = 0, length: Int = dst.byteLength - offset) {
+public fun DROP_Buffer.readFully(dst: ArrayBuffer, offset: Int = 0, length: Int = dst.byteLength - offset) {
     read { memory, start, endExclusive ->
         if (endExclusive - start < length) {
             throw EOFException("Not enough bytes available to read $length bytes")
@@ -17,7 +17,7 @@ public fun Buffer.readFully(dst: ArrayBuffer, offset: Int = 0, length: Int = dst
     }
 }
 
-public fun Buffer.readFully(dst: ArrayBufferView, offset: Int = 0, length: Int = dst.byteLength - offset) {
+public fun DROP_Buffer.readFully(dst: ArrayBufferView, offset: Int = 0, length: Int = dst.byteLength - offset) {
     read { memory, start, endExclusive ->
         if (endExclusive - start < length) {
             throw EOFException("Not enough bytes available to read $length bytes")
@@ -28,21 +28,21 @@ public fun Buffer.readFully(dst: ArrayBufferView, offset: Int = 0, length: Int =
     }
 }
 
-public fun Buffer.readAvailable(dst: ArrayBuffer, offset: Int = 0, length: Int = dst.byteLength - offset): Int {
+public fun DROP_Buffer.readAvailable(dst: ArrayBuffer, offset: Int = 0, length: Int = dst.byteLength - offset): Int {
     if (!canRead()) return -1
     val readSize = minOf(length, readRemaining)
     readFully(dst, offset, readSize)
     return readSize
 }
 
-public fun Buffer.readAvailable(dst: ArrayBufferView, offset: Int = 0, length: Int = dst.byteLength - offset): Int {
+public fun DROP_Buffer.readAvailable(dst: ArrayBufferView, offset: Int = 0, length: Int = dst.byteLength - offset): Int {
     if (!canRead()) return -1
     val readSize = minOf(length, readRemaining)
     readFully(dst, offset, readSize)
     return readSize
 }
 
-public fun Buffer.writeFully(src: ArrayBuffer, offset: Int = 0, length: Int = src.byteLength) {
+public fun DROP_Buffer.writeFully(src: ArrayBuffer, offset: Int = 0, length: Int = src.byteLength) {
     write { memory, start, endExclusive ->
         if (endExclusive - start < length) {
             throw InsufficientSpaceException("Not enough free space to write $length bytes")
@@ -53,7 +53,7 @@ public fun Buffer.writeFully(src: ArrayBuffer, offset: Int = 0, length: Int = sr
     }
 }
 
-public fun Buffer.writeFully(src: ArrayBufferView, offset: Int = 0, length: Int = src.byteLength - offset) {
+public fun DROP_Buffer.writeFully(src: ArrayBufferView, offset: Int = 0, length: Int = src.byteLength - offset) {
     write { memory, dstOffset, endExclusive ->
         if (endExclusive - dstOffset < length) {
             throw InsufficientSpaceException("Not enough free space to write $length bytes")
@@ -65,7 +65,7 @@ public fun Buffer.writeFully(src: ArrayBufferView, offset: Int = 0, length: Int 
 }
 
 @OptIn(ExperimentalContracts::class)
-public inline fun Buffer.writeDirect(block: (DataView) -> Int): Int {
+public inline fun DROP_Buffer.writeDirect(block: (DataView) -> Int): Int {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
@@ -76,7 +76,7 @@ public inline fun Buffer.writeDirect(block: (DataView) -> Int): Int {
 }
 
 @OptIn(ExperimentalContracts::class)
-public inline fun Buffer.readDirect(block: (DataView) -> Int): Int {
+public inline fun DROP_Buffer.readDirect(block: (DataView) -> Int): Int {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
@@ -87,7 +87,7 @@ public inline fun Buffer.readDirect(block: (DataView) -> Int): Int {
 }
 
 @OptIn(ExperimentalContracts::class)
-public inline fun Buffer.writeDirectInt8Array(block: (Int8Array) -> Int): Int {
+public inline fun DROP_Buffer.writeDirectInt8Array(block: (Int8Array) -> Int): Int {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
@@ -98,7 +98,7 @@ public inline fun Buffer.writeDirectInt8Array(block: (Int8Array) -> Int): Int {
 }
 
 @OptIn(ExperimentalContracts::class)
-public inline fun Buffer.readDirectInt8Array(block: (Int8Array) -> Int): Int {
+public inline fun DROP_Buffer.readDirectInt8Array(block: (Int8Array) -> Int): Int {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }

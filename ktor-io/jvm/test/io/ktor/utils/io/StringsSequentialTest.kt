@@ -4,6 +4,6 @@ import io.ktor.utils.io.core.internal.*
 
 class StringsSequentialTest : StringsTest() {
     override fun ByteChannel(autoFlush: Boolean): ByteChannel {
-        return ByteChannelSequentialJVM(ChunkBuffer.Empty, autoFlush)
+        return ByteChannelSequentialJVM(DROP_ChunkBuffer.Empty, autoFlush)
     }
 }

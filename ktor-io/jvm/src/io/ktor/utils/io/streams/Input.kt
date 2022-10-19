@@ -1,6 +1,6 @@
 package io.ktor.utils.io.streams
 
-import io.ktor.utils.io.bits.Memory
+import io.ktor.utils.io.bits.DROP_Memory
 import io.ktor.utils.io.bits.storeByteArray
 import io.ktor.utils.io.core.*
 import io.ktor.utils.io.core.internal.*
@@ -9,10 +9,10 @@ import java.io.*
 
 internal class InputStreamAsInput(
     private val stream: InputStream,
-    pool: ObjectPool<ChunkBuffer>
-) : Input(pool = pool) {
+    pool: ObjectPool<DROP_ChunkBuffer>
+) : DROP_Input(pool = pool) {
 
-    override fun fill(destination: Memory, offset: Int, length: Int): Int {
+    override fun fill(destination: DROP_Memory, offset: Int, length: Int): Int {
         if (destination.buffer.hasArray() && !destination.buffer.isReadOnly) {
             return stream
                 .read(destination.buffer.array(), destination.buffer.arrayOffset() + offset, length)
@@ -35,4 +35,4 @@ internal class InputStreamAsInput(
     }
 }
 
-public fun InputStream.asInput(pool: ObjectPool<ChunkBuffer> = ChunkBuffer.Pool): Input = InputStreamAsInput(this, pool)
+public fun InputStream.asInput(pool: ObjectPool<DROP_ChunkBuffer> = DROP_ChunkBuffer.Pool): DROP_Input = InputStreamAsInput(this, pool)

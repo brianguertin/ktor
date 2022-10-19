@@ -9,7 +9,7 @@ import kotlin.require
 /**
  * Represents a linear range of bytes.
  */
-public actual class Memory constructor(public val view: DataView) {
+public actual class DROP_Memory constructor(public val view: DataView) {
     /**
      * Size of memory range in bytes.
      */
@@ -53,14 +53,14 @@ public actual class Memory constructor(public val view: DataView) {
      * Returns memory's subrange. On some platforms it could do range checks but it is not guaranteed to be safe.
      * It also could lead to memory allocations on some platforms.
      */
-    public actual fun slice(offset: Int, length: Int): Memory {
+    public actual fun slice(offset: Int, length: Int): DROP_Memory {
         require(offset >= 0) { "offset shouldn't be negative: $offset" }
         require(length >= 0) { "length shouldn't be negative: $length" }
         if (offset + length > size) {
             throw IndexOutOfBoundsException("offset + length > size: $offset + $length > $size")
         }
 
-        return Memory(
+        return DROP_Memory(
             DataView(
                 view.buffer,
                 view.byteOffset + offset,
@@ -73,7 +73,7 @@ public actual class Memory constructor(public val view: DataView) {
      * Returns memory's subrange. On some platforms it could do range checks but it is not guaranteed to be safe.
      * It also could lead to memory allocations on some platforms.
      */
-    public actual fun slice(offset: Long, length: Long): Memory {
+    public actual fun slice(offset: Long, length: Long): DROP_Memory {
         return slice(offset.toIntOrFail("offset"), length.toIntOrFail("length"))
     }
 
@@ -83,7 +83,7 @@ public actual class Memory constructor(public val view: DataView) {
      * Copying bytes from a memory to itself is allowed.
      */
     public actual fun copyTo(
-        destination: Memory,
+        destination: DROP_Memory,
         offset: Int,
         length: Int,
         destinationOffset: Int
@@ -100,7 +100,7 @@ public actual class Memory constructor(public val view: DataView) {
      * Copying bytes from a memory to itself is allowed.
      */
     public actual fun copyTo(
-        destination: Memory,
+        destination: DROP_Memory,
         offset: Long,
         length: Long,
         destinationOffset: Long
@@ -117,7 +117,7 @@ public actual class Memory constructor(public val view: DataView) {
         /**
          * Represents an empty memory region
          */
-        public actual val Empty: Memory = Memory(DataView(ArrayBuffer(0)))
+        public actual val Empty: DROP_Memory = DROP_Memory(DataView(ArrayBuffer(0)))
     }
 }
 
@@ -125,7 +125,7 @@ public actual class Memory constructor(public val view: DataView) {
  * Copies bytes from this memory range from the specified [offset] and [length]
  * to the [destination] at [destinationOffset].
  */
-public actual fun Memory.copyTo(
+public actual fun DROP_Memory.copyTo(
     destination: ByteArray,
     offset: Int,
     length: Int,
@@ -143,7 +143,7 @@ public actual fun Memory.copyTo(
  * Copies bytes from this memory range from the specified [offset] and [length]
  * to the [destination] at [destinationOffset].
  */
-public actual fun Memory.copyTo(
+public actual fun DROP_Memory.copyTo(
     destination: ByteArray,
     offset: Long,
     length: Int,
@@ -155,7 +155,7 @@ public actual fun Memory.copyTo(
 /**
  * Fill memory range starting at the specified [offset] with [value] repeated [count] times.
  */
-public actual fun Memory.fill(offset: Int, count: Int, value: Byte) {
+public actual fun DROP_Memory.fill(offset: Int, count: Int, value: Byte) {
     for (index in offset until offset + count) {
         this[index] = value
     }
@@ -164,7 +164,7 @@ public actual fun Memory.fill(offset: Int, count: Int, value: Byte) {
 /**
  * Fill memory range starting at the specified [offset] with [value] repeated [count] times.
  */
-public actual fun Memory.fill(offset: Long, count: Long, value: Byte) {
+public actual fun DROP_Memory.fill(offset: Long, count: Long, value: Byte) {
     fill(offset.toIntOrFail("offset"), count.toIntOrFail("count"), value)
 }
 
@@ -172,7 +172,7 @@ public actual fun Memory.fill(offset: Long, count: Long, value: Byte) {
  * Copies bytes from this memory range from the specified [offset] and [length]
  * to the [destination] at [destinationOffset].
  */
-public fun Memory.copyTo(destination: ArrayBuffer, offset: Int, length: Int, destinationOffset: Int) {
+public fun DROP_Memory.copyTo(destination: ArrayBuffer, offset: Int, length: Int, destinationOffset: Int) {
     @Suppress("UnsafeCastFromDynamic")
     val to = Int8Array(destination, destinationOffset, length)
     val from = Int8Array(view.buffer, view.byteOffset + offset, length)
@@ -184,7 +184,7 @@ public fun Memory.copyTo(destination: ArrayBuffer, offset: Int, length: Int, des
  * Copies bytes from this memory range from the specified [offset] and [length]
  * to the [destination] at [destinationOffset].
  */
-public fun Memory.copyTo(destination: ArrayBufferView, offset: Int, length: Int, destinationOffset: Int) {
+public fun DROP_Memory.copyTo(destination: ArrayBufferView, offset: Int, length: Int, destinationOffset: Int) {
     @Suppress("UnsafeCastFromDynamic")
     val to = Int8Array(destination.buffer, destinationOffset + destination.byteOffset, length)
     val from = Int8Array(view.buffer, view.byteOffset + offset, length)
@@ -196,7 +196,7 @@ public fun Memory.copyTo(destination: ArrayBufferView, offset: Int, length: Int,
  * Copies bytes from this memory range from the specified [offset] and [length]
  * to the [destination] at [destinationOffset].
  */
-public fun ArrayBuffer.copyTo(destination: Memory, offset: Int, length: Int, destinationOffset: Int) {
+public fun ArrayBuffer.copyTo(destination: DROP_Memory, offset: Int, length: Int, destinationOffset: Int) {
     val from = Int8Array(this, offset, length)
     val to = Int8Array(destination.view.buffer, destination.view.byteOffset + destinationOffset, length)
 
@@ -207,8 +207,8 @@ public fun ArrayBuffer.copyTo(destination: Memory, offset: Int, length: Int, des
  * Copies bytes from this memory range from the specified [offset] and [length]
  * to the [destination] at [destinationOffset].
  */
-public fun ArrayBufferView.copyTo(destination: Memory, offset: Int, length: Int, destinationOffset: Int) {
+public fun ArrayBufferView.copyTo(destination: DROP_Memory, offset: Int, length: Int, destinationOffset: Int) {
     buffer.copyTo(destination, offset + byteOffset, length, destinationOffset)
 }
 
-internal val Memory.Int8ArrayView: Int8Array get() = Int8Array(view.buffer, view.byteOffset, view.byteLength)
+internal val DROP_Memory.Int8ArrayView: Int8Array get() = Int8Array(view.buffer, view.byteOffset, view.byteLength)

@@ -72,8 +72,8 @@ public fun HttpClient.defaultTransformers() {
                 proceedWith(HttpResponseContainer(info, body.readRemaining().readText().toInt()))
             }
 
-            ByteReadPacket::class,
-            Input::class -> {
+            DROP_ByteReadPacket::class,
+            DROP_Input::class -> {
                 proceedWith(HttpResponseContainer(info, body.readRemaining()))
             }
 

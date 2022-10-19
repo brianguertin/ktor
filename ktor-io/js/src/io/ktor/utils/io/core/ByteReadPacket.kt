@@ -12,21 +12,21 @@ public actual fun ByteReadPacket(
     offset: Int,
     length: Int,
     block: (ByteArray) -> Unit
-): ByteReadPacket {
+): DROP_ByteReadPacket {
     val content = array.asDynamic() as Int8Array
     val sub = when {
         offset == 0 && length == array.size -> content.buffer
         else -> content.buffer.slice(offset, offset + length)
     }
 
-    val pool = object : SingleInstancePool<ChunkBuffer>() {
-        override fun produceInstance(): ChunkBuffer =
-            ChunkBuffer(Memory.of(sub), null, this)
+    val pool = object : SingleInstancePool<DROP_ChunkBuffer>() {
+        override fun produceInstance(): DROP_ChunkBuffer =
+            DROP_ChunkBuffer(DROP_Memory.of(sub), null, this)
 
-        override fun disposeInstance(instance: ChunkBuffer) {
+        override fun disposeInstance(instance: DROP_ChunkBuffer) {
             block(array)
         }
     }
 
-    return ByteReadPacket(pool.borrow().apply { resetForRead() }, pool)
+    return DROP_ByteReadPacket(pool.borrow().apply { resetForRead() }, pool)
 }

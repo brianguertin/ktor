@@ -148,7 +148,7 @@ public class HttpPlainText internal constructor(
         return TextContent(content, contentType.withCharset(charset))
     }
 
-    internal fun read(call: HttpClientCall, body: Input): String {
+    internal fun read(call: HttpClientCall, body: DROP_Input): String {
         val actualCharset = call.response.charset() ?: responseCharsetFallback
         LOGGER.trace("Reading response body for ${call.request.url} as String with charset $actualCharset")
         return body.readText(charset = actualCharset)

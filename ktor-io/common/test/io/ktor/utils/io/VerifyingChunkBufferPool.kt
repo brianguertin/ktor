@@ -12,18 +12,18 @@ import kotlin.test.*
 
 class VerifyingChunkBufferPool(
     private val bufferSize: Int = DEFAULT_BUFFER_SIZE,
-) : ObjectPool<ChunkBuffer> {
+) : ObjectPool<DROP_ChunkBuffer> {
     override val capacity: Int = Int.MAX_VALUE
     private val allocator: Allocator = DefaultAllocator
     private val allocated = mutableSetOf<IdentityWrapper>()
 
-    override fun borrow(): ChunkBuffer {
-        val instance = ChunkBuffer(allocator.alloc(bufferSize), null, this)
+    override fun borrow(): DROP_ChunkBuffer {
+        val instance = DROP_ChunkBuffer(allocator.alloc(bufferSize), null, this)
         check(allocated.add(IdentityWrapper(instance)))
         return instance
     }
 
-    override fun recycle(instance: ChunkBuffer) {
+    override fun recycle(instance: DROP_ChunkBuffer) {
         check(allocated.remove(IdentityWrapper(instance)))
         allocator.free(instance.memory)
     }
@@ -35,7 +35,7 @@ class VerifyingChunkBufferPool(
         assertEquals(0, allocated.size, "There are remaining unreleased buffers, ")
     }
 
-    private class IdentityWrapper(private val instance: ChunkBuffer) {
+    private class IdentityWrapper(private val instance: DROP_ChunkBuffer) {
         override fun equals(other: Any?): Boolean {
             if (other !is IdentityWrapper) return false
             return other.instance === this.instance

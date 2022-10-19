@@ -279,7 +279,7 @@ private fun hexDigitToChar(digit: Int): Char = when (digit) {
     else -> 'A' + digit - 10
 }
 
-private fun ByteReadPacket.forEach(block: (Byte) -> Unit) {
+private fun DROP_ByteReadPacket.forEach(block: (Byte) -> Unit) {
     takeWhile { buffer ->
         while (buffer.canRead()) {
             block(buffer.readByte())

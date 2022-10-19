@@ -5,7 +5,7 @@ import io.ktor.utils.io.core.*
 import io.ktor.utils.io.core.internal.*
 
 /**
- * Await for [desiredSpace] will be available for write and invoke [block] function providing [Memory] instance and
+ * Await for [desiredSpace] will be available for write and invoke [block] function providing [DROP_Memory] instance and
  * the corresponding range suitable for wiring in the memory. The block function should return number of bytes were
  * written, possibly 0.
  *
@@ -16,9 +16,9 @@ import io.ktor.utils.io.core.internal.*
  */
 public suspend inline fun ByteWriteChannel.write(
     desiredSpace: Int = 1,
-    block: (freeSpace: Memory, startOffset: Long, endExclusive: Long) -> Int
+    block: (freeSpace: DROP_Memory, startOffset: Long, endExclusive: Long) -> Int
 ): Int {
-    val buffer = requestWriteBuffer(desiredSpace) ?: Buffer.Empty
+    val buffer = requestWriteBuffer(desiredSpace) ?: DROP_Buffer.Empty
     var bytesWritten = 0
     try {
         bytesWritten = block(buffer.memory, buffer.writePosition.toLong(), buffer.limit.toLong())
@@ -32,7 +32,7 @@ public suspend inline fun ByteWriteChannel.write(
 @Suppress("DEPRECATION")
 @Deprecated("Use writeMemory instead.")
 public interface WriterSession {
-    public fun request(min: Int): ChunkBuffer?
+    public fun request(min: Int): DROP_ChunkBuffer?
     public fun written(n: Int)
     public fun flush()
 }
@@ -50,7 +50,7 @@ internal interface HasWriteSession {
 }
 
 @PublishedApi
-internal suspend fun ByteWriteChannel.requestWriteBuffer(desiredSpace: Int): Buffer? {
+internal suspend fun ByteWriteChannel.requestWriteBuffer(desiredSpace: Int): DROP_Buffer? {
     val session = writeSessionFor()
     if (session != null) {
         val buffer = session.request(desiredSpace)
@@ -65,7 +65,7 @@ internal suspend fun ByteWriteChannel.requestWriteBuffer(desiredSpace: Int): Buf
 }
 
 @PublishedApi
-internal suspend fun ByteWriteChannel.completeWriting(buffer: Buffer, written: Int) {
+internal suspend fun ByteWriteChannel.completeWriting(buffer: DROP_Buffer, written: Int) {
     if (this is HasWriteSession) {
         endWriteSession(written)
         return
@@ -75,10 +75,10 @@ internal suspend fun ByteWriteChannel.completeWriting(buffer: Buffer, written: I
 }
 
 @Suppress("DEPRECATION")
-private suspend fun ByteWriteChannel.completeWritingFallback(buffer: Buffer) {
-    if (buffer is ChunkBuffer) {
+private suspend fun ByteWriteChannel.completeWritingFallback(buffer: DROP_Buffer) {
+    if (buffer is DROP_ChunkBuffer) {
         writeFully(buffer)
-        buffer.release(ChunkBuffer.Pool)
+        buffer.release(DROP_ChunkBuffer.Pool)
         return
     }
 
@@ -86,14 +86,14 @@ private suspend fun ByteWriteChannel.completeWritingFallback(buffer: Buffer) {
 }
 
 @Suppress("DEPRECATION")
-private suspend fun writeBufferSuspend(session: WriterSuspendSession, desiredSpace: Int): Buffer? {
+private suspend fun writeBufferSuspend(session: WriterSuspendSession, desiredSpace: Int): DROP_Buffer? {
     session.tryAwait(desiredSpace)
     return session.request(desiredSpace) ?: session.request(1)
 }
 
-private fun writeBufferFallback(): Buffer = ChunkBuffer.Pool.borrow().also {
+private fun writeBufferFallback(): DROP_Buffer = DROP_ChunkBuffer.Pool.borrow().also {
     it.resetForWrite()
-    it.reserveEndGap(Buffer.ReservedSize)
+    it.reserveEndGap(DROP_Buffer.ReservedSize)
 }
 
 @Suppress("DEPRECATION", "NOTHING_TO_INLINE")

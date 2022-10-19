@@ -10,7 +10,7 @@ import kotlin.contracts.*
  * otherwise an unexpected behaviour may occur.
  */
 @OptIn(ExperimentalContracts::class)
-public inline fun <R> BytePacketBuilder.preview(block: (tmp: ByteReadPacket) -> R): R {
+public inline fun <R> DROP_BytePacketBuilder.preview(block: (tmp: DROP_ByteReadPacket) -> R): R {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
@@ -24,10 +24,10 @@ public inline fun <R> BytePacketBuilder.preview(block: (tmp: ByteReadPacket) -> 
 }
 
 @PublishedApi
-internal fun BytePacketBuilder.preview(): ByteReadPacket {
+internal fun DROP_BytePacketBuilder.preview(): DROP_ByteReadPacket {
     val head = head
     return when {
-        head === ChunkBuffer.Empty -> ByteReadPacket.Empty
-        else -> ByteReadPacket(head.copyAll(), _pool)
+        head === DROP_ChunkBuffer.Empty -> DROP_ByteReadPacket.Empty
+        else -> DROP_ByteReadPacket(head.copyAll(), _pool)
     }
 }

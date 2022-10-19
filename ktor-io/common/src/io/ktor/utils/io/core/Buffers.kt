@@ -8,7 +8,7 @@ import kotlin.contracts.*
 /**
  * Read the specified number of bytes specified (optional, read all remaining by default)
  */
-public fun Buffer.readBytes(count: Int = readRemaining): ByteArray {
+public fun DROP_Buffer.readBytes(count: Int = readRemaining): ByteArray {
     if (count == 0) {
         return EmptyByteArray
     }
@@ -18,7 +18,7 @@ public fun Buffer.readBytes(count: Int = readRemaining): ByteArray {
     return result
 }
 
-internal fun ChunkBuffer?.releaseAll(pool: ObjectPool<ChunkBuffer>) {
+internal fun DROP_ChunkBuffer?.releaseAll(pool: ObjectPool<DROP_ChunkBuffer>) {
     var current = this
     while (current != null) {
         val next = current.cleanNext()
@@ -28,7 +28,7 @@ internal fun ChunkBuffer?.releaseAll(pool: ObjectPool<ChunkBuffer>) {
 }
 
 @OptIn(ExperimentalContracts::class)
-internal inline fun ChunkBuffer.forEachChunk(block: (ChunkBuffer) -> Unit) {
+internal inline fun DROP_ChunkBuffer.forEachChunk(block: (DROP_ChunkBuffer) -> Unit) {
     contract {
         callsInPlace(block, InvocationKind.AT_LEAST_ONCE)
     }
@@ -42,14 +42,14 @@ internal inline fun ChunkBuffer.forEachChunk(block: (ChunkBuffer) -> Unit) {
 /**
  * Copy every element of the chain starting from this and setup next links.
  */
-internal fun ChunkBuffer.copyAll(): ChunkBuffer {
+internal fun DROP_ChunkBuffer.copyAll(): DROP_ChunkBuffer {
     val copied = duplicate()
     val next = this.next ?: return copied
 
     return next.copyAll(copied, copied)
 }
 
-private tailrec fun ChunkBuffer.copyAll(head: ChunkBuffer, prev: ChunkBuffer): ChunkBuffer {
+private tailrec fun DROP_ChunkBuffer.copyAll(head: DROP_ChunkBuffer, prev: DROP_ChunkBuffer): DROP_ChunkBuffer {
     val copied = duplicate()
     prev.next = copied
 
@@ -58,7 +58,7 @@ private tailrec fun ChunkBuffer.copyAll(head: ChunkBuffer, prev: ChunkBuffer): C
     return next.copyAll(head, copied)
 }
 
-internal tailrec fun ChunkBuffer.findTail(): ChunkBuffer {
+internal tailrec fun DROP_ChunkBuffer.findTail(): DROP_ChunkBuffer {
     val next = this.next ?: return this
     return next.findTail()
 }
@@ -66,16 +66,16 @@ internal tailrec fun ChunkBuffer.findTail(): ChunkBuffer {
 /**
  * Summarize remainings of all elements of the chain
  */
-internal fun ChunkBuffer.remainingAll(): Long = remainingAll(0L)
+internal fun DROP_ChunkBuffer.remainingAll(): Long = remainingAll(0L)
 
-private tailrec fun ChunkBuffer.remainingAll(n: Long): Long {
+private tailrec fun DROP_ChunkBuffer.remainingAll(n: Long): Long {
     val rem = readRemaining.toLong() + n
     val next = this.next ?: return rem
 
     return next.remainingAll(rem)
 }
 
-internal tailrec fun ChunkBuffer.isEmpty(): Boolean {
+internal tailrec fun DROP_ChunkBuffer.isEmpty(): Boolean {
     if (readRemaining > 0) return false
     val next = this.next ?: return true
     return next.isEmpty()
@@ -90,7 +90,7 @@ internal inline fun Long.coerceAtMostMaxIntOrFail(message: String): Int {
     return this.toInt()
 }
 
-internal fun Buffer.peekTo(destination: Memory, destinationOffset: Long, offset: Long, max: Long): Long {
+internal fun DROP_Buffer.peekTo(destination: DROP_Memory, destinationOffset: Long, offset: Long, max: Long): Long {
     val size = minOf(
         destination.size - destinationOffset,
         max,

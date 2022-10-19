@@ -123,4 +123,4 @@ internal suspend fun ByteReadChannel.readText(
     }
 }
 
-internal expect fun ByteReadPacket.readTextWithCustomCharset(charset: Charset): String
+internal expect fun DROP_ByteReadPacket.readTextWithCustomCharset(charset: Charset): String

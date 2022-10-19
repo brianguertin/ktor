@@ -6,7 +6,6 @@ package io.ktor.server.engine
 
 import io.ktor.http.content.*
 import io.ktor.server.application.*
-import io.ktor.server.request.*
 import io.ktor.util.pipeline.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.charsets.*
@@ -19,5 +18,5 @@ internal actual suspend fun PipelineContext<Any, ApplicationCall>.defaultPlatfor
 internal actual fun PipelineContext<*, ApplicationCall>.multiPartData(rc: ByteReadChannel): MultiPartData =
     error("Multipart is not supported in native")
 
-internal actual fun ByteReadPacket.readTextWithCustomCharset(charset: Charset): String =
+internal actual fun DROP_ByteReadPacket.readTextWithCustomCharset(charset: Charset): String =
     error("Charset $charset is not supported in native")

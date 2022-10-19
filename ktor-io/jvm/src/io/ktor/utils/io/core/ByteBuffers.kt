@@ -8,13 +8,13 @@ import kotlin.contracts.*
  * Read at most `dst.remaining()` bytes to the specified [dst] byte buffer and change its position accordingly
  * @return number of bytes copied
  */
-public fun ByteReadPacket.readAvailable(dst: ByteBuffer): Int = readAsMuchAsPossible(dst, 0)
+public fun DROP_ByteReadPacket.readAvailable(dst: ByteBuffer): Int = readAsMuchAsPossible(dst, 0)
 
 /**
  * Read exactly `dst.remaining()` bytes to the specified [dst] byte buffer and change its position accordingly
  * @return number of bytes copied
  */
-public fun ByteReadPacket.readFully(dst: ByteBuffer): Int {
+public fun DROP_ByteReadPacket.readFully(dst: ByteBuffer): Int {
     val rc = readAsMuchAsPossible(dst, 0)
     if (dst.hasRemaining()) {
         throw EOFException("Not enough data in packet to fill buffer: ${dst.remaining()} more bytes required")
@@ -22,9 +22,9 @@ public fun ByteReadPacket.readFully(dst: ByteBuffer): Int {
     return rc
 }
 
-private tailrec fun ByteReadPacket.readAsMuchAsPossible(bb: ByteBuffer, copied: Int): Int {
+private tailrec fun DROP_ByteReadPacket.readAsMuchAsPossible(bb: ByteBuffer, copied: Int): Int {
     if (!bb.hasRemaining()) return copied
-    val current: ChunkBuffer = prepareRead(1) ?: return copied
+    val current: DROP_ChunkBuffer = prepareRead(1) ?: return copied
 
     val destinationCapacity = bb.remaining()
     val available = current.readRemaining
@@ -54,7 +54,7 @@ private tailrec fun ByteReadPacket.readAsMuchAsPossible(bb: ByteBuffer, copied: 
  * is at least 8 bytes long (long integer bytes length)
  */
 @OptIn(ExperimentalContracts::class)
-public inline fun BytePacketBuilder.writeDirect(size: Int, block: (ByteBuffer) -> Unit) {
+public inline fun DROP_BytePacketBuilder.writeDirect(size: Int, block: (ByteBuffer) -> Unit) {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
@@ -75,7 +75,7 @@ public inline fun BytePacketBuilder.writeDirect(size: Int, block: (ByteBuffer) -
  * is at least 8 bytes long (long integer bytes length)
  */
 @OptIn(ExperimentalContracts::class)
-public inline fun BytePacketBuilder.writeByteBufferDirect(size: Int, block: (ByteBuffer) -> Unit): Int {
+public inline fun DROP_BytePacketBuilder.writeByteBufferDirect(size: Int, block: (ByteBuffer) -> Unit): Int {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
@@ -86,7 +86,7 @@ public inline fun BytePacketBuilder.writeByteBufferDirect(size: Int, block: (Byt
 }
 
 @OptIn(ExperimentalContracts::class)
-public inline fun ByteReadPacket.readDirect(size: Int, block: (ByteBuffer) -> Unit) {
+public inline fun DROP_ByteReadPacket.readDirect(size: Int, block: (ByteBuffer) -> Unit) {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
@@ -98,7 +98,7 @@ public inline fun ByteReadPacket.readDirect(size: Int, block: (ByteBuffer) -> Un
 
 @OptIn(ExperimentalContracts::class)
 @Deprecated("Use read {} instead.")
-public inline fun Input.readDirect(size: Int, block: (ByteBuffer) -> Unit) {
+public inline fun DROP_Input.readDirect(size: Int, block: (ByteBuffer) -> Unit) {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
@@ -110,4 +110,4 @@ public inline fun Input.readDirect(size: Int, block: (ByteBuffer) -> Unit) {
     }
 }
 
-internal fun Buffer.hasArray(): Boolean = memory.buffer.let { it.hasArray() && !it.isReadOnly }
+internal fun DROP_Buffer.hasArray(): Boolean = memory.buffer.let { it.hasArray() && !it.isReadOnly }

@@ -12,7 +12,7 @@ class ByteChannelSequentialTest {
 
     @Test
     fun testReadAvailable() = runBlocking {
-        val channel = ByteChannelSequentialJVM(ChunkBuffer.Empty, true)
+        val channel = ByteChannelSequentialJVM(DROP_ChunkBuffer.Empty, true)
         channel.writeFully(byteArrayOf(1, 2))
 
         val read1 = channel.readAvailable(4) { it.position(it.position() + 4) }
@@ -25,7 +25,7 @@ class ByteChannelSequentialTest {
 
     @Test
     fun testAwaitContent() = runBlocking {
-        val channel = ByteChannelSequentialJVM(ChunkBuffer.Empty, true)
+        val channel = ByteChannelSequentialJVM(DROP_ChunkBuffer.Empty, true)
 
         var awaitingContent = false
         launch {

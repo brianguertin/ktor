@@ -11,29 +11,29 @@ public actual inline fun ByteReadPacket(
     offset: Int,
     length: Int,
     crossinline block: (ByteArray) -> Unit
-): ByteReadPacket {
+): DROP_ByteReadPacket {
     return ByteReadPacket(ByteBuffer.wrap(array, offset, length)) { block(array) }
 }
 
-public fun ByteReadPacket(bb: ByteBuffer, release: (ByteBuffer) -> Unit = {}): ByteReadPacket {
+public fun ByteReadPacket(bb: ByteBuffer, release: (ByteBuffer) -> Unit = {}): DROP_ByteReadPacket {
     val pool = poolFor(bb, release)
     val view = pool.borrow().apply { resetForRead() }
-    return ByteReadPacket(view, pool)
+    return DROP_ByteReadPacket(view, pool)
 }
 
-private fun poolFor(bb: ByteBuffer, release: (ByteBuffer) -> Unit): ObjectPool<ChunkBuffer> {
+private fun poolFor(bb: ByteBuffer, release: (ByteBuffer) -> Unit): ObjectPool<DROP_ChunkBuffer> {
     return SingleByteBufferPool(bb, release)
 }
 
 private class SingleByteBufferPool(
     val instance: ByteBuffer,
     val release: (ByteBuffer) -> Unit
-) : SingleInstancePool<ChunkBuffer>() {
-    override fun produceInstance(): ChunkBuffer {
+) : SingleInstancePool<DROP_ChunkBuffer>() {
+    override fun produceInstance(): DROP_ChunkBuffer {
         return ChunkBuffer(instance, this)
     }
 
-    override fun disposeInstance(instance: ChunkBuffer) {
+    override fun disposeInstance(instance: DROP_ChunkBuffer) {
         release(this.instance)
     }
 }

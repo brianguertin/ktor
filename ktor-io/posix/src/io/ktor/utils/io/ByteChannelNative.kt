@@ -17,7 +17,7 @@ import kotlinx.coroutines.channels.*
  * Creates buffered channel for asynchronous reading and writing of sequences of bytes.
  */
 public actual fun ByteChannel(autoFlush: Boolean): ByteChannel {
-    return ByteChannelNative(ChunkBuffer.Empty, autoFlush)
+    return ByteChannelNative(DROP_ChunkBuffer.Empty, autoFlush)
 }
 
 /**
@@ -25,7 +25,7 @@ public actual fun ByteChannel(autoFlush: Boolean): ByteChannel {
  */
 public actual fun ByteReadChannel(content: ByteArray, offset: Int, length: Int): ByteReadChannel {
     if (content.isEmpty()) return ByteReadChannel.Empty
-    val head = ChunkBuffer.Pool.borrow()
+    val head = DROP_ChunkBuffer.Pool.borrow()
     var tail = head
 
     var start = offset
@@ -33,13 +33,13 @@ public actual fun ByteReadChannel(content: ByteArray, offset: Int, length: Int):
     while (true) {
         tail.reserveEndGap(8)
         val size = minOf(end - start, tail.writeRemaining)
-        (tail as Buffer).writeFully(content, start, size)
+        (tail as DROP_Buffer).writeFully(content, start, size)
         start += size
 
         if (start == end) break
 
         val current = tail
-        tail = ChunkBuffer.Pool.borrow()
+        tail = DROP_ChunkBuffer.Pool.borrow()
         current.next = tail
     }
 
@@ -60,9 +60,9 @@ public actual suspend fun ByteReadChannel.copyTo(dst: ByteWriteChannel, limit: L
 }
 
 internal class ByteChannelNative(
-    initial: ChunkBuffer,
+    initial: DROP_ChunkBuffer,
     autoFlush: Boolean,
-    pool: ObjectPool<ChunkBuffer> = ChunkBuffer.Pool
+    pool: ObjectPool<DROP_ChunkBuffer> = DROP_ChunkBuffer.Pool
 ) : ByteChannelSequentialBase(initial, autoFlush, pool) {
     private var attachedJob: Job? by atomic(null)
 
@@ -79,7 +79,7 @@ internal class ByteChannelNative(
     /**
      * Invokes [block] if it is possible to read at least [min] byte
      * providing buffer to it so lambda can read from the buffer
-     * up to [Buffer.readRemaining] bytes. If there are no [min] bytes available then the invocation returns -1.
+     * up to [DROP_Buffer.readRemaining] bytes. If there are no [min] bytes available then the invocation returns -1.
      *
      * Warning: it is not guaranteed that all of available bytes will be represented as a single byte buffer
      * eg: it could be 4 bytes available for read but the provided byte buffer could have only 2 available bytes:
@@ -90,7 +90,7 @@ internal class ByteChannelNative(
      *
      * @return number of consumed bytes or -1 if the block wasn't executed.
      */
-    public fun readAvailable(min: Int, block: (Buffer) -> Unit): Int {
+    public fun readAvailable(min: Int, block: (DROP_Buffer) -> Unit): Int {
         if (availableForRead < min) {
             return -1
         }
@@ -160,7 +160,7 @@ internal class ByteChannelNative(
         }
     }
 
-    override fun writeAvailable(min: Int, block: (Buffer) -> Unit): Int {
+    override fun writeAvailable(min: Int, block: (DROP_Buffer) -> Unit): Int {
         if (closed) {
             throw closedCause ?: ClosedSendChannelException("Channel closed for write")
         }

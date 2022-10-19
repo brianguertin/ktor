@@ -1,6 +1,6 @@
 package io.ktor.utils.io.nio
 
-import io.ktor.utils.io.bits.Memory
+import io.ktor.utils.io.bits.DROP_Memory
 import io.ktor.utils.io.bits.sliceSafe
 import io.ktor.utils.io.core.*
 import io.ktor.utils.io.core.internal.*
@@ -10,13 +10,13 @@ import kotlin.require
 
 private class ChannelAsInput(
     private val channel: ReadableByteChannel,
-    pool: ObjectPool<ChunkBuffer>
-) : Input(pool = pool) {
+    pool: ObjectPool<DROP_ChunkBuffer>
+) : DROP_Input(pool = pool) {
     init {
         require(channel !is SelectableChannel || !channel.isBlocking) { "Non-blocking channels are not supported" }
     }
 
-    override fun fill(destination: Memory, offset: Int, length: Int): Int {
+    override fun fill(destination: DROP_Memory, offset: Int, length: Int): Int {
         return channel.read(destination.buffer.sliceSafe(offset, length)).coerceAtLeast(0)
     }
 
@@ -26,5 +26,5 @@ private class ChannelAsInput(
 }
 
 public fun ReadableByteChannel.asInput(
-    pool: ObjectPool<ChunkBuffer> = ChunkBuffer.Pool
-): Input = ChannelAsInput(this, pool)
+    pool: ObjectPool<DROP_ChunkBuffer> = DROP_ChunkBuffer.Pool
+): DROP_Input = ChannelAsInput(this, pool)

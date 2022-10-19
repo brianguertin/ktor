@@ -50,7 +50,7 @@ public class MultiPartFormDataContent(
     private val PART_OVERHEAD_SIZE = RN_BYTES.size * 2 + BOUNDARY_BYTES.size
 
     private val rawParts: List<PreparedPart> = parts.map { part ->
-        val headersBuilder = BytePacketBuilder()
+        val headersBuilder = DROP_BytePacketBuilder()
         for ((key, values) in part.headers.entries()) {
             headersBuilder.writeText("$key: ${values.joinToString("; ")}")
             headersBuilder.writeFully(RN_BYTES)
@@ -146,7 +146,7 @@ private fun generateBoundary(): String = buildString {
 }.take(70)
 
 private sealed class PreparedPart(val headers: ByteArray, val size: Long?) {
-    class InputPart(headers: ByteArray, val provider: () -> Input, size: Long?) : PreparedPart(headers, size)
+    class InputPart(headers: ByteArray, val provider: () -> DROP_Input, size: Long?) : PreparedPart(headers, size)
     class ChannelPart(
         headers: ByteArray,
         val provider: () -> ByteReadChannel,
@@ -154,8 +154,8 @@ private sealed class PreparedPart(val headers: ByteArray, val size: Long?) {
     ) : PreparedPart(headers, size)
 }
 
-private suspend fun Input.copyTo(channel: ByteWriteChannel) {
-    if (this is ByteReadPacket) {
+private suspend fun DROP_Input.copyTo(channel: ByteWriteChannel) {
+    if (this is DROP_ByteReadPacket) {
         channel.writePacket(this)
         return
     }

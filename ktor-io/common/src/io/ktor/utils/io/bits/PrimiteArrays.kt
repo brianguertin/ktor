@@ -6,7 +6,7 @@ package io.ktor.utils.io.bits
  * Copies bytes from this memory range from the specified [offset] and [count]
  * to the [destination] at [destinationOffset].
  */
-public inline fun Memory.loadByteArray(
+public inline fun DROP_Memory.loadByteArray(
     offset: Int,
     destination: ByteArray,
     destinationOffset: Int = 0,
@@ -20,7 +20,7 @@ public inline fun Memory.loadByteArray(
  * to the [destination] at [destinationOffset] interpreting numbers in the network order (Big Endian).
  * @param destinationOffset items
  */
-public inline fun Memory.loadByteArray(
+public inline fun DROP_Memory.loadByteArray(
     offset: Long,
     destination: ByteArray,
     destinationOffset: Int = 0,
@@ -35,7 +35,7 @@ public inline fun Memory.loadByteArray(
  * @param destinationOffset items
  */
 @OptIn(ExperimentalUnsignedTypes::class)
-public inline fun Memory.loadUByteArray(
+public inline fun DROP_Memory.loadUByteArray(
     offset: Int,
     destination: UByteArray,
     destinationOffset: Int = 0,
@@ -50,7 +50,7 @@ public inline fun Memory.loadUByteArray(
  * @param destinationOffset items
  */
 @OptIn(ExperimentalUnsignedTypes::class)
-public inline fun Memory.loadUByteArray(
+public inline fun DROP_Memory.loadUByteArray(
     offset: Long,
     destination: UByteArray,
     destinationOffset: Int = 0,
@@ -64,7 +64,7 @@ public inline fun Memory.loadUByteArray(
  * to the [destination] at [destinationOffset] interpreting numbers in the network order (Big Endian).
  * @param destinationOffset items
  */
-public expect fun Memory.loadShortArray(
+public expect fun DROP_Memory.loadShortArray(
     offset: Int,
     destination: ShortArray,
     destinationOffset: Int = 0,
@@ -76,7 +76,7 @@ public expect fun Memory.loadShortArray(
  * to the [destination] at [destinationOffset] interpreting numbers in the network order (Big Endian).
  * @param destinationOffset items
  */
-public expect fun Memory.loadShortArray(
+public expect fun DROP_Memory.loadShortArray(
     offset: Long,
     destination: ShortArray,
     destinationOffset: Int = 0,
@@ -89,7 +89,7 @@ public expect fun Memory.loadShortArray(
  * @param destinationOffset items
  */
 @OptIn(ExperimentalUnsignedTypes::class)
-public inline fun Memory.loadUShortArray(
+public inline fun DROP_Memory.loadUShortArray(
     offset: Int,
     destination: UShortArray,
     destinationOffset: Int = 0,
@@ -104,7 +104,7 @@ public inline fun Memory.loadUShortArray(
  * @param destinationOffset items
  */
 @OptIn(ExperimentalUnsignedTypes::class)
-public inline fun Memory.loadUShortArray(
+public inline fun DROP_Memory.loadUShortArray(
     offset: Long,
     destination: UShortArray,
     destinationOffset: Int = 0,
@@ -118,7 +118,7 @@ public inline fun Memory.loadUShortArray(
  * to the [destination] at [destinationOffset] interpreting numbers in the network order (Big Endian).
  * @param destinationOffset items
  */
-public expect fun Memory.loadIntArray(
+public expect fun DROP_Memory.loadIntArray(
     offset: Int,
     destination: IntArray,
     destinationOffset: Int = 0,
@@ -130,7 +130,7 @@ public expect fun Memory.loadIntArray(
  * to the [destination] at [destinationOffset] interpreting numbers in the network order (Big Endian).
  * @param destinationOffset items
  */
-public expect fun Memory.loadIntArray(
+public expect fun DROP_Memory.loadIntArray(
     offset: Long,
     destination: IntArray,
     destinationOffset: Int = 0,
@@ -143,7 +143,7 @@ public expect fun Memory.loadIntArray(
  * @param destinationOffset items
  */
 @OptIn(ExperimentalUnsignedTypes::class)
-public inline fun Memory.loadUIntArray(
+public inline fun DROP_Memory.loadUIntArray(
     offset: Int,
     destination: UIntArray,
     destinationOffset: Int = 0,
@@ -158,7 +158,7 @@ public inline fun Memory.loadUIntArray(
  * @param destinationOffset items
  */
 @OptIn(ExperimentalUnsignedTypes::class)
-public inline fun Memory.loadUIntArray(
+public inline fun DROP_Memory.loadUIntArray(
     offset: Long,
     destination: UIntArray,
     destinationOffset: Int = 0,
@@ -172,7 +172,7 @@ public inline fun Memory.loadUIntArray(
  * to the [destination] at [destinationOffset] interpreting numbers in the network order (Big Endian).
  * @param destinationOffset items
  */
-public expect fun Memory.loadLongArray(
+public expect fun DROP_Memory.loadLongArray(
     offset: Int,
     destination: LongArray,
     destinationOffset: Int = 0,
@@ -184,7 +184,7 @@ public expect fun Memory.loadLongArray(
  * to the [destination] at [destinationOffset] interpreting numbers in the network order (Big Endian).
  * @param destinationOffset items
  */
-public expect fun Memory.loadLongArray(
+public expect fun DROP_Memory.loadLongArray(
     offset: Long,
     destination: LongArray,
     destinationOffset: Int = 0,
@@ -197,7 +197,7 @@ public expect fun Memory.loadLongArray(
  * @param destinationOffset items
  */
 @OptIn(ExperimentalUnsignedTypes::class)
-public inline fun Memory.loadULongArray(
+public inline fun DROP_Memory.loadULongArray(
     offset: Int,
     destination: ULongArray,
     destinationOffset: Int = 0,
@@ -212,7 +212,7 @@ public inline fun Memory.loadULongArray(
  * @param destinationOffset items
  */
 @OptIn(ExperimentalUnsignedTypes::class)
-public inline fun Memory.loadULongArray(
+public inline fun DROP_Memory.loadULongArray(
     offset: Long,
     destination: ULongArray,
     destinationOffset: Int = 0,
@@ -226,7 +226,7 @@ public inline fun Memory.loadULongArray(
  * to the [destination] at [destinationOffset] interpreting numbers in the network order (Big Endian).
  * @param destinationOffset items
  */
-public expect fun Memory.loadFloatArray(
+public expect fun DROP_Memory.loadFloatArray(
     offset: Int,
     destination: FloatArray,
     destinationOffset: Int = 0,
@@ -238,7 +238,7 @@ public expect fun Memory.loadFloatArray(
  * to the [destination] at [destinationOffset] interpreting numbers in the network order (Big Endian).
  * @param destinationOffset items
  */
-public expect fun Memory.loadFloatArray(
+public expect fun DROP_Memory.loadFloatArray(
     offset: Long,
     destination: FloatArray,
     destinationOffset: Int = 0,
@@ -250,7 +250,7 @@ public expect fun Memory.loadFloatArray(
  * to the [destination] at [destinationOffset] interpreting numbers in the network order (Big Endian).
  * @param destinationOffset items
  */
-public expect fun Memory.loadDoubleArray(
+public expect fun DROP_Memory.loadDoubleArray(
     offset: Int,
     destination: DoubleArray,
     destinationOffset: Int = 0,
@@ -262,7 +262,7 @@ public expect fun Memory.loadDoubleArray(
  * to the [destination] at [destinationOffset] interpreting numbers in the network order (Big Endian).
  * @param destinationOffset items
  */
-public expect fun Memory.loadDoubleArray(
+public expect fun DROP_Memory.loadDoubleArray(
     offset: Long,
     destination: DoubleArray,
     destinationOffset: Int = 0,
@@ -273,7 +273,7 @@ public expect fun Memory.loadDoubleArray(
  * Copies unsigned shorts integers from the [source] array at [sourceOffset] to this memory at the specified [offset].
  * @param sourceOffset items
  */
-public inline fun Memory.storeByteArray(
+public inline fun DROP_Memory.storeByteArray(
     offset: Int,
     source: ByteArray,
     sourceOffset: Int = 0,
@@ -288,7 +288,7 @@ public inline fun Memory.storeByteArray(
  * Copies unsigned shorts integers from the [source] array at [sourceOffset] to this memory at the specified [offset].
  * @param sourceOffset items
  */
-public inline fun Memory.storeByteArray(
+public inline fun DROP_Memory.storeByteArray(
     offset: Long,
     source: ByteArray,
     sourceOffset: Int = 0,
@@ -304,7 +304,7 @@ public inline fun Memory.storeByteArray(
  * @param sourceOffset items
  */
 @OptIn(ExperimentalUnsignedTypes::class)
-public inline fun Memory.storeUByteArray(
+public inline fun DROP_Memory.storeUByteArray(
     offset: Int,
     source: UByteArray,
     sourceOffset: Int = 0,
@@ -318,7 +318,7 @@ public inline fun Memory.storeUByteArray(
  * @param sourceOffset items
  */
 @OptIn(ExperimentalUnsignedTypes::class)
-public inline fun Memory.storeUByteArray(
+public inline fun DROP_Memory.storeUByteArray(
     offset: Long,
     source: UByteArray,
     sourceOffset: Int = 0,
@@ -332,7 +332,7 @@ public inline fun Memory.storeUByteArray(
  * interpreting numbers in the network order (Big Endian).
  * @param sourceOffset items
  */
-public expect fun Memory.storeShortArray(
+public expect fun DROP_Memory.storeShortArray(
     offset: Int,
     source: ShortArray,
     sourceOffset: Int = 0,
@@ -344,7 +344,7 @@ public expect fun Memory.storeShortArray(
  * interpreting numbers in the network order (Big Endian).
  * @param sourceOffset items
  */
-public expect fun Memory.storeShortArray(
+public expect fun DROP_Memory.storeShortArray(
     offset: Long,
     source: ShortArray,
     sourceOffset: Int = 0,
@@ -357,7 +357,7 @@ public expect fun Memory.storeShortArray(
  * @param sourceOffset items
  */
 @OptIn(ExperimentalUnsignedTypes::class)
-public inline fun Memory.storeUShortArray(
+public inline fun DROP_Memory.storeUShortArray(
     offset: Int,
     source: UShortArray,
     sourceOffset: Int = 0,
@@ -372,7 +372,7 @@ public inline fun Memory.storeUShortArray(
  * @param sourceOffset items
  */
 @OptIn(ExperimentalUnsignedTypes::class)
-public inline fun Memory.storeUShortArray(
+public inline fun DROP_Memory.storeUShortArray(
     offset: Long,
     source: UShortArray,
     sourceOffset: Int = 0,
@@ -386,7 +386,7 @@ public inline fun Memory.storeUShortArray(
  * interpreting numbers in the network order (Big Endian).
  * @param sourceOffset items
  */
-public expect fun Memory.storeIntArray(
+public expect fun DROP_Memory.storeIntArray(
     offset: Int,
     source: IntArray,
     sourceOffset: Int = 0,
@@ -398,7 +398,7 @@ public expect fun Memory.storeIntArray(
  * interpreting numbers in the network order (Big Endian).
  * @param sourceOffset items
  */
-public expect fun Memory.storeIntArray(
+public expect fun DROP_Memory.storeIntArray(
     offset: Long,
     source: IntArray,
     sourceOffset: Int = 0,
@@ -411,7 +411,7 @@ public expect fun Memory.storeIntArray(
  * @param sourceOffset items
  */
 @OptIn(ExperimentalUnsignedTypes::class)
-public inline fun Memory.storeUIntArray(
+public inline fun DROP_Memory.storeUIntArray(
     offset: Int,
     source: UIntArray,
     sourceOffset: Int = 0,
@@ -426,7 +426,7 @@ public inline fun Memory.storeUIntArray(
  * @param sourceOffset items
  */
 @OptIn(ExperimentalUnsignedTypes::class)
-public inline fun Memory.storeUIntArray(
+public inline fun DROP_Memory.storeUIntArray(
     offset: Long,
     source: UIntArray,
     sourceOffset: Int = 0,
@@ -440,7 +440,7 @@ public inline fun Memory.storeUIntArray(
  * interpreting numbers in the network order (Big Endian).
  * @param sourceOffset items
  */
-public expect fun Memory.storeLongArray(
+public expect fun DROP_Memory.storeLongArray(
     offset: Int,
     source: LongArray,
     sourceOffset: Int = 0,
@@ -452,7 +452,7 @@ public expect fun Memory.storeLongArray(
  * interpreting numbers in the network order (Big Endian).
  * @param sourceOffset items
  */
-public expect fun Memory.storeLongArray(
+public expect fun DROP_Memory.storeLongArray(
     offset: Long,
     source: LongArray,
     sourceOffset: Int = 0,
@@ -465,7 +465,7 @@ public expect fun Memory.storeLongArray(
  * @param sourceOffset items
  */
 @OptIn(ExperimentalUnsignedTypes::class)
-public inline fun Memory.storeULongArray(
+public inline fun DROP_Memory.storeULongArray(
     offset: Int,
     source: ULongArray,
     sourceOffset: Int = 0,
@@ -480,7 +480,7 @@ public inline fun Memory.storeULongArray(
  * @param sourceOffset items
  */
 @OptIn(ExperimentalUnsignedTypes::class)
-public inline fun Memory.storeULongArray(
+public inline fun DROP_Memory.storeULongArray(
     offset: Long,
     source: ULongArray,
     sourceOffset: Int = 0,
@@ -494,7 +494,7 @@ public inline fun Memory.storeULongArray(
  * interpreting numbers in the network order (Big Endian).
  * @param sourceOffset items
  */
-public expect fun Memory.storeFloatArray(
+public expect fun DROP_Memory.storeFloatArray(
     offset: Int,
     source: FloatArray,
     sourceOffset: Int = 0,
@@ -506,7 +506,7 @@ public expect fun Memory.storeFloatArray(
  * interpreting numbers in the network order (Big Endian).
  * @param sourceOffset items
  */
-public expect fun Memory.storeFloatArray(
+public expect fun DROP_Memory.storeFloatArray(
     offset: Long,
     source: FloatArray,
     sourceOffset: Int = 0,
@@ -518,7 +518,7 @@ public expect fun Memory.storeFloatArray(
  * interpreting numbers in the network order (Big Endian).
  * @param sourceOffset items
  */
-public expect fun Memory.storeDoubleArray(
+public expect fun DROP_Memory.storeDoubleArray(
     offset: Int,
     source: DoubleArray,
     sourceOffset: Int = 0,
@@ -530,7 +530,7 @@ public expect fun Memory.storeDoubleArray(
  * interpreting numbers in the network order (Big Endian).
  * @param sourceOffset items
  */
-public expect fun Memory.storeDoubleArray(
+public expect fun DROP_Memory.storeDoubleArray(
     offset: Long,
     source: DoubleArray,
     sourceOffset: Int = 0,

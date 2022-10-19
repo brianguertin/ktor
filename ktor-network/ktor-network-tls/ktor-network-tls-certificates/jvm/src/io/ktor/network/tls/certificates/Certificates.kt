@@ -192,7 +192,7 @@ public val KeyStore.trustManagers: List<TrustManager>
     get() = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
         .apply { init(this@trustManagers) }.trustManagers.toList()
 
-private fun BytePacketBuilder.writeX509Info(
+private fun DROP_BytePacketBuilder.writeX509Info(
     algorithm: String,
     issuer: X500Principal,
     subject: X500Principal,
@@ -243,7 +243,7 @@ private fun BytePacketBuilder.writeX509Info(
     }
 }
 
-private fun BytePacketBuilder.extKeyUsage(content: BytePacketBuilder.() -> Unit) {
+private fun DROP_BytePacketBuilder.extKeyUsage(content: DROP_BytePacketBuilder.() -> Unit) {
     writeDerSequence {
         writeDerObjectIdentifier(OID.ExtKeyUsage)
         writeDerOctetString {
@@ -252,19 +252,19 @@ private fun BytePacketBuilder.extKeyUsage(content: BytePacketBuilder.() -> Unit)
     }
 }
 
-private fun BytePacketBuilder.clientAuth() {
+private fun DROP_BytePacketBuilder.clientAuth() {
     writeDerSequence {
         writeDerObjectIdentifier(OID.ClientAuth)
     }
 }
 
-private fun BytePacketBuilder.serverAuth() {
+private fun DROP_BytePacketBuilder.serverAuth() {
     writeDerSequence {
         writeDerObjectIdentifier(OID.ServerAuth)
     }
 }
 
-private fun BytePacketBuilder.subjectAlternativeNames(
+private fun DROP_BytePacketBuilder.subjectAlternativeNames(
     domains: List<String>,
     ipAddresses: List<InetAddress>
 ) {
@@ -289,7 +289,7 @@ private fun BytePacketBuilder.subjectAlternativeNames(
     }
 }
 
-private fun BytePacketBuilder.caExtension() {
+private fun DROP_BytePacketBuilder.caExtension() {
     writeDerSequence {
         writeDerObjectIdentifier(OID.BasicConstraints)
         // is critical extension bit
@@ -303,7 +303,7 @@ private fun BytePacketBuilder.caExtension() {
     }
 }
 
-private fun BytePacketBuilder.writeAlgorithmIdentifier(algorithm: String) {
+private fun DROP_BytePacketBuilder.writeAlgorithmIdentifier(algorithm: String) {
     writeDerSequence {
         val oid = OID.fromAlgorithm(algorithm)
         writeDerObjectIdentifier(oid)
@@ -311,21 +311,38 @@ private fun BytePacketBuilder.writeAlgorithmIdentifier(algorithm: String) {
     }
 }
 
-private fun BytePacketBuilder.writeX509Extension(id: Int, builder: BytePacketBuilder.() -> Unit) {
+private fun DROP_BytePacketBuilder.writeX509Extension(id: Int, builder: DROP_BytePacketBuilder.() -> Unit) {
     writeByte((0x80 or id).toByte())
     val packet = buildPacket { builder() }
     writeDerLength(packet.remaining.toInt())
     writePacket(packet)
 }
 
-private fun BytePacketBuilder.writeX500Principal(dName: X500Principal) {
+private fun DROP_BytePacketBuilder.writeX500Principal(dName: X500Principal) {
     writeFully(dName.encoded)
 }
 
-private fun BytePacketBuilder.writeCertificate(
-    issuer: X500Principal,
-    subject: X500Principal,
-    publicKey: PublicKey,
+private fun DROP_BytePacketBuilder.writeX509Counterparty(counterparty: Counterparty) {
+    writeDerSequence {
+        if (counterparty.country.isNotEmpty()) {
+            writeX509NamePart(OID.CountryName, counterparty.country)
+        }
+        if (counterparty.organization.isNotEmpty()) {
+            writeX509NamePart(OID.OrganizationName, counterparty.organization)
+        }
+        if (counterparty.organizationUnit.isNotEmpty()) {
+            writeX509NamePart(OID.OrganizationalUnitName, counterparty.organizationUnit)
+        }
+        if (counterparty.commonName.isNotEmpty()) {
+            writeX509NamePart(OID.CommonName, counterparty.commonName)
+        }
+    }
+}
+
+internal fun DROP_BytePacketBuilder.writeCertificate(
+    issuer: Counterparty,
+    subject: Counterparty,
+    keyPair: KeyPair,
     algorithm: String,
     validFrom: Instant,
     validUntil: Instant,
@@ -356,7 +373,7 @@ private fun BytePacketBuilder.writeCertificate(
     }
 }
 
-private fun BytePacketBuilder.writeVersion(v: Int = 2) {
+private fun DROP_BytePacketBuilder.writeVersion(v: Int = 2) {
     writeDerType(2, 0, false)
     val encoded = buildPacket {
         writeAsnInt(v)
@@ -365,7 +382,7 @@ private fun BytePacketBuilder.writeVersion(v: Int = 2) {
     writePacket(encoded)
 }
 
-private fun BytePacketBuilder.writeDerOctetString(block: BytePacketBuilder.() -> Unit) {
+private fun DROP_BytePacketBuilder.writeDerOctetString(block: DROP_BytePacketBuilder.() -> Unit) {
     val sub = buildPacket { block() }
 
     writeDerType(0, 4, true)
@@ -373,7 +390,7 @@ private fun BytePacketBuilder.writeDerOctetString(block: BytePacketBuilder.() ->
     writePacket(sub)
 }
 
-private fun BytePacketBuilder.writeDerBitString(array: ByteArray, unused: Int = 0) {
+private fun DROP_BytePacketBuilder.writeDerBitString(array: ByteArray, unused: Int = 0) {
     require(unused in 0..7)
 
     writeDerType(0, 3, true)
@@ -382,21 +399,21 @@ private fun BytePacketBuilder.writeDerBitString(array: ByteArray, unused: Int = 
     writeFully(array)
 }
 
-private fun BytePacketBuilder.writeDerUTCTime(date: Instant) {
+private fun DROP_BytePacketBuilder.writeDerUTCTime(date: Instant) {
     writeDerUTF8String(
         DateTimeFormatter.ofPattern("yyMMddHHmmss'Z'").format(date.atZone(ZoneOffset.UTC)),
         0x17
     )
 }
 
-private fun BytePacketBuilder.writeDerGeneralizedTime(date: Instant) {
+private fun DROP_BytePacketBuilder.writeDerGeneralizedTime(date: Instant) {
     writeDerUTF8String(
         DateTimeFormatter.ofPattern("yyyyMMddHHmmss'Z'").format(date.atZone(ZoneOffset.UTC)),
         0x18
     )
 }
 
-private fun BytePacketBuilder.writeDerUTF8String(s: String, type: Int = 0x0c) {
+private fun DROP_BytePacketBuilder.writeDerUTF8String(s: String, type: Int = 0x0c) {
     val sub = buildPacket {
         writeText(s)
     }
@@ -406,11 +423,11 @@ private fun BytePacketBuilder.writeDerUTF8String(s: String, type: Int = 0x0c) {
     writePacket(sub)
 }
 
-private fun BytePacketBuilder.writeDerNull() {
+private fun DROP_BytePacketBuilder.writeDerNull() {
     writeShort(0x0500)
 }
 
-private fun BytePacketBuilder.writeDerSequence(block: BytePacketBuilder.() -> Unit) {
+private fun DROP_BytePacketBuilder.writeDerSequence(block: DROP_BytePacketBuilder.() -> Unit) {
     val sub = buildPacket { block() }
 
     writeDerType(0, 0x10, false)
@@ -418,11 +435,11 @@ private fun BytePacketBuilder.writeDerSequence(block: BytePacketBuilder.() -> Un
     writePacket(sub)
 }
 
-private fun BytePacketBuilder.writeDerObjectIdentifier(identifier: OID) {
+private fun DROP_BytePacketBuilder.writeDerObjectIdentifier(identifier: OID) {
     writeDerObjectIdentifier(identifier.asArray)
 }
 
-private fun BytePacketBuilder.writeDerObjectIdentifier(identifier: IntArray) {
+private fun DROP_BytePacketBuilder.writeDerObjectIdentifier(identifier: IntArray) {
     require(identifier.size >= 2)
     require(identifier[0] in 0..2)
     require(identifier[0] == 2 || identifier[1] in 0..39)
@@ -440,7 +457,7 @@ private fun BytePacketBuilder.writeDerObjectIdentifier(identifier: IntArray) {
     writePacket(sub)
 }
 
-private fun BytePacketBuilder.writeAsnInt(value: BigInteger) {
+private fun DROP_BytePacketBuilder.writeAsnInt(value: BigInteger) {
     writeDerType(0, 2, true)
 
     val encoded = value.toByteArray()
@@ -448,7 +465,7 @@ private fun BytePacketBuilder.writeAsnInt(value: BigInteger) {
     writeFully(encoded)
 }
 
-private fun BytePacketBuilder.writeAsnInt(value: Int) {
+private fun DROP_BytePacketBuilder.writeAsnInt(value: Int) {
     writeDerType(0, 2, true)
 
     val encoded = buildPacket {
@@ -469,7 +486,7 @@ private fun BytePacketBuilder.writeAsnInt(value: Int) {
     writePacket(encoded)
 }
 
-private fun BytePacketBuilder.writeDerLength(length: Int) {
+private fun DROP_BytePacketBuilder.writeDerLength(length: Int) {
     require(length >= 0)
 
     when {
@@ -499,7 +516,7 @@ private fun BytePacketBuilder.writeDerLength(length: Int) {
     }
 }
 
-private fun BytePacketBuilder.writeDerType(kind: Int, typeIdentifier: Int, simpleType: Boolean) {
+private fun DROP_BytePacketBuilder.writeDerType(kind: Int, typeIdentifier: Int, simpleType: Boolean) {
     require(kind in 0..3)
     require(typeIdentifier >= 0)
 
@@ -538,7 +555,7 @@ private fun Int.derLength(): Int {
  * Value: 0b1111 1111 if true or 0b0000 0000 if false
  */
 @OptIn(ExperimentalUnsignedTypes::class)
-private fun BytePacketBuilder.writeDerBoolean(value: Boolean) {
+private fun DROP_BytePacketBuilder.writeDerBoolean(value: Boolean) {
     writeDerType(0, 1, true)
     writeDerLength(1)
     writeUByte(value.toUByte())
@@ -550,7 +567,7 @@ private fun Boolean.toUByte(): UByte = if (this) {
     0.toUByte()
 }
 
-private fun BytePacketBuilder.writeDerInt(value: Int) {
+private fun DROP_BytePacketBuilder.writeDerInt(value: Int) {
     require(value >= 0)
 
     val byteCount = value.derLength()

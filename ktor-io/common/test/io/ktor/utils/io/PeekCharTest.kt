@@ -1,6 +1,6 @@
 package io.ktor.utils.io
 
-import io.ktor.utils.io.bits.Memory
+import io.ktor.utils.io.bits.DROP_Memory
 import io.ktor.utils.io.bits.set
 import io.ktor.utils.io.core.*
 import io.ktor.utils.io.core.internal.*
@@ -10,7 +10,7 @@ class PeekCharTest {
     @Test
     fun testPeekEOF() {
         assertFailsWith<EOFException> {
-            ByteReadPacket.Empty.peekCharUtf8()
+            DROP_ByteReadPacket.Empty.peekCharUtf8()
         }
     }
 
@@ -66,15 +66,15 @@ class PeekCharTest {
     fun testPeekUtf8Edge() {
         val oSlash = '\u00f8'
 
-        val chunk1 = ChunkBuffer.Pool.borrow()
-        val chunk2 = ChunkBuffer.Pool.borrow()
+        val chunk1 = DROP_ChunkBuffer.Pool.borrow()
+        val chunk2 = DROP_ChunkBuffer.Pool.borrow()
         chunk1.reserveEndGap(8)
         chunk1.next = chunk2
 
         chunk1.writeByte(0xc3.toByte())
         chunk2.writeByte(0xb8.toByte())
 
-        ByteReadPacket(chunk1, ChunkBuffer.Pool).use {
+        DROP_ByteReadPacket(chunk1, DROP_ChunkBuffer.Pool).use {
             assertEquals(oSlash, it.peekCharUtf8())
         }
     }
@@ -83,8 +83,8 @@ class PeekCharTest {
     fun testPeekUtf8EdgeFor3BytesCharacter() {
         val bopomofoChar = '\u310f'
 
-        val chunk1 = ChunkBuffer.Pool.borrow()
-        val chunk2 = ChunkBuffer.Pool.borrow()
+        val chunk1 = DROP_ChunkBuffer.Pool.borrow()
+        val chunk2 = DROP_ChunkBuffer.Pool.borrow()
         chunk1.reserveEndGap(8)
         chunk1.next = chunk2
 
@@ -92,7 +92,7 @@ class PeekCharTest {
         chunk2.writeByte(0x84.toByte())
         chunk2.writeByte(0x8f.toByte())
 
-        ByteReadPacket(chunk1, ChunkBuffer.Pool).use {
+        DROP_ByteReadPacket(chunk1, DROP_ChunkBuffer.Pool).use {
             assertEquals(bopomofoChar, it.peekCharUtf8())
         }
     }
@@ -101,8 +101,8 @@ class PeekCharTest {
     fun testPeekUtf8EdgeFor3BytesCharacter2() {
         val bopomofoChar = '\u310f'
 
-        val chunk1 = ChunkBuffer.Pool.borrow()
-        val chunk2 = ChunkBuffer.Pool.borrow()
+        val chunk1 = DROP_ChunkBuffer.Pool.borrow()
+        val chunk2 = DROP_ChunkBuffer.Pool.borrow()
         chunk1.reserveEndGap(8)
         chunk1.next = chunk2
 
@@ -110,7 +110,7 @@ class PeekCharTest {
         chunk1.writeByte(0x84.toByte())
         chunk2.writeByte(0x8f.toByte())
 
-        ByteReadPacket(chunk1, ChunkBuffer.Pool).use {
+        DROP_ByteReadPacket(chunk1, DROP_ChunkBuffer.Pool).use {
             assertEquals(bopomofoChar, it.peekCharUtf8())
         }
     }
@@ -119,8 +119,8 @@ class PeekCharTest {
     fun testPeekUtf8EdgeReservedFor3BytesCharacter() {
         val bopomofoChar = '\u310f'
 
-        val chunk1 = ChunkBuffer.Pool.borrow()
-        val chunk2 = ChunkBuffer.Pool.borrow()
+        val chunk1 = DROP_ChunkBuffer.Pool.borrow()
+        val chunk2 = DROP_ChunkBuffer.Pool.borrow()
         chunk1.reserveEndGap(8)
         chunk1.next = chunk2
 
@@ -130,7 +130,7 @@ class PeekCharTest {
         chunk2.writeByte(0x8f.toByte())
         chunk2.writeByte(0x30)
 
-        ByteReadPacket(chunk1, ChunkBuffer.Pool).use {
+        DROP_ByteReadPacket(chunk1, DROP_ChunkBuffer.Pool).use {
             it.discardExact(4087)
             assertEquals(bopomofoChar, it.peekCharUtf8())
             it.discardExact(3)
@@ -143,8 +143,8 @@ class PeekCharTest {
         val bopomofoChar = '\u310f'
         var count = 0
 
-        val myInput = object : Input() {
-            override fun fill(destination: Memory, offset: Int, length: Int): Int {
+        val myInput = object : DROP_Input() {
+            override fun fill(destination: DROP_Memory, offset: Int, length: Int): Int {
                 destination[offset] = when (count++) {
                     0 -> 0xe3.toByte()
                     1 -> 0x84.toByte()

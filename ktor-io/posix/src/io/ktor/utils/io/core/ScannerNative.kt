@@ -3,7 +3,7 @@ package io.ktor.utils.io.core
 import kotlinx.cinterop.*
 import platform.posix.*
 
-internal actual fun Buffer.discardUntilDelimiterImpl(delimiter: Byte): Int {
+internal actual fun DROP_Buffer.discardUntilDelimiterImpl(delimiter: Byte): Int {
     val content = content
     var idx = readPosition
     val end = writePosition
@@ -18,7 +18,7 @@ internal actual fun Buffer.discardUntilDelimiterImpl(delimiter: Byte): Int {
     return idx - start
 }
 
-internal actual fun Buffer.discardUntilDelimitersImpl(delimiter1: Byte, delimiter2: Byte): Int {
+internal actual fun DROP_Buffer.discardUntilDelimitersImpl(delimiter1: Byte, delimiter2: Byte): Int {
     val content = content
     var idx = readPosition
     val end = writePosition
@@ -34,7 +34,7 @@ internal actual fun Buffer.discardUntilDelimitersImpl(delimiter1: Byte, delimite
     return idx - start
 }
 
-internal actual fun Buffer.readUntilDelimiterImpl(
+internal actual fun DROP_Buffer.readUntilDelimiterImpl(
     delimiter: Byte,
     dst: ByteArray,
     offset: Int,
@@ -47,7 +47,7 @@ internal actual fun Buffer.readUntilDelimiterImpl(
     return readUntilImpl({ it == delimiter }, dst, offset, length)
 }
 
-internal actual fun Buffer.readUntilDelimitersImpl(
+internal actual fun DROP_Buffer.readUntilDelimitersImpl(
     delimiter1: Byte,
     delimiter2: Byte,
     dst: ByteArray,
@@ -62,18 +62,18 @@ internal actual fun Buffer.readUntilDelimitersImpl(
     return readUntilImpl({ it == delimiter1 || it == delimiter2 }, dst, offset, length)
 }
 
-internal actual fun Buffer.readUntilDelimiterImpl(delimiter: Byte, dst: Output): Int {
+internal actual fun DROP_Buffer.readUntilDelimiterImpl(delimiter: Byte, dst: DROP_Output): Int {
     return readUntilImpl({ it == delimiter }, dst)
 }
 
-internal actual fun Buffer.readUntilDelimitersImpl(delimiter1: Byte, delimiter2: Byte, dst: Output): Int {
+internal actual fun DROP_Buffer.readUntilDelimitersImpl(delimiter1: Byte, delimiter2: Byte, dst: DROP_Output): Int {
     check(delimiter1 != delimiter2)
 
     return readUntilImpl({ it == delimiter1 || it == delimiter2 }, dst)
 }
 
 @OptIn(UnsafeNumber::class)
-private inline fun Buffer.readUntilImpl(
+private inline fun DROP_Buffer.readUntilImpl(
     predicate: (Byte) -> Boolean,
     dst: ByteArray,
     offset: Int,
@@ -104,9 +104,9 @@ private inline fun Buffer.readUntilImpl(
 }
 
 @OptIn(UnsafeNumber::class)
-private inline fun Buffer.readUntilImpl(
+private inline fun DROP_Buffer.readUntilImpl(
     predicate: (Byte) -> Boolean,
-    dst: Output
+    dst: DROP_Output
 ): Int {
     val content = content
     var i = readPosition
@@ -136,4 +136,4 @@ private inline fun Buffer.readUntilImpl(
     return copiedTotal
 }
 
-internal inline val Buffer.content: CPointer<ByteVar> get() = memory.pointer
+internal inline val DROP_Buffer.content: CPointer<ByteVar> get() = memory.pointer

@@ -29,7 +29,7 @@ fun List<PartData>.makeString(): String = buildString {
     }
 }
 
-private fun filenameContentTypeAndContentString(provider: () -> Input, headers: Headers): String {
+private fun filenameContentTypeAndContentString(provider: () -> DROP_Input, headers: Headers): String {
     val dispositionHeader: String = headers.getAll(HttpHeaders.ContentDisposition)!!.joinToString(";")
     val disposition: ContentDisposition = ContentDisposition.parse(dispositionHeader)
     val filename: String = disposition.parameter("filename") ?: ""

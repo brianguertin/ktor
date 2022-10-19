@@ -6,7 +6,7 @@ import org.khronos.webgl.*
 /**
  * Read exactly [n] bytes to a new array buffer instance
  */
-public fun ByteReadPacket.readArrayBuffer(
+public fun DROP_ByteReadPacket.readArrayBuffer(
     n: Int = remaining.coerceAtMostMaxIntOrFail("Unable to make a new ArrayBuffer: packet is too big")
 ): ArrayBuffer {
     val buffer = ArrayBuffer(n)
@@ -17,19 +17,19 @@ public fun ByteReadPacket.readArrayBuffer(
 /**
  * Write exactly [length] bytes from the specified [src] array buffer
  */
-public fun BytePacketBuilder.writeFully(src: ArrayBuffer, offset: Int = 0, length: Int = src.byteLength - offset) {
+public fun DROP_BytePacketBuilder.writeFully(src: ArrayBuffer, offset: Int = 0, length: Int = src.byteLength - offset) {
     writeFully(Int8Array(src), offset, length)
 }
 
 /**
  * Write exactly [length] bytes from the specified [src] typed array
  */
-public fun BytePacketBuilder.writeFully(src: Int8Array, offset: Int = 0, length: Int = src.length - offset) {
+public fun DROP_BytePacketBuilder.writeFully(src: Int8Array, offset: Int = 0, length: Int = src.length - offset) {
     var written = 0
     var rem = length
 
     while (rem > 0) {
-        write(1) { bb: Buffer ->
+        write(1) { bb: DROP_Buffer ->
             val size = minOf(bb.writeRemaining, rem)
             bb.writeFully(src, written + offset, size)
             written += size

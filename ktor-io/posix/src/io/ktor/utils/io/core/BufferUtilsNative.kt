@@ -12,19 +12,19 @@ import kotlin.native.concurrent.*
 @PublishedApi
 internal val MAX_SIZE: size_t = size_t.MAX_VALUE
 
-public fun ChunkBuffer(ptr: CPointer<*>, lengthInBytes: Int, origin: ChunkBuffer?): ChunkBuffer {
-    return ChunkBuffer(Memory.of(ptr, lengthInBytes), origin, null)
+public fun ChunkBuffer(ptr: CPointer<*>, lengthInBytes: Int, origin: DROP_ChunkBuffer?): DROP_ChunkBuffer {
+    return DROP_ChunkBuffer(DROP_Memory.of(ptr, lengthInBytes), origin, null)
 }
 
-public fun ChunkBuffer(ptr: CPointer<*>, lengthInBytes: Long, origin: ChunkBuffer?): ChunkBuffer {
-    return ChunkBuffer(Memory.of(ptr, lengthInBytes), origin, null)
+public fun ChunkBuffer(ptr: CPointer<*>, lengthInBytes: Long, origin: DROP_ChunkBuffer?): DROP_ChunkBuffer {
+    return DROP_ChunkBuffer(DROP_Memory.of(ptr, lengthInBytes), origin, null)
 }
 
-public fun Buffer.readFully(pointer: CPointer<ByteVar>, offset: Int, length: Int) {
+public fun DROP_Buffer.readFully(pointer: CPointer<ByteVar>, offset: Int, length: Int) {
     readFully(pointer, offset.toLong(), length)
 }
 
-public fun Buffer.readFully(pointer: CPointer<ByteVar>, offset: Long, length: Int) {
+public fun DROP_Buffer.readFully(pointer: CPointer<ByteVar>, offset: Long, length: Int) {
     requirePositiveIndex(offset, "offset")
     requirePositiveIndex(length, "length")
     readExact(length, "content") { memory, start ->
@@ -32,11 +32,11 @@ public fun Buffer.readFully(pointer: CPointer<ByteVar>, offset: Long, length: In
     }
 }
 
-public fun Buffer.readAvailable(pointer: CPointer<ByteVar>, offset: Int, length: Int): Int {
+public fun DROP_Buffer.readAvailable(pointer: CPointer<ByteVar>, offset: Int, length: Int): Int {
     return readAvailable(pointer, offset.toLong(), length)
 }
 
-public fun Buffer.readAvailable(pointer: CPointer<ByteVar>, offset: Long, length: Int): Int {
+public fun DROP_Buffer.readAvailable(pointer: CPointer<ByteVar>, offset: Long, length: Int): Int {
     val available = readRemaining
     if (available == 0) return -1
     val resultSize = minOf(available, length)
@@ -44,7 +44,7 @@ public fun Buffer.readAvailable(pointer: CPointer<ByteVar>, offset: Long, length
     return resultSize
 }
 
-public fun Buffer.writeFully(pointer: CPointer<ByteVar>, offset: Int, length: Int) {
+public fun DROP_Buffer.writeFully(pointer: CPointer<ByteVar>, offset: Int, length: Int) {
     requirePositiveIndex(offset, "offset")
     requirePositiveIndex(length, "length")
 
@@ -53,7 +53,7 @@ public fun Buffer.writeFully(pointer: CPointer<ByteVar>, offset: Int, length: In
     }
 }
 
-public fun Buffer.writeFully(pointer: CPointer<ByteVar>, offset: Long, length: Int) {
+public fun DROP_Buffer.writeFully(pointer: CPointer<ByteVar>, offset: Long, length: Int) {
     requirePositiveIndex(offset, "offset")
     requirePositiveIndex(length, "length")
 
@@ -63,7 +63,7 @@ public fun Buffer.writeFully(pointer: CPointer<ByteVar>, offset: Long, length: I
 }
 
 @OptIn(ExperimentalContracts::class)
-public inline fun Buffer.readDirect(block: (CPointer<ByteVar>) -> Int): Int {
+public inline fun DROP_Buffer.readDirect(block: (CPointer<ByteVar>) -> Int): Int {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
@@ -74,7 +74,7 @@ public inline fun Buffer.readDirect(block: (CPointer<ByteVar>) -> Int): Int {
 }
 
 @OptIn(ExperimentalContracts::class)
-public inline fun Buffer.writeDirect(block: (CPointer<ByteVar>) -> Int): Int {
+public inline fun DROP_Buffer.writeDirect(block: (CPointer<ByteVar>) -> Int): Int {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }

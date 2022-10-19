@@ -3,7 +3,7 @@ package io.ktor.utils.io
 import io.ktor.utils.io.bits.*
 import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
-import io.ktor.utils.io.core.Buffer
+import io.ktor.utils.io.core.DROP_Buffer
 import io.ktor.utils.io.core.internal.*
 import io.ktor.utils.io.internal.*
 import io.ktor.utils.io.pool.*
@@ -494,7 +494,7 @@ internal open class ByteBufferChannel(
         return consumed
     }
 
-    private fun readAsMuchAsPossible(dst: Buffer, consumed: Int = 0, max: Int = dst.writeRemaining): Int {
+    private fun readAsMuchAsPossible(dst: DROP_Buffer, consumed: Int = 0, max: Int = dst.writeRemaining): Int {
         var currentConsumed = consumed
         var currentMax = max
 
@@ -576,7 +576,7 @@ internal open class ByteBufferChannel(
         return copied
     }
 
-    override suspend fun readFully(dst: ChunkBuffer, n: Int) {
+    override suspend fun readFully(dst: DROP_ChunkBuffer, n: Int) {
         val rc = readAsMuchAsPossible(dst, max = n)
         if (rc == n) {
             return
@@ -585,7 +585,7 @@ internal open class ByteBufferChannel(
         readFullySuspend(dst, n - rc)
     }
 
-    private suspend fun readFullySuspend(dst: ChunkBuffer, n: Int) {
+    private suspend fun readFullySuspend(dst: DROP_ChunkBuffer, n: Int) {
         var copied = 0
 
         while (dst.canWrite() && copied < n) {
@@ -630,7 +630,7 @@ internal open class ByteBufferChannel(
         }
     }
 
-    override suspend fun readAvailable(dst: ChunkBuffer): Int {
+    override suspend fun readAvailable(dst: DROP_ChunkBuffer): Int {
         val consumed = readAsMuchAsPossible(dst)
 
         return when {
@@ -663,7 +663,7 @@ internal open class ByteBufferChannel(
         return readAvailable(dst)
     }
 
-    private suspend fun readAvailableSuspend(dst: ChunkBuffer): Int {
+    private suspend fun readAvailableSuspend(dst: DROP_ChunkBuffer): Int {
         if (!readSuspend(1)) {
             return -1
         }
@@ -671,12 +671,12 @@ internal open class ByteBufferChannel(
         return readAvailable(dst)
     }
 
-    override suspend fun readPacket(size: Int): ByteReadPacket {
+    override suspend fun readPacket(size: Int): DROP_ByteReadPacket {
         closed?.cause?.let { rethrowClosed(it) }
 
-        if (size == 0) return ByteReadPacket.Empty
+        if (size == 0) return DROP_ByteReadPacket.Empty
 
-        val builder = BytePacketBuilder()
+        val builder = DROP_BytePacketBuilder()
         val buffer = BufferPool.borrow()
         var remaining = size
 
@@ -709,7 +709,7 @@ internal open class ByteBufferChannel(
         }
     }
 
-    private suspend fun readPacketSuspend(size: Int, builder: BytePacketBuilder, buffer: ByteBuffer): ByteReadPacket {
+    private suspend fun readPacketSuspend(size: Int, builder: DROP_BytePacketBuilder, buffer: ByteBuffer): DROP_ByteReadPacket {
         var remaining = size
 
         try {
@@ -970,7 +970,7 @@ internal open class ByteBufferChannel(
         writeSuspend(1)
     }
 
-    override suspend fun writeAvailable(src: ChunkBuffer): Int {
+    override suspend fun writeAvailable(src: DROP_ChunkBuffer): Int {
         joining?.let { resolveDelegation(this, it)?.let { return it.writeAvailable(src) } }
 
         val copied = writeAsMuchAsPossible(src)
@@ -988,7 +988,7 @@ internal open class ByteBufferChannel(
         return writeAvailable(src)
     }
 
-    private suspend fun writeAvailableSuspend(src: ChunkBuffer): Int {
+    private suspend fun writeAvailableSuspend(src: DROP_ChunkBuffer): Int {
         writeSuspend(1)
 
         joining?.let { resolveDelegation(this, it)?.let { return it.writeAvailableSuspend(src) } }
@@ -996,7 +996,7 @@ internal open class ByteBufferChannel(
         return writeAvailable(src)
     }
 
-    override suspend fun writeFully(src: Buffer) {
+    override suspend fun writeFully(src: DROP_Buffer) {
         writeAsMuchAsPossible(src)
 
         if (!src.canRead()) {
@@ -1006,7 +1006,7 @@ internal open class ByteBufferChannel(
         writeFullySuspend(src)
     }
 
-    override suspend fun writeFully(memory: Memory, startIndex: Int, endIndex: Int) {
+    override suspend fun writeFully(memory: DROP_Memory, startIndex: Int, endIndex: Int) {
         val slice = memory.slice(startIndex, endIndex - startIndex)
         writeFully(slice.buffer)
     }
@@ -1021,7 +1021,7 @@ internal open class ByteBufferChannel(
         }
     }
 
-    private suspend fun writeFullySuspend(src: Buffer) {
+    private suspend fun writeFullySuspend(src: DROP_Buffer) {
         while (src.canRead()) {
             tryWriteSuspend(1)
 
@@ -1251,7 +1251,7 @@ internal open class ByteBufferChannel(
         return 0
     }
 
-    private fun writeAsMuchAsPossible(src: Buffer): Int {
+    private fun writeAsMuchAsPossible(src: DROP_Buffer): Int {
         writing { dst, state ->
             var written = 0
 
@@ -1519,7 +1519,7 @@ internal open class ByteBufferChannel(
         read(min, block)
     }
 
-    override suspend fun writePacket(packet: ByteReadPacket) {
+    override suspend fun writePacket(packet: DROP_ByteReadPacket) {
         joining?.let { resolveDelegation(this, it)?.let { return it.writePacket(packet) } }
 
         try {
@@ -1537,7 +1537,7 @@ internal open class ByteBufferChannel(
         }
     }
 
-    private suspend fun writePacketSuspend(packet: ByteReadPacket) {
+    private suspend fun writePacketSuspend(packet: DROP_ByteReadPacket) {
         try {
             while (packet.isNotEmpty) {
                 writeSuspend(1)
@@ -1550,7 +1550,7 @@ internal open class ByteBufferChannel(
         }
     }
 
-    private fun tryWritePacketPart(packet: ByteReadPacket): Int {
+    private fun tryWritePacketPart(packet: DROP_ByteReadPacket): Int {
         var copied = 0
         writing { dst, state ->
             val size = state.tryWriteAtMost(minOf(packet.remaining, dst.remaining().toLong()).toInt())
@@ -1765,14 +1765,14 @@ internal open class ByteBufferChannel(
         return sb.toString()
     }
 
-    override suspend fun readRemaining(limit: Long): ByteReadPacket = if (isClosedForWrite) {
+    override suspend fun readRemaining(limit: Long): DROP_ByteReadPacket = if (isClosedForWrite) {
         closedCause?.let { rethrowClosed(it) }
         remainingPacket(limit)
     } else {
         readRemainingSuspend(limit)
     }
 
-    private fun remainingPacket(limit: Long): ByteReadPacket = buildPacket {
+    private fun remainingPacket(limit: Long): DROP_ByteReadPacket = buildPacket {
         var remaining = limit
         writeWhile { buffer ->
             if (buffer.writeRemaining.toLong() > remaining) {
@@ -1787,7 +1787,7 @@ internal open class ByteBufferChannel(
 
     private suspend fun readRemainingSuspend(
         limit: Long
-    ): ByteReadPacket = buildPacket {
+    ): DROP_ByteReadPacket = buildPacket {
         var remaining = limit
         writeWhile { buffer ->
             if (buffer.writeRemaining.toLong() > remaining) {
@@ -2067,7 +2067,7 @@ internal open class ByteBufferChannel(
     }
 
     override suspend fun peekTo(
-        destination: Memory,
+        destination: DROP_Memory,
         destinationOffset: Long,
         offset: Long,
         min: Long,

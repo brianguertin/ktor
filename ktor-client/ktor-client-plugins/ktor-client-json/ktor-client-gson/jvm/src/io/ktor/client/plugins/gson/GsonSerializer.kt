@@ -24,7 +24,7 @@ public class GsonSerializer(block: GsonBuilder.() -> Unit = {}) : JsonSerializer
     override fun write(data: Any, contentType: ContentType): OutgoingContent =
         TextContent(backend.toJson(data), contentType)
 
-    override fun read(type: TypeInfo, body: Input): Any {
+    override fun read(type: TypeInfo, body: DROP_Input): Any {
         val text = body.readText()
         return backend.fromJson(text, type.reifiedType)
     }

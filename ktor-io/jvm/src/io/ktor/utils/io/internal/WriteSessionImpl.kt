@@ -9,8 +9,8 @@ internal class WriteSessionImpl(channel: ByteBufferChannel) : WriterSuspendSessi
     private var locked = 0
 
     private var current = channel.resolveChannelInstance()
-    private var byteBuffer = ChunkBuffer.Empty.memory.buffer
-    private var view = ChunkBuffer.Empty
+    private var byteBuffer = DROP_ChunkBuffer.Empty.memory.buffer
+    private var view = DROP_ChunkBuffer.Empty
     private var ringBufferCapacity = current.currentState().capacity
 
     fun begin() {
@@ -31,7 +31,7 @@ internal class WriteSessionImpl(channel: ByteBufferChannel) : WriterSuspendSessi
         current.tryTerminate()
     }
 
-    override fun request(min: Int): ChunkBuffer? {
+    override fun request(min: Int): DROP_ChunkBuffer? {
         locked += ringBufferCapacity.tryWriteAtLeast(0)
         if (locked < min) return null
         current.prepareWriteBuffer(byteBuffer, locked)

@@ -2,16 +2,15 @@ package io.ktor.utils.io
 
 import io.ktor.utils.io.core.*
 import io.ktor.utils.io.core.internal.*
-import io.ktor.utils.io.pool.*
 import kotlinx.cinterop.*
 import kotlin.test.*
 
 class ChunkBufferNativeTest {
-    private val buffer = ChunkBuffer.Pool.borrow()
+    private val buffer = DROP_ChunkBuffer.Pool.borrow()
 
     @AfterTest
     fun destroy() {
-        buffer.release(ChunkBuffer.Pool)
+        buffer.release(DROP_ChunkBuffer.Pool)
     }
 
     @Test

@@ -42,7 +42,7 @@ public actual suspend fun ByteReadChannel.copyTo(dst: ByteWriteChannel, limit: L
 }
 
 private suspend fun ByteReadChannel.copyToImpl(dst: ByteWriteChannel, limit: Long): Long {
-    val buffer = ChunkBuffer.Pool.borrow()
+    val buffer = DROP_ChunkBuffer.Pool.borrow()
     val dstNeedsFlush = !dst.autoFlush
 
     try {
@@ -68,7 +68,7 @@ private suspend fun ByteReadChannel.copyToImpl(dst: ByteWriteChannel, limit: Lon
         dst.close(t)
         throw t
     } finally {
-        buffer.release(ChunkBuffer.Pool)
+        buffer.release(DROP_ChunkBuffer.Pool)
     }
 }
 

@@ -7,7 +7,7 @@ import kotlin.test.*
 private val SIZES = intArrayOf(0, 1, 2, 3, 10, 100, 4087, 4088, 4089, 4095, 4096, 4097, 8191, 8192, 8193, 65537)
 
 class ReadBufferTest {
-    private val pool = ChunkBuffer.Pool
+    private val pool = DROP_ChunkBuffer.Pool
 
     private val buffer = pool.borrow().apply {
         resetForWrite()

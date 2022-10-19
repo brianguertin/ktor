@@ -33,7 +33,7 @@ public suspend fun OutgoingContent.toByteArray(): ByteArray = when (this) {
 
 @Suppress("KDocMissingDocumentation")
 @OptIn(DelicateCoroutinesApi::class)
-public suspend fun OutgoingContent.toByteReadPacket(): ByteReadPacket = when (this) {
+public suspend fun OutgoingContent.toByteReadPacket(): DROP_ByteReadPacket = when (this) {
     is OutgoingContent.ByteArrayContent -> ByteReadPacket(bytes())
     is OutgoingContent.ReadChannelContent -> readFrom().readRemaining()
     is OutgoingContent.WriteChannelContent -> {
@@ -45,7 +45,7 @@ public suspend fun OutgoingContent.toByteReadPacket(): ByteReadPacket = when (th
         channel.readRemaining()
     }
 
-    else -> ByteReadPacket.Empty
+    else -> DROP_ByteReadPacket.Empty
 }
 
 /**

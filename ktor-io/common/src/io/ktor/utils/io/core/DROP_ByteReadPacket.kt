@@ -11,12 +11,16 @@ import io.ktor.utils.io.pool.*
  * but creates a new view instead. Once packet created it should be either completely read (consumed) or released
  * via [release].
  */
-public class ByteReadPacket internal constructor(
-    head: ChunkBuffer,
+public class DROP_ByteReadPacket internal constructor(
+    head: DROP_ChunkBuffer,
     remaining: Long,
-    pool: ObjectPool<ChunkBuffer>
-) : Input(head, remaining, pool) {
-    public constructor(head: ChunkBuffer, pool: ObjectPool<ChunkBuffer>) : this(head, head.remainingAll(), pool)
+    pool: ObjectPool<DROP_ChunkBuffer>
+) : DROP_Input(head, remaining, pool) {
+    public constructor(head: DROP_ChunkBuffer, pool: ObjectPool<DROP_ChunkBuffer>) : this(
+        head,
+        head.remainingAll(),
+        pool
+    )
 
     init {
         markNoMoreChunksAvailable()
@@ -26,11 +30,11 @@ public class ByteReadPacket internal constructor(
      * Returns a copy of the packet. The original packet and the copy could be used concurrently. Both need to be
      * either completely consumed or released via [release]
      */
-    public final fun copy(): ByteReadPacket = ByteReadPacket(head.copyAll(), remaining, pool)
+    public final fun copy(): DROP_ByteReadPacket = DROP_ByteReadPacket(head.copyAll(), remaining, pool)
 
-    final override fun fill(): ChunkBuffer? = null
+    final override fun fill(): DROP_ChunkBuffer? = null
 
-    final override fun fill(destination: Memory, offset: Int, length: Int): Int {
+    final override fun fill(destination: DROP_Memory, offset: Int, length: Int): Int {
         return 0
     }
 
@@ -42,7 +46,8 @@ public class ByteReadPacket internal constructor(
     }
 
     public companion object {
-        public val Empty: ByteReadPacket = ByteReadPacket(ChunkBuffer.Empty, 0L, ChunkBuffer.EmptyPool)
+        public val Empty: DROP_ByteReadPacket =
+            DROP_ByteReadPacket(DROP_ChunkBuffer.Empty, 0L, DROP_ChunkBuffer.EmptyPool)
     }
 }
 
@@ -51,9 +56,9 @@ public expect fun ByteReadPacket(
     offset: Int = 0,
     length: Int = array.size,
     block: (ByteArray) -> Unit
-): ByteReadPacket
+): DROP_ByteReadPacket
 
 @Suppress("NOTHING_TO_INLINE")
-public inline fun ByteReadPacket(array: ByteArray, offset: Int = 0, length: Int = array.size): ByteReadPacket {
+public inline fun ByteReadPacket(array: ByteArray, offset: Int = 0, length: Int = array.size): DROP_ByteReadPacket {
     return ByteReadPacket(array, offset, length) {}
 }

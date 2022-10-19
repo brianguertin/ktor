@@ -15,7 +15,7 @@ internal object EmptyByteReadChannel : ByteReadChannel {
         return -1
     }
 
-    override suspend fun readAvailable(dst: ChunkBuffer): Int {
+    override suspend fun readAvailable(dst: DROP_ChunkBuffer): Int {
         return -1
     }
 
@@ -23,16 +23,16 @@ internal object EmptyByteReadChannel : ByteReadChannel {
         TODO("Not yet implemented")
     }
 
-    override suspend fun readFully(dst: ChunkBuffer, n: Int) {
+    override suspend fun readFully(dst: DROP_ChunkBuffer, n: Int) {
         TODO("Not yet implemented")
     }
 
-    override suspend fun readPacket(size: Int): ByteReadPacket {
+    override suspend fun readPacket(size: Int): DROP_ByteReadPacket {
         TODO("Not yet implemented")
     }
 
-    override suspend fun readRemaining(limit: Long): ByteReadPacket {
-        return ByteReadPacket.Empty
+    override suspend fun readRemaining(limit: Long): DROP_ByteReadPacket {
+        return DROP_ByteReadPacket.Empty
     }
 
     override suspend fun readLong(): Long {
@@ -91,7 +91,7 @@ internal object EmptyByteReadChannel : ByteReadChannel {
     }
 
     override suspend fun peekTo(
-        destination: Memory,
+        destination: DROP_Memory,
         destinationOffset: Long,
         offset: Long,
         min: Long,

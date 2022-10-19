@@ -6,7 +6,7 @@ import java.nio.*
 /**
  * Read buffer's content to the [destination] buffer moving its position.
  */
-public fun Buffer.readFully(destination: ByteBuffer) {
+public fun DROP_Buffer.readFully(destination: ByteBuffer) {
     val size = destination.remaining()
     readExact(size, "buffer content") { memory, offset ->
         memory.copyTo(destination, offset)
@@ -16,7 +16,7 @@ public fun Buffer.readFully(destination: ByteBuffer) {
 /**
  * Write [source] buffer content moving its position.
  */
-public fun Buffer.writeFully(source: ByteBuffer) {
+public fun DROP_Buffer.writeFully(source: ByteBuffer) {
     val size = source.remaining()
     writeExact(size, "buffer content") { memory, offset ->
         source.copyTo(memory, offset)

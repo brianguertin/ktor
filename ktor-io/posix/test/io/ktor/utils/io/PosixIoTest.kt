@@ -11,11 +11,11 @@ import kotlin.test.*
 
 class PosixIoTest {
     private val filename = "build/test.tmp"
-    private lateinit var buffer: Buffer
+    private lateinit var buffer: DROP_Buffer
 
     @BeforeTest
     fun setup() {
-        buffer = Buffer(DefaultAllocator.alloc(4096))
+        buffer = DROP_Buffer(DefaultAllocator.alloc(4096))
         buffer.resetForWrite()
         buffer.writeFully("test".encodeToByteArray())
 

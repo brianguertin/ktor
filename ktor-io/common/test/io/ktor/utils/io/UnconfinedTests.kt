@@ -33,7 +33,7 @@ class UnconfinedTests {
         }.channel
 
         val task = suspend {
-            val packet = BytePacketBuilder()
+            val packet = DROP_BytePacketBuilder()
             packet.writeFully(ByteArray(119))
             channel.writePacket(packet.build())
             startFlush = true

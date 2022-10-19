@@ -118,7 +118,7 @@ internal class DarwinWebsocketSession(
                             cancel("Error receiving pong", DarwinHttpRequestException(error))
                             return@sendPingWithPongReceiveHandler
                         }
-                        _incoming.trySend(Frame.Pong(ByteReadPacket.Empty))
+                        _incoming.trySend(Frame.Pong(DROP_ByteReadPacket.Empty))
                     }
                 }
 

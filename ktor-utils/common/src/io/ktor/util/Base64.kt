@@ -67,9 +67,9 @@ public fun ByteArray.encodeBase64(): String {
 }
 
 /**
- * Encode [ByteReadPacket] in base64 format
+ * Encode [DROP_ByteReadPacket] in base64 format
  */
-public fun ByteReadPacket.encodeBase64(): String = readBytes().encodeBase64()
+public fun DROP_ByteReadPacket.encodeBase64(): String = readBytes().encodeBase64()
 
 /**
  * Decode [String] from base64 format encoded in UTF-8.
@@ -84,9 +84,9 @@ public fun String.decodeBase64Bytes(): ByteArray = buildPacket {
 }.decodeBase64Bytes().readBytes()
 
 /**
- * Decode [ByteReadPacket] from base64 format
+ * Decode [DROP_ByteReadPacket] from base64 format
  */
-public fun ByteReadPacket.decodeBase64Bytes(): Input = buildPacket {
+public fun DROP_ByteReadPacket.decodeBase64Bytes(): DROP_Input = buildPacket {
     val data = ByteArray(4)
 
     while (remaining > 0) {

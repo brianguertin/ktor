@@ -59,7 +59,7 @@ internal fun Inflater.inflateFully(data: ByteArray): ByteArray {
     return packet.readBytes()
 }
 
-private fun BytePacketBuilder.deflateTo(
+private fun DROP_BytePacketBuilder.deflateTo(
     deflater: Deflater,
     buffer: ByteBuffer,
     flush: Boolean

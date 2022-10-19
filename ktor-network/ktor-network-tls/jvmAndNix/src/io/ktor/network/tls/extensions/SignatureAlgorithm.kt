@@ -103,7 +103,7 @@ public val SupportedSignatureAlgorithms: List<HashAndSign> = listOf(
     HashAndSign(HashAlgorithm.SHA1, SignatureAlgorithm.RSA, OID.RSAwithSHA1Encryption)
 )
 
-internal fun ByteReadPacket.parseSignatureAlgorithms(): List<HashAndSign> {
+internal fun DROP_ByteReadPacket.parseSignatureAlgorithms(): List<HashAndSign> {
     val length = readShort().toInt() and 0xffff
 
     val result = mutableListOf<HashAndSign>()
@@ -118,7 +118,7 @@ internal fun ByteReadPacket.parseSignatureAlgorithms(): List<HashAndSign> {
     return result
 }
 
-internal fun ByteReadPacket.readHashAndSign(): HashAndSign? {
+internal fun DROP_ByteReadPacket.readHashAndSign(): HashAndSign? {
     val hash = readByte()
     val sign = readByte()
     return HashAndSign.byCode(hash, sign)

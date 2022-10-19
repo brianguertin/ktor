@@ -41,25 +41,25 @@ public interface ByteReadChannel {
      * @return number of bytes were read or `-1` if the channel has been closed
      */
     public suspend fun readAvailable(dst: ByteArray, offset: Int, length: Int): Int
-    public suspend fun readAvailable(dst: ChunkBuffer): Int
+    public suspend fun readAvailable(dst: DROP_ChunkBuffer): Int
 
     /**
      * Reads all [length] bytes to [dst] buffer or fails if channel has been closed.
      * Suspends if not enough bytes available.
      */
     public suspend fun readFully(dst: ByteArray, offset: Int, length: Int)
-    public suspend fun readFully(dst: ChunkBuffer, n: Int)
+    public suspend fun readFully(dst: DROP_ChunkBuffer, n: Int)
 
     /**
      * Reads the specified amount of bytes and makes a byte packet from them. Fails if channel has been closed
      * and not enough bytes available.
      */
-    public suspend fun readPacket(size: Int): ByteReadPacket
+    public suspend fun readPacket(size: Int): DROP_ByteReadPacket
 
     /**
      * Reads up to [limit] bytes and makes a byte packet or until end of stream encountered.
      */
-    public suspend fun readRemaining(limit: Long = Long.MAX_VALUE): ByteReadPacket
+    public suspend fun readRemaining(limit: Long = Long.MAX_VALUE): DROP_ByteReadPacket
 
     /**
      * Reads a long number (suspending if not enough bytes available) or fails if channel has been closed
@@ -183,7 +183,7 @@ public interface ByteReadChannel {
      * @return number of bytes copied to the [destination] possibly `0`
      */
     public suspend fun peekTo(
-        destination: Memory,
+        destination: DROP_Memory,
         destinationOffset: Long,
         offset: Long = 0,
         min: Long = 1,
@@ -198,9 +198,9 @@ public interface ByteReadChannel {
 /**
  * Reads all remaining bytes and makes a byte packet
  */
-public suspend fun ByteReadChannel.readRemaining(): ByteReadPacket = readRemaining(Long.MAX_VALUE)
+public suspend fun ByteReadChannel.readRemaining(): DROP_ByteReadPacket = readRemaining(Long.MAX_VALUE)
 
-public suspend fun ByteReadChannel.readFully(dst: ChunkBuffer) {
+public suspend fun ByteReadChannel.readFully(dst: DROP_ChunkBuffer) {
     readFully(dst, dst.writeRemaining)
 }
 

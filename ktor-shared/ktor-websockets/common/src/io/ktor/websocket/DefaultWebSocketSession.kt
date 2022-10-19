@@ -159,7 +159,7 @@ internal class DefaultWebSocketSessionImpl(
     private fun runIncomingProcessor(ponger: SendChannel<Frame.Ping>): Job = launch(
         IncomingProcessorCoroutineName + Dispatchers.Unconfined
     ) {
-        var last: BytePacketBuilder? = null
+        var last: DROP_BytePacketBuilder? = null
         var closeFramePresented = false
         try {
             @OptIn(ExperimentalCoroutinesApi::class)
@@ -181,7 +181,7 @@ internal class DefaultWebSocketSessionImpl(
 
                         if (!frame.fin) {
                             if (last == null) {
-                                last = BytePacketBuilder()
+                                last = DROP_BytePacketBuilder()
                             }
 
                             last!!.writeFully(frame.data)
@@ -310,7 +310,7 @@ internal class DefaultWebSocketSessionImpl(
     }
 
     private suspend fun checkMaxFrameSize(
-        packet: BytePacketBuilder?,
+        packet: DROP_BytePacketBuilder?,
         frame: Frame
     ) {
         val size = frame.data.size + (packet?.size ?: 0)

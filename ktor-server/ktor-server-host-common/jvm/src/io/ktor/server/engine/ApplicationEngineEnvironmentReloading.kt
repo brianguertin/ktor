@@ -183,7 +183,7 @@ public class ApplicationEngineEnvironmentReloading(
             kotlin.jvm.functions.Function1::class.java, // kotlin-stdlib
             Logger::class.java, // slf4j
             ByteReadChannel::class.java,
-            Input::class.java, // kotlinx-io
+            DROP_Input::class.java, // kotlinx-io
             Attributes::class.java
         ).mapNotNullTo(HashSet()) { it.protectionDomain.codeSource.location }
 

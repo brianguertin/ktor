@@ -42,7 +42,7 @@ internal fun onBodyChunkReceived(
     }
 
     val chunkSize = (size * count).toInt()
-    val written = body.writeAvailable(1) { dst: Buffer ->
+    val written = body.writeAvailable(1) { dst: DROP_Buffer ->
         val toWrite = minOf(chunkSize - wrapper.bytesWritten.value, dst.writeRemaining)
         dst.writeFully(buffer, wrapper.bytesWritten.value, toWrite)
     }
@@ -79,7 +79,7 @@ internal fun onBodyChunkRequested(
     if (body.isClosedForRead) {
         return if (body.closedCause != null) -1 else 0
     }
-    val readCount = body.readAvailable(1) { source: Buffer ->
+    val readCount = body.readAvailable(1) { source: DROP_Buffer ->
         source.readAvailable(buffer, 0, requested)
     }
     if (readCount > 0) {

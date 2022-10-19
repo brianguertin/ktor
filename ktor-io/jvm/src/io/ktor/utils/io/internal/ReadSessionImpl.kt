@@ -7,13 +7,13 @@ import io.ktor.utils.io.core.internal.*
 @Suppress("DEPRECATION")
 internal class ReadSessionImpl(private val channel: ByteBufferChannel) : SuspendableReadSession {
     private var lastAvailable = 0
-    private var lastView: ChunkBuffer = ChunkBuffer.Empty
+    private var lastView: DROP_ChunkBuffer = DROP_ChunkBuffer.Empty
 
     public fun completed() {
-        completed(ChunkBuffer.Empty)
+        completed(DROP_ChunkBuffer.Empty)
     }
 
-    private fun completed(newView: ChunkBuffer) {
+    private fun completed(newView: DROP_ChunkBuffer) {
         val delta = lastAvailable - lastView.readRemaining
         if (delta > 0) {
             channel.consumed(delta)
@@ -32,7 +32,7 @@ internal class ReadSessionImpl(private val channel: ByteBufferChannel) : Suspend
         return quantity
     }
 
-    override fun request(atLeast: Int): ChunkBuffer? = channel.request(0, atLeast)?.let {
+    override fun request(atLeast: Int): DROP_ChunkBuffer? = channel.request(0, atLeast)?.let {
         ChunkBuffer(it).also {
             it.resetForRead()
             completed(it)

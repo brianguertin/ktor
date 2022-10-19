@@ -84,7 +84,7 @@ internal class CBCCipher(
         return sendMac.doFinal(content)
     }
 
-    private fun BytePacketBuilder.writePadding() {
+    private fun DROP_BytePacketBuilder.writePadding() {
         val lastBlockSize = (size + 1) % sendCipher.blockSize
         val paddingSize: Byte = (sendCipher.blockSize - lastBlockSize).toByte()
 

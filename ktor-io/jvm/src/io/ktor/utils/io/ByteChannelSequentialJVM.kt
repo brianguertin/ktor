@@ -8,7 +8,7 @@ import java.nio.*
 
 @Suppress("DEPRECATION", "OverridingDeprecatedMember")
 public class ByteChannelSequentialJVM(
-    initial: ChunkBuffer,
+    initial: DROP_ChunkBuffer,
     autoFlush: Boolean
 ) : ByteChannelSequentialBase(initial, autoFlush) {
 

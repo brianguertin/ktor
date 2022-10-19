@@ -26,7 +26,7 @@ public class JacksonSerializer(
     override fun write(data: Any, contentType: ContentType): OutgoingContent =
         TextContent(backend.writeValueAsString(data), contentType)
 
-    override fun read(type: TypeInfo, body: Input): Any {
+    override fun read(type: TypeInfo, body: DROP_Input): Any {
         return backend.readValue(body.readText(), backend.typeFactory.constructType(type.reifiedType))
     }
 }

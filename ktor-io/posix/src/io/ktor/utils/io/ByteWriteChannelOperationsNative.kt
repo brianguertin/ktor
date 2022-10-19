@@ -8,7 +8,7 @@ import kotlinx.cinterop.*
 /**
  * Invokes [block] if it is possible to write at least [min] byte
  * providing buffer to it so lambda can write to the buffer
- * up to [Buffer.writeRemaining] bytes. If there are no [min] bytes spaces available then the invocation returns -1.
+ * up to [DROP_Buffer.writeRemaining] bytes. If there are no [min] bytes spaces available then the invocation returns -1.
  *
  * Warning: it is not guaranteed that all of remaining bytes will be represented as a single byte buffer
  * eg: it could be 4 bytes available for write but the provided byte buffer could have only 2 remaining bytes:
@@ -19,7 +19,7 @@ import kotlinx.cinterop.*
  *
  * @return number of consumed bytes or -1 if the block wasn't executed.
  */
-public fun ByteWriteChannel.writeAvailable(min: Int, block: (Buffer) -> Unit): Int {
+public fun ByteWriteChannel.writeAvailable(min: Int, block: (DROP_Buffer) -> Unit): Int {
     TODO()
 }
 

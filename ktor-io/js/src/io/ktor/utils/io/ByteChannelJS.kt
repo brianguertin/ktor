@@ -10,7 +10,7 @@ import org.khronos.webgl.*
  * Creates buffered channel for asynchronous reading and writing of sequences of bytes.
  */
 public actual fun ByteChannel(autoFlush: Boolean): ByteChannel {
-    return ByteChannelJS(ChunkBuffer.Empty, autoFlush)
+    return ByteChannelJS(DROP_ChunkBuffer.Empty, autoFlush)
 }
 
 /**
@@ -18,7 +18,7 @@ public actual fun ByteChannel(autoFlush: Boolean): ByteChannel {
  */
 public actual fun ByteReadChannel(content: ByteArray, offset: Int, length: Int): ByteReadChannel {
     if (content.isEmpty()) return ByteReadChannel.Empty
-    val head = ChunkBuffer.Pool.borrow()
+    val head = DROP_ChunkBuffer.Pool.borrow()
     var tail = head
 
     var start = offset
@@ -26,12 +26,12 @@ public actual fun ByteReadChannel(content: ByteArray, offset: Int, length: Int):
     while (true) {
         tail.reserveEndGap(8)
         val size = minOf(end - start, tail.writeRemaining)
-        (tail as Buffer).writeFully(content, start, size)
+        (tail as DROP_Buffer).writeFully(content, start, size)
         start += size
 
         if (start == end) break
         val current = tail
-        tail = ChunkBuffer.Pool.borrow()
+        tail = DROP_ChunkBuffer.Pool.borrow()
         current.next = tail
     }
 
@@ -43,7 +43,7 @@ public actual fun ByteReadChannel(content: ByteArray, offset: Int, length: Int):
  */
 public fun ByteReadChannel(content: ArrayBufferView): ByteReadChannel {
     if (content.byteLength == 0) return ByteReadChannel.Empty
-    val head = ChunkBuffer.Pool.borrow()
+    val head = DROP_ChunkBuffer.Pool.borrow()
     var tail = head
 
     var start = 0
@@ -56,7 +56,7 @@ public fun ByteReadChannel(content: ArrayBufferView): ByteReadChannel {
         remaining -= size
 
         if (remaining == 0) break
-        tail = ChunkBuffer.Pool.borrow()
+        tail = DROP_ChunkBuffer.Pool.borrow()
     }
 
     return ByteChannelJS(head, false).apply { close() }
@@ -75,7 +75,7 @@ public actual suspend fun ByteReadChannel.copyTo(dst: ByteWriteChannel, limit: L
     return (this as ByteChannelSequentialBase).copyToSequentialImpl((dst as ByteChannelSequentialBase), limit)
 }
 
-internal class ByteChannelJS(initial: ChunkBuffer, autoFlush: Boolean) : ByteChannelSequentialBase(initial, autoFlush) {
+internal class ByteChannelJS(initial: DROP_ChunkBuffer, autoFlush: Boolean) : ByteChannelSequentialBase(initial, autoFlush) {
     private var attachedJob: Job? = null
 
     @OptIn(InternalCoroutinesApi::class)

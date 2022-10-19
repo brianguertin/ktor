@@ -45,7 +45,7 @@ class ChannelsTest {
     }
 
     @Suppress("UNUSED_PARAMETER")
-    private fun Input.peekEquals(text: String, iteration: Int): Boolean {
+    private fun DROP_Input.peekEquals(text: String, iteration: Int): Boolean {
         var equals = false
 
         takeWhileSize(text.length) { buffer ->
@@ -59,7 +59,7 @@ class ChannelsTest {
         return equals
     }
 
-    private fun verify(buffer: Buffer) {
+    private fun verify(buffer: DROP_Buffer) {
         var failedAt = -1
 
         buffer.read { memory, start, endExclusive ->
@@ -81,7 +81,7 @@ class ChannelsTest {
         }
     }
 
-    private fun verificationFailed(buffer: Buffer, errorIndex: Int): Nothing {
+    private fun verificationFailed(buffer: DROP_Buffer, errorIndex: Int): Nothing {
         buffer.read { memory, start, endExclusive ->
             print(
                 buildString(endExclusive - start + errorIndex + 3) {

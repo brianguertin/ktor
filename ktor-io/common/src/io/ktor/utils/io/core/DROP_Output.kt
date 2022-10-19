@@ -6,13 +6,13 @@ import io.ktor.utils.io.core.internal.*
 import io.ktor.utils.io.pool.*
 
 /**
- * This shouldn't be implemented directly. Inherit [Output] instead.
+ * This shouldn't be implemented directly. Inherit [DROP_Output] instead.
  */
-public abstract class Output public constructor(
-    protected val pool: ObjectPool<ChunkBuffer>
+public abstract class DROP_Output public constructor(
+    protected val pool: ObjectPool<DROP_ChunkBuffer>
 ) : Appendable, Closeable {
 
-    public constructor() : this(ChunkBuffer.Pool)
+    public constructor() : this(DROP_ChunkBuffer.Pool)
 
     protected val _size: Int
         get() = chainedSize + (tailPosition - tailInitialPosition)
@@ -22,21 +22,21 @@ public abstract class Output public constructor(
      * It should never capture the [source] instance
      * longer than this method execution since it may be disposed after return.
      */
-    protected abstract fun flush(source: Memory, offset: Int, length: Int)
+    protected abstract fun flush(source: DROP_Memory, offset: Int, length: Int)
 
     /**
      * An implementation should only close the destination.
      */
     protected abstract fun closeDestination()
 
-    private var _head: ChunkBuffer? = null
+    private var _head: DROP_ChunkBuffer? = null
 
-    private var _tail: ChunkBuffer? = null
+    private var _tail: DROP_ChunkBuffer? = null
 
-    internal val head: ChunkBuffer
-        get() = _head ?: ChunkBuffer.Empty
+    internal val head: DROP_ChunkBuffer
+        get() = _head ?: DROP_ChunkBuffer.Empty
 
-    internal var tailMemory: Memory = Memory.Empty
+    internal var tailMemory: DROP_Memory = DROP_Memory.Empty
 
     internal var tailPosition: Int = 0
 
@@ -71,7 +71,7 @@ public abstract class Output public constructor(
      * Detach all chunks and cleanup all internal state so builder could be reusable again
      * @return a chain of buffer views or `null` of it is empty
      */
-    internal fun stealAll(): ChunkBuffer? {
+    internal fun stealAll(): DROP_ChunkBuffer? {
         val head = this._head ?: return null
 
         _tail?.commitWrittenUntilIndex(tailPosition)
@@ -82,32 +82,32 @@ public abstract class Output public constructor(
         tailEndExclusive = 0
         tailInitialPosition = 0
         chainedSize = 0
-        tailMemory = Memory.Empty
+        tailMemory = DROP_Memory.Empty
 
         return head
     }
 
-    internal fun appendSingleChunk(buffer: ChunkBuffer) {
+    internal fun appendSingleChunk(buffer: DROP_ChunkBuffer) {
         check(buffer.next == null) { "It should be a single buffer chunk." }
         appendChainImpl(buffer, buffer, 0)
     }
 
-    internal fun appendChain(head: ChunkBuffer) {
+    internal fun appendChain(head: DROP_ChunkBuffer) {
         val tail = head.findTail()
         val chainedSizeDelta = (head.remainingAll() - tail.readRemaining).toIntOrFail("total size increase")
         appendChainImpl(head, tail, chainedSizeDelta)
     }
 
-    private fun appendNewChunk(): ChunkBuffer {
+    private fun appendNewChunk(): DROP_ChunkBuffer {
         val new = pool.borrow()
-        new.reserveEndGap(Buffer.ReservedSize)
+        new.reserveEndGap(DROP_Buffer.ReservedSize)
 
         appendSingleChunk(new)
 
         return new
     }
 
-    private fun appendChainImpl(head: ChunkBuffer, newTail: ChunkBuffer, chainedSizeDelta: Int) {
+    private fun appendChainImpl(head: DROP_ChunkBuffer, newTail: DROP_ChunkBuffer, chainedSizeDelta: Int) {
         val _tail = _tail
         if (_tail == null) {
             _head = head
@@ -157,7 +157,7 @@ public abstract class Output public constructor(
     /**
      * Append single UTF-8 character
      */
-    override fun append(value: Char): Output {
+    override fun append(value: Char): DROP_Output {
         val tailPosition = tailPosition
         if (tailEndExclusive - tailPosition >= 3) {
             val size = tailMemory.putUtf8Char(tailPosition, value.code)
@@ -177,7 +177,7 @@ public abstract class Output public constructor(
         }
     }
 
-    override fun append(value: CharSequence?): Output {
+    override fun append(value: CharSequence?): DROP_Output {
         if (value == null) {
             append("null", 0, 4)
         } else {
@@ -186,7 +186,7 @@ public abstract class Output public constructor(
         return this
     }
 
-    override fun append(value: CharSequence?, startIndex: Int, endIndex: Int): Output {
+    override fun append(value: CharSequence?, startIndex: Int, endIndex: Int): DROP_Output {
         if (value == null) {
             return append("null", startIndex, endIndex)
         }
@@ -199,7 +199,7 @@ public abstract class Output public constructor(
     /**
      * Writes another packet to the end. Please note that the instance [packet] gets consumed so you don't need to release it
      */
-    public fun writePacket(packet: ByteReadPacket) {
+    public fun writePacket(packet: DROP_ByteReadPacket) {
         val foreignStolen = packet.stealAll()
         if (foreignStolen == null) {
             packet.release()
@@ -216,9 +216,9 @@ public abstract class Output public constructor(
     }
 
     /**
-     * Write chunk buffer to current [Output]. Assuming that chunk buffer is from current pool.
+     * Write chunk buffer to current [DROP_Output]. Assuming that chunk buffer is from current pool.
      */
-    internal fun writeChunkBuffer(chunkBuffer: ChunkBuffer) {
+    internal fun writeChunkBuffer(chunkBuffer: DROP_ChunkBuffer) {
         val _tail = _tail
         if (_tail == null) {
             appendChain(chunkBuffer)
@@ -228,7 +228,7 @@ public abstract class Output public constructor(
         writePacketMerging(_tail, chunkBuffer, pool)
     }
 
-    private fun writePacketMerging(tail: ChunkBuffer, foreignStolen: ChunkBuffer, pool: ObjectPool<ChunkBuffer>) {
+    private fun writePacketMerging(tail: DROP_ChunkBuffer, foreignStolen: DROP_ChunkBuffer, pool: ObjectPool<DROP_ChunkBuffer>) {
         tail.commitWrittenUntilIndex(tailPosition)
 
         val lastSize = tail.readRemaining
@@ -267,7 +267,7 @@ public abstract class Output public constructor(
     /**
      * Do prepend current [tail] to the beginning of [foreignStolen].
      */
-    private fun writePacketSlowPrepend(foreignStolen: ChunkBuffer, tail: ChunkBuffer) {
+    private fun writePacketSlowPrepend(foreignStolen: DROP_ChunkBuffer, tail: DROP_ChunkBuffer) {
         foreignStolen.writeBufferPrepend(tail)
 
         val _head = _head ?: error("head should't be null since it is already handled in the fast-path")
@@ -294,7 +294,7 @@ public abstract class Output public constructor(
     /**
      * Write exact [n] bytes from packet to the builder
      */
-    public fun writePacket(p: ByteReadPacket, n: Int) {
+    public fun writePacket(p: DROP_ByteReadPacket, n: Int) {
         var remaining = n
 
         while (remaining > 0) {
@@ -314,7 +314,7 @@ public abstract class Output public constructor(
     /**
      * Write exact [n] bytes from packet to the builder
      */
-    public fun writePacket(p: ByteReadPacket, n: Long) {
+    public fun writePacket(p: DROP_ByteReadPacket, n: Long) {
         var remaining = n
 
         while (remaining > 0L) {
@@ -344,7 +344,7 @@ public abstract class Output public constructor(
     }
 
     @PublishedApi
-    internal fun prepareWriteHead(n: Int): ChunkBuffer {
+    internal fun prepareWriteHead(n: Int): DROP_ChunkBuffer {
         if (tailRemaining >= n) {
             _tail?.let {
                 it.commitWrittenUntilIndex(tailPosition)
@@ -360,7 +360,7 @@ public abstract class Output public constructor(
     }
 
     @PublishedApi
-    internal inline fun write(size: Int, block: (Buffer) -> Int): Int {
+    internal inline fun write(size: Int, block: (DROP_Buffer) -> Int): Int {
         val buffer = prepareWriteHead(size)
         try {
             val result = block(buffer)
@@ -372,16 +372,16 @@ public abstract class Output public constructor(
         }
     }
 
-    internal open fun last(buffer: ChunkBuffer) {
+    internal open fun last(buffer: DROP_ChunkBuffer) {
         appendSingleChunk(buffer)
     }
 
     internal fun afterBytesStolen() {
         val head = head
-        if (head !== ChunkBuffer.Empty) {
+        if (head !== DROP_ChunkBuffer.Empty) {
             check(head.next == null)
             head.resetForWrite()
-            head.reserveEndGap(Buffer.ReservedSize)
+            head.reserveEndGap(DROP_Buffer.ReservedSize)
             tailPosition = head.writePosition
             tailInitialPosition = tailPosition
             tailEndExclusive = head.limit
@@ -390,68 +390,68 @@ public abstract class Output public constructor(
 }
 
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-public fun Output.append(csq: CharSequence, start: Int = 0, end: Int = csq.length): Appendable {
+public fun DROP_Output.append(csq: CharSequence, start: Int = 0, end: Int = csq.length): Appendable {
     return append(csq, start, end)
 }
 
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-public fun Output.append(csq: CharArray, start: Int = 0, end: Int = csq.size): Appendable {
+public fun DROP_Output.append(csq: CharArray, start: Int = 0, end: Int = csq.size): Appendable {
     return append(csq, start, end)
 }
 
-public fun Output.writeFully(src: ByteArray, offset: Int = 0, length: Int = src.size - offset) {
+public fun DROP_Output.writeFully(src: ByteArray, offset: Int = 0, length: Int = src.size - offset) {
     writeFullyBytesTemplate(offset, length) { buffer, currentOffset, count ->
         buffer.writeFully(src, currentOffset, count)
     }
 }
 
-public fun Output.writeFully(src: ShortArray, offset: Int = 0, length: Int = src.size - offset) {
+public fun DROP_Output.writeFully(src: ShortArray, offset: Int = 0, length: Int = src.size - offset) {
     writeFullyTemplate(2, offset, length) { buffer, currentOffset, count ->
         buffer.writeFully(src, currentOffset, count)
     }
 }
 
-public fun Output.writeFully(src: IntArray, offset: Int = 0, length: Int = src.size - offset) {
+public fun DROP_Output.writeFully(src: IntArray, offset: Int = 0, length: Int = src.size - offset) {
     writeFullyTemplate(4, offset, length) { buffer, currentOffset, count ->
         buffer.writeFully(src, currentOffset, count)
     }
 }
 
-public fun Output.writeFully(src: LongArray, offset: Int = 0, length: Int = src.size - offset) {
+public fun DROP_Output.writeFully(src: LongArray, offset: Int = 0, length: Int = src.size - offset) {
     writeFullyTemplate(8, offset, length) { buffer, currentOffset, count ->
         buffer.writeFully(src, currentOffset, count)
     }
 }
 
-public fun Output.writeFully(src: FloatArray, offset: Int = 0, length: Int = src.size - offset) {
+public fun DROP_Output.writeFully(src: FloatArray, offset: Int = 0, length: Int = src.size - offset) {
     writeFullyTemplate(4, offset, length) { buffer, currentOffset, count ->
         buffer.writeFully(src, currentOffset, count)
     }
 }
 
-public fun Output.writeFully(src: DoubleArray, offset: Int = 0, length: Int = src.size - offset) {
+public fun DROP_Output.writeFully(src: DoubleArray, offset: Int = 0, length: Int = src.size - offset) {
     writeFullyTemplate(8, offset, length) { buffer, currentOffset, count ->
         buffer.writeFully(src, currentOffset, count)
     }
 }
 
-public fun Output.writeFully(src: Buffer, length: Int = src.readRemaining) {
+public fun DROP_Output.writeFully(src: DROP_Buffer, length: Int = src.readRemaining) {
     writeFullyBytesTemplate(0, length) { buffer, _, count ->
         buffer.writeFully(src, count)
     }
 }
 
-public fun Output.writeFully(src: Memory, offset: Int, length: Int) {
+public fun DROP_Output.writeFully(src: DROP_Memory, offset: Int, length: Int) {
     writeFully(src, offset.toLong(), length.toLong())
 }
 
-public fun Output.writeFully(src: Memory, offset: Long, length: Long) {
+public fun DROP_Output.writeFully(src: DROP_Memory, offset: Long, length: Long) {
     writeFullyBytesTemplate(offset, length) { memory, destinationOffset, sourceOffset, count ->
         src.copyTo(memory, sourceOffset, count, destinationOffset)
     }
 }
 
-public fun Output.fill(times: Long, value: Byte = 0) {
+public fun DROP_Output.fill(times: Long, value: Byte = 0) {
     var written = 0L
     writeWhile { buffer ->
         val partTimes = minOf(buffer.writeRemaining.toLong(), times - written).toInt()
@@ -466,8 +466,8 @@ public fun Output.fill(times: Long, value: Byte = 0) {
  * Depending on the output underlying implementation it could invoke [block] function with the same buffer several times
  * however it is guaranteed that it is always non-empty.
  */
-internal inline fun Output.writeWhile(block: (Buffer) -> Boolean) {
-    var tail: ChunkBuffer = prepareWriteHead(1, null)
+internal inline fun DROP_Output.writeWhile(block: (DROP_Buffer) -> Boolean) {
+    var tail: DROP_ChunkBuffer = prepareWriteHead(1, null)
     try {
         while (true) {
             if (!block(tail)) break
@@ -484,7 +484,7 @@ internal inline fun Output.writeWhile(block: (Buffer) -> Boolean) {
  * bytes space (could be the same buffer as before if it complies to the restriction).
  * @param initialSize for the first buffer passed to [block] function
  */
-internal inline fun Output.writeWhileSize(initialSize: Int = 1, block: (Buffer) -> Int) {
+internal inline fun DROP_Output.writeWhileSize(initialSize: Int = 1, block: (DROP_Buffer) -> Int) {
     var tail = prepareWriteHead(initialSize, null)
 
     try {
@@ -499,10 +499,10 @@ internal inline fun Output.writeWhileSize(initialSize: Int = 1, block: (Buffer) 
     }
 }
 
-private inline fun Output.writeFullyBytesTemplate(
+private inline fun DROP_Output.writeFullyBytesTemplate(
     offset: Int,
     length: Int,
-    block: (Buffer, currentOffset: Int, count: Int) -> Unit
+    block: (DROP_Buffer, currentOffset: Int, count: Int) -> Unit
 ) {
     var currentOffset = offset
     var remaining = length
@@ -516,10 +516,10 @@ private inline fun Output.writeFullyBytesTemplate(
     }
 }
 
-private inline fun Output.writeFullyBytesTemplate(
+private inline fun DROP_Output.writeFullyBytesTemplate(
     initialOffset: Long,
     length: Long,
-    block: (destination: Memory, destinationOffset: Long, currentOffset: Long, count: Long) -> Unit
+    block: (destination: DROP_Memory, destinationOffset: Long, currentOffset: Long, count: Long) -> Unit
 ) {
     var currentOffset = initialOffset
     var remaining = length
@@ -534,11 +534,11 @@ private inline fun Output.writeFullyBytesTemplate(
     }
 }
 
-private inline fun Output.writeFullyTemplate(
+private inline fun DROP_Output.writeFullyTemplate(
     componentSize: Int,
     offset: Int,
     length: Int,
-    block: (Buffer, currentOffset: Int, count: Int) -> Unit
+    block: (DROP_Buffer, currentOffset: Int, count: Int) -> Unit
 ) {
     var currentOffset = offset
     var remaining = length

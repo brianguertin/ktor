@@ -7,7 +7,6 @@ package io.ktor.network.tls
 import io.ktor.network.tls.extensions.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
-import java.io.*
 import java.math.*
 import java.security.cert.*
 import java.security.spec.*
@@ -26,7 +25,7 @@ internal suspend fun ByteReadChannel.readTLSRecord(): TLSRecord {
     return TLSRecord(type, version, packet)
 }
 
-internal fun ByteReadPacket.readTLSHandshake(): TLSHandshake = TLSHandshake().apply {
+internal fun DROP_ByteReadPacket.readTLSHandshake(): TLSHandshake = TLSHandshake().apply {
     val typeAndVersion = readInt()
     type = TLSHandshakeType.byCode(typeAndVersion ushr 24)
     val length = typeAndVersion and 0xffffff
@@ -35,7 +34,7 @@ internal fun ByteReadPacket.readTLSHandshake(): TLSHandshake = TLSHandshake().ap
     }
 }
 
-internal fun ByteReadPacket.readTLSServerHello(): TLSServerHello {
+internal fun DROP_ByteReadPacket.readTLSServerHello(): TLSServerHello {
     val version = readTLSVersion()
 
     val random = ByteArray(32)
@@ -82,7 +81,7 @@ internal fun ByteReadPacket.readTLSServerHello(): TLSServerHello {
     return TLSServerHello(version, random, sessionId, suite, compressionMethod, extensions)
 }
 
-internal fun ByteReadPacket.readCurveParams(): NamedCurve {
+internal fun DROP_ByteReadPacket.readCurveParams(): NamedCurve {
     val type = readByte().toInt() and 0xff
     when (ServerKeyExchangeType.byCode(type)) {
         ServerKeyExchangeType.NamedCurve -> {
@@ -95,7 +94,7 @@ internal fun ByteReadPacket.readCurveParams(): NamedCurve {
     }
 }
 
-internal fun ByteReadPacket.readTLSCertificate(): List<Certificate> {
+internal fun DROP_ByteReadPacket.readTLSCertificate(): List<Certificate> {
     val certificatesChainLength = readTripleByteLength()
     var certificateBase = 0
     val result = ArrayList<Certificate>()
@@ -119,7 +118,7 @@ internal fun ByteReadPacket.readTLSCertificate(): List<Certificate> {
     return result
 }
 
-internal fun ByteReadPacket.readECPoint(fieldSize: Int): ECPoint {
+internal fun DROP_ByteReadPacket.readECPoint(fieldSize: Int): ECPoint {
     val pointSize = readByte().toInt() and 0xff
 
     val tag = readByte()
@@ -137,10 +136,10 @@ internal fun ByteReadPacket.readECPoint(fieldSize: Int): ECPoint {
 private suspend fun ByteReadChannel.readTLSVersion() =
     TLSVersion.byCode(readShortCompatible() and 0xffff)
 
-private fun ByteReadPacket.readTLSVersion() =
+private fun DROP_ByteReadPacket.readTLSVersion() =
     TLSVersion.byCode(readShort().toInt() and 0xffff)
 
-internal fun ByteReadPacket.readTripleByteLength(): Int = (readByte().toInt() and 0xff shl 16) or
+internal fun DROP_ByteReadPacket.readTripleByteLength(): Int = (readByte().toInt() and 0xff shl 16) or
     (readShort().toInt() and 0xffff)
 
 internal suspend fun ByteReadChannel.readShortCompatible(): Int {

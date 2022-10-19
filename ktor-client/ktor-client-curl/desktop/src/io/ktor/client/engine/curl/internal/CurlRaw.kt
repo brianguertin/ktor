@@ -52,7 +52,7 @@ internal class CurlRequestData(
 }
 
 internal class CurlResponseBuilder(val request: CurlRequestData) {
-    val headersBytes = BytePacketBuilder()
+    val headersBytes = DROP_BytePacketBuilder()
     val bodyChannel = ByteChannel(true).apply { attachJob(request.executionContext) }
 }
 

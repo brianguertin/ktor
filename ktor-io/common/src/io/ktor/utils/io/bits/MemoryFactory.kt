@@ -16,15 +16,15 @@ import kotlin.contracts.*
  * 1. length has no default (blocked by expect/actual with default value compiler bug (fixed in KT 1.4.3))
  * 2. no inline -> can't suspend inside block (blocked by inline compiler bug)
  */
-public expect fun <R> ByteArray.useMemory(offset: Int = 0, length: Int, block: (Memory) -> R): R
+public expect fun <R> ByteArray.useMemory(offset: Int = 0, length: Int, block: (DROP_Memory) -> R): R
 
 /**
- * Invoke [block] function with a temporary [Memory] instance of the specified [size] in bytes.
+ * Invoke [block] function with a temporary [DROP_Memory] instance of the specified [size] in bytes.
  * The provided instance shouldn't be captured and used outside of the [block] otherwise an undefined behaviour
  * may occur including crash and/or data corruption.
  */
 @OptIn(ExperimentalContracts::class)
-public inline fun <R> withMemory(size: Int, block: (Memory) -> R): R {
+public inline fun <R> withMemory(size: Int, block: (DROP_Memory) -> R): R {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
@@ -33,12 +33,12 @@ public inline fun <R> withMemory(size: Int, block: (Memory) -> R): R {
 }
 
 /**
- * Invoke [block] function with a temporary [Memory] instance of the specified [size] in bytes.
+ * Invoke [block] function with a temporary [DROP_Memory] instance of the specified [size] in bytes.
  * The provided instance shouldn't be captured and used outside of the [block] otherwise an undefined behaviour
  * may occur including crash and/or data corruption.
  */
 @OptIn(ExperimentalContracts::class)
-public inline fun <R> withMemory(size: Long, block: (Memory) -> R): R {
+public inline fun <R> withMemory(size: Long, block: (DROP_Memory) -> R): R {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
@@ -56,9 +56,9 @@ public inline fun <R> withMemory(size: Long, block: (Memory) -> R): R {
 internal expect object DefaultAllocator : Allocator
 
 public interface Allocator {
-    public fun alloc(size: Int): Memory
+    public fun alloc(size: Int): DROP_Memory
 
-    public fun alloc(size: Long): Memory
+    public fun alloc(size: Long): DROP_Memory
 
-    public fun free(instance: Memory)
+    public fun free(instance: DROP_Memory)
 }

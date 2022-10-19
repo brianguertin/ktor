@@ -48,7 +48,7 @@ object MockSerializer : JsonSerializer {
         error("Can't serialize $data")
     }
 
-    override fun read(type: TypeInfo, body: Input): Any {
+    override fun read(type: TypeInfo, body: DROP_Input): Any {
         error("can't read $type")
     }
 }

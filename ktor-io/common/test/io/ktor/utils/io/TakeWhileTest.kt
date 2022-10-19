@@ -9,8 +9,8 @@ class TakeWhileTest {
     private val chunk1 = pool.borrow()
     private val chunk2 = pool.borrow()
 
-    private val chunks = ArrayList<ChunkBuffer>()
-    private val packets = ArrayList<ByteReadPacket>()
+    private val chunks = ArrayList<DROP_ChunkBuffer>()
+    private val packets = ArrayList<DROP_ByteReadPacket>()
 
     @BeforeTest
     fun prepare() {
@@ -44,7 +44,7 @@ class TakeWhileTest {
         chunk1.writeFully(cycle(chunk1.writeRemaining))
         chunk2.writeFully(cycle(3))
 
-        val pkt = ByteReadPacket(chunk1, pool)
+        val pkt = DROP_ByteReadPacket(chunk1, pool)
         packets.add(pkt)
         chunks.remove(chunk1)
         chunks.remove(chunk2)
@@ -64,7 +64,7 @@ class TakeWhileTest {
         chunk1.writeFully(cycle(chunk1.writeRemaining))
         chunk2.writeFully(cycle(10))
 
-        val pkt = ByteReadPacket(chunk1, pool)
+        val pkt = DROP_ByteReadPacket(chunk1, pool)
         packets.add(pkt)
         chunks.remove(chunk1)
         chunks.remove(chunk2)

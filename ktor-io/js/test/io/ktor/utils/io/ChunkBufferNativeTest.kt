@@ -9,7 +9,7 @@ import io.ktor.utils.io.core.internal.*
 import kotlin.test.*
 
 class ChunkBufferNativeTest {
-    private val buffer = ChunkBuffer.Pool.borrow()
+    private val buffer = DROP_ChunkBuffer.Pool.borrow()
 
     @BeforeTest
     fun prepare() {
@@ -19,7 +19,7 @@ class ChunkBufferNativeTest {
 
     @AfterTest
     fun destroy() {
-        buffer.release(ChunkBuffer.Pool)
+        buffer.release(DROP_ChunkBuffer.Pool)
     }
 
     @Test

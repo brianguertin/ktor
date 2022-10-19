@@ -62,7 +62,7 @@ public actual val CharsetEncoder.charset: Charset get() = _charset
 public actual fun CharsetEncoder.encodeToByteArray(input: CharSequence, fromIndex: Int, toIndex: Int): ByteArray =
     encodeToByteArrayImpl1(input, fromIndex, toIndex)
 
-internal actual fun CharsetEncoder.encodeImpl(input: CharSequence, fromIndex: Int, toIndex: Int, dst: Buffer): Int {
+internal actual fun CharsetEncoder.encodeImpl(input: CharSequence, fromIndex: Int, toIndex: Int, dst: DROP_Buffer): Int {
     require(fromIndex <= toIndex)
     if (charset == Charsets.ISO_8859_1) {
         return encodeISO88591(input, fromIndex, toIndex, dst)
@@ -93,13 +93,13 @@ internal actual fun CharsetEncoder.encodeImpl(input: CharSequence, fromIndex: In
     return start - fromIndex
 }
 
-public actual fun CharsetEncoder.encodeUTF8(input: ByteReadPacket, dst: Output) {
+public actual fun CharsetEncoder.encodeUTF8(input: DROP_ByteReadPacket, dst: DROP_Output) {
     require(charset === Charsets.UTF_8)
     // we only support UTF-8 so as far as input is UTF-8 encoded string then we simply copy bytes
     dst.writePacket(input)
 }
 
-internal actual fun CharsetEncoder.encodeComplete(dst: Buffer): Boolean = true
+internal actual fun CharsetEncoder.encodeComplete(dst: DROP_Buffer): Boolean = true
 
 // ----------------------------------------------------------------------
 
@@ -110,7 +110,7 @@ private data class CharsetDecoderImpl(private val charset: Charset) : CharsetDec
 public actual val CharsetDecoder.charset: Charset get() = _charset
 
 internal actual fun CharsetDecoder.decodeBuffer(
-    input: Buffer,
+    input: DROP_Buffer,
     out: Appendable,
     lastBuffer: Boolean,
     max: Int
@@ -131,7 +131,7 @@ internal actual fun CharsetDecoder.decodeBuffer(
     return copied
 }
 
-public actual fun CharsetDecoder.decode(input: Input, dst: Appendable, max: Int): Int {
+public actual fun CharsetDecoder.decode(input: DROP_Input, dst: Appendable, max: Int): Int {
     val decoder = Decoder(charset.name, true)
     var charactersCopied = 0
 
@@ -193,7 +193,7 @@ public actual fun CharsetDecoder.decode(input: Input, dst: Appendable, max: Int)
     return charactersCopied
 }
 
-public actual fun CharsetDecoder.decodeExactBytes(input: Input, inputLength: Int): String {
+public actual fun CharsetDecoder.decodeExactBytes(input: DROP_Input, inputLength: Int): String {
     if (inputLength == 0) return ""
     if (input.headRemaining >= inputLength) {
         val decoder = Decoder(charset._name, true)
@@ -231,7 +231,7 @@ private data class CharsetImpl(val name: String) : Charset(name) {
 
 public actual open class MalformedInputException actual constructor(message: String) : Throwable(message)
 
-private fun CharsetDecoder.decodeExactBytesSlow(input: Input, inputLength: Int): String {
+private fun CharsetDecoder.decodeExactBytesSlow(input: DROP_Input, inputLength: Int): String {
     val decoder = Decoder(charset.name, true)
     var inputRemaining = inputLength
     val sb = StringBuilder(inputLength)

@@ -10,10 +10,10 @@ import kotlin.contracts.*
 /**
  * Represents a buffer with read and write positions.
  *
- * Concurrent unsafe: the same memory could be shared between different instances of [Buffer] however you can't
- * read/write using the same [Buffer] instance from different threads.
+ * Concurrent unsafe: the same memory could be shared between different instances of [DROP_Buffer] however you can't
+ * read/write using the same [DROP_Buffer] instance from different threads.
  */
-public open class Buffer(public val memory: Memory) {
+public open class DROP_Buffer(public val memory: DROP_Memory) {
 
     /**
      * Current read position. It is always non-negative and will never run ahead of the [writePosition].
@@ -247,7 +247,7 @@ public open class Buffer(public val memory: Memory) {
         }
     }
 
-    protected open fun duplicateTo(copy: Buffer) {
+    protected open fun duplicateTo(copy: DROP_Buffer) {
         copy.limit = limit
         copy.startGap = startGap
         copy.readPosition = readPosition
@@ -255,9 +255,9 @@ public open class Buffer(public val memory: Memory) {
     }
 
     /**
-     * Create a new [Buffer] instance pointing to the same memory and having the same positions.
+     * Create a new [DROP_Buffer] instance pointing to the same memory and having the same positions.
      */
-    public open fun duplicate(): Buffer = Buffer(memory).apply {
+    public open fun duplicate(): DROP_Buffer = DROP_Buffer(memory).apply {
         duplicateTo(this)
     }
 
@@ -332,27 +332,27 @@ public open class Buffer(public val memory: Memory) {
     public companion object {
         /**
          * Number of bytes usually reserved in the end of chunk
-         * when several instances of [io.ktor.utils.io.core.internal.ChunkBuffer] are connected into a chain (usually inside of [ByteReadPacket]
-         * or [BytePacketBuilder])
+         * when several instances of [io.ktor.utils.io.core.internal.DROP_ChunkBuffer] are connected into a chain (usually inside of [DROP_ByteReadPacket]
+         * or [DROP_BytePacketBuilder])
          */
         public const val ReservedSize: Int = 8
 
         /**
          * The empty buffer singleton: it has zero capacity for read and write.
          */
-        public val Empty: Buffer get() = ChunkBuffer.Empty
+        public val Empty: DROP_Buffer get() = DROP_ChunkBuffer.Empty
     }
 }
 
 /**
  * @return `true` if there are available bytes to be read
  */
-public inline fun Buffer.canRead(): Boolean = writePosition > readPosition
+public inline fun DROP_Buffer.canRead(): Boolean = writePosition > readPosition
 
 /**
  * @return `true` if there is free room to for write
  */
-public inline fun Buffer.canWrite(): Boolean = limit > writePosition
+public inline fun DROP_Buffer.canWrite(): Boolean = limit > writePosition
 
 /**
  * Apply [block] of code with buffer's memory providing read range indices. The returned value of [block] lambda should
@@ -361,7 +361,7 @@ public inline fun Buffer.canWrite(): Boolean = limit > writePosition
  * including data damage.
  */
 @OptIn(ExperimentalContracts::class)
-public inline fun Buffer.read(block: (memory: Memory, start: Int, endExclusive: Int) -> Int): Int {
+public inline fun DROP_Buffer.read(block: (memory: DROP_Memory, start: Int, endExclusive: Int) -> Int): Int {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
@@ -378,7 +378,7 @@ public inline fun Buffer.read(block: (memory: Memory, start: Int, endExclusive: 
  * including data damage.
  */
 @OptIn(ExperimentalContracts::class)
-public inline fun Buffer.write(block: (memory: Memory, start: Int, endExclusive: Int) -> Int): Int {
+public inline fun DROP_Buffer.write(block: (memory: DROP_Memory, start: Int, endExclusive: Int) -> Int): Int {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
@@ -400,7 +400,7 @@ internal fun rewindFailed(count: Int, rewindRemaining: Int): Nothing {
     throw IllegalArgumentException("Unable to rewind $count bytes: only $rewindRemaining could be rewinded")
 }
 
-internal fun Buffer.startGapReservationFailedDueToLimit(startGap: Int): Nothing {
+internal fun DROP_Buffer.startGapReservationFailedDueToLimit(startGap: Int): Nothing {
     if (startGap > capacity) {
         throw IllegalArgumentException("Start gap $startGap is bigger than the capacity $capacity")
     }
@@ -410,31 +410,31 @@ internal fun Buffer.startGapReservationFailedDueToLimit(startGap: Int): Nothing 
     )
 }
 
-internal fun Buffer.startGapReservationFailed(startGap: Int): Nothing {
+internal fun DROP_Buffer.startGapReservationFailed(startGap: Int): Nothing {
     throw IllegalStateException(
         "Unable to reserve $startGap start gap: " +
             "there are already $readRemaining content bytes starting at offset $readPosition"
     )
 }
 
-internal fun Buffer.endGapReservationFailedDueToCapacity(endGap: Int) {
+internal fun DROP_Buffer.endGapReservationFailedDueToCapacity(endGap: Int) {
     throw IllegalArgumentException("End gap $endGap is too big: capacity is $capacity")
 }
 
-internal fun Buffer.endGapReservationFailedDueToStartGap(endGap: Int) {
+internal fun DROP_Buffer.endGapReservationFailedDueToStartGap(endGap: Int) {
     throw IllegalArgumentException(
         "End gap $endGap is too big: there are already $startGap bytes reserved in the beginning"
     )
 }
 
-internal fun Buffer.endGapReservationFailedDueToContent(endGap: Int) {
+internal fun DROP_Buffer.endGapReservationFailedDueToContent(endGap: Int) {
     throw IllegalArgumentException(
         "Unable to reserve end gap $endGap:" +
             " there are already $readRemaining content bytes at offset $readPosition"
     )
 }
 
-internal fun Buffer.restoreStartGap(size: Int) {
+internal fun DROP_Buffer.restoreStartGap(size: Int) {
     releaseStartGap(readPosition - size)
 }
 

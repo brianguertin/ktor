@@ -12,5 +12,5 @@ import io.ktor.utils.io.pool.*
 /**
  * ChunkBuffer pool for UDP datagrams
  */
-public val DefaultDatagramChunkBufferPool: ObjectPool<ChunkBuffer> =
+public val DefaultDatagramChunkBufferPool: ObjectPool<DROP_ChunkBuffer> =
     DefaultBufferPool(MAX_DATAGRAM_SIZE, 2048)

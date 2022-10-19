@@ -7,7 +7,7 @@ class ReadUntilDelimiterTest {
     private val pool: VerifyingChunkBufferPool = VerifyingChunkBufferPool()
     private val small = ByteArray(3)
     private val empty = ByteArray(0)
-    private val builder = BytePacketBuilder(pool)
+    private val builder = DROP_BytePacketBuilder(pool)
 
     @AfterTest
     fun verifyPool() {
@@ -16,7 +16,7 @@ class ReadUntilDelimiterTest {
 
     @Test
     fun testEmpty() {
-        val src = ByteReadPacket.Empty
+        val src = DROP_ByteReadPacket.Empty
         assertEquals(0, src.readUntilDelimiter(0, small))
         assertEquals(0, src.readUntilDelimiter(0, empty))
         assertEquals(0, src.readUntilDelimiters(0, 1, small))
@@ -260,12 +260,12 @@ class ReadUntilDelimiterTest {
         }
     }
 
-    private fun packetOf(vararg bytes: Byte): ByteReadPacket {
+    private fun packetOf(vararg bytes: Byte): DROP_ByteReadPacket {
         builder.writeFully(bytes)
         return builder.build()
     }
 
-    private fun String.unhex(): ByteReadPacket {
+    private fun String.unhex(): DROP_ByteReadPacket {
         val builder = builder
         builder.reset()
 

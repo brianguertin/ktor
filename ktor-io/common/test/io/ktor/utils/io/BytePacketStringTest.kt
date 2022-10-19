@@ -160,7 +160,7 @@ open class BytePacketStringTest {
             append("1,2|3")
         }
 
-        val sb = BytePacketBuilder()
+        val sb = DROP_BytePacketBuilder()
         val counts = mutableListOf<Int>()
 
         while (true) {
@@ -180,7 +180,7 @@ open class BytePacketStringTest {
             append("1,2,3")
         }
 
-        val sb = BytePacketBuilder()
+        val sb = DROP_BytePacketBuilder()
         val counts = mutableListOf<Int>()
 
         while (true) {
@@ -200,7 +200,7 @@ open class BytePacketStringTest {
             append("1,2|3")
         }
 
-        val sb = BytePacketBuilder()
+        val sb = DROP_BytePacketBuilder()
         val counts = mutableListOf<Int>()
 
         while (true) {
@@ -240,7 +240,7 @@ open class BytePacketStringTest {
             append("1,23|,4")
         }
 
-        val sb = BytePacketBuilder()
+        val sb = DROP_BytePacketBuilder()
         val counts = mutableListOf<Int>()
 
         while (true) {
@@ -280,7 +280,7 @@ open class BytePacketStringTest {
             append("\u0422,\u0423|\u0424")
         }
 
-        val sb = BytePacketBuilder()
+        val sb = DROP_BytePacketBuilder()
         val counts = mutableListOf<Int>()
 
         while (true) {
@@ -320,7 +320,7 @@ open class BytePacketStringTest {
             append("1\u04222")
         }
 
-        val sb = BytePacketBuilder()
+        val sb = DROP_BytePacketBuilder()
         val counts = mutableListOf<Int>()
 
         while (true) {
@@ -501,8 +501,8 @@ open class BytePacketStringTest {
         }
     }.readBytes()
 
-    private inline fun buildPacket(block: BytePacketBuilder.() -> Unit): ByteReadPacket {
-        val builder = BytePacketBuilder(pool)
+    private inline fun buildPacket(block: DROP_BytePacketBuilder.() -> Unit): DROP_ByteReadPacket {
+        val builder = DROP_BytePacketBuilder(pool)
         try {
             block(builder)
             return builder.build()

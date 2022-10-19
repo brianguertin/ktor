@@ -10,7 +10,7 @@ import platform.posix.*
  * to the [destination] at [destinationOffset] interpreting numbers in the network order (Big Endian).
  * @param destinationOffset items
  */
-public actual fun Memory.loadShortArray(
+public actual fun DROP_Memory.loadShortArray(
     offset: Int,
     destination: ShortArray,
     destinationOffset: Int,
@@ -25,7 +25,7 @@ public actual fun Memory.loadShortArray(
  * @param destinationOffset items
  */
 @OptIn(UnsafeNumber::class)
-public actual fun Memory.loadShortArray(
+public actual fun DROP_Memory.loadShortArray(
     offset: Long,
     destination: ShortArray,
     destinationOffset: Int,
@@ -66,7 +66,7 @@ public actual fun Memory.loadShortArray(
  * to the [destination] at [destinationOffset] interpreting numbers in the network order (Big Endian).
  * @param destinationOffset items
  */
-public actual fun Memory.loadIntArray(
+public actual fun DROP_Memory.loadIntArray(
     offset: Int,
     destination: IntArray,
     destinationOffset: Int,
@@ -81,7 +81,7 @@ public actual fun Memory.loadIntArray(
  * @param destinationOffset items
  */
 @OptIn(UnsafeNumber::class)
-public actual fun Memory.loadIntArray(
+public actual fun DROP_Memory.loadIntArray(
     offset: Long,
     destination: IntArray,
     destinationOffset: Int,
@@ -126,7 +126,7 @@ public actual fun Memory.loadIntArray(
  * to the [destination] at [destinationOffset] interpreting numbers in the network order (Big Endian).
  * @param destinationOffset items
  */
-public actual fun Memory.loadLongArray(
+public actual fun DROP_Memory.loadLongArray(
     offset: Int,
     destination: LongArray,
     destinationOffset: Int,
@@ -141,7 +141,7 @@ public actual fun Memory.loadLongArray(
  * @param destinationOffset items
  */
 @OptIn(UnsafeNumber::class)
-public actual fun Memory.loadLongArray(
+public actual fun DROP_Memory.loadLongArray(
     offset: Long,
     destination: LongArray,
     destinationOffset: Int,
@@ -182,7 +182,7 @@ public actual fun Memory.loadLongArray(
  * to the [destination] at [destinationOffset] interpreting numbers in the network order (Big Endian).
  * @param destinationOffset items
  */
-public actual fun Memory.loadFloatArray(
+public actual fun DROP_Memory.loadFloatArray(
     offset: Int,
     destination: FloatArray,
     destinationOffset: Int,
@@ -197,7 +197,7 @@ public actual fun Memory.loadFloatArray(
  * @param destinationOffset items
  */
 @OptIn(UnsafeNumber::class)
-public actual fun Memory.loadFloatArray(
+public actual fun DROP_Memory.loadFloatArray(
     offset: Long,
     destination: FloatArray,
     destinationOffset: Int,
@@ -238,7 +238,7 @@ public actual fun Memory.loadFloatArray(
  * to the [destination] at [destinationOffset] interpreting numbers in the network order (Big Endian).
  * @param destinationOffset items
  */
-public actual fun Memory.loadDoubleArray(
+public actual fun DROP_Memory.loadDoubleArray(
     offset: Int,
     destination: DoubleArray,
     destinationOffset: Int,
@@ -253,7 +253,7 @@ public actual fun Memory.loadDoubleArray(
  * @param destinationOffset items
  */
 @OptIn(UnsafeNumber::class)
-public actual fun Memory.loadDoubleArray(
+public actual fun DROP_Memory.loadDoubleArray(
     offset: Long,
     destination: DoubleArray,
     destinationOffset: Int,
@@ -294,7 +294,7 @@ public actual fun Memory.loadDoubleArray(
  * interpreting numbers in the network order (Big Endian).
  * @param sourceOffset items
  */
-public actual fun Memory.storeShortArray(
+public actual fun DROP_Memory.storeShortArray(
     offset: Int,
     source: ShortArray,
     sourceOffset: Int,
@@ -308,7 +308,7 @@ public actual fun Memory.storeShortArray(
  * interpreting numbers in the network order (Big Endian).
  * @param sourceOffset items
  */
-public actual fun Memory.storeShortArray(
+public actual fun DROP_Memory.storeShortArray(
     offset: Long,
     source: ShortArray,
     sourceOffset: Int,
@@ -339,7 +339,7 @@ public actual fun Memory.storeShortArray(
  * interpreting numbers in the network order (Big Endian).
  * @param sourceOffset items
  */
-public actual fun Memory.storeIntArray(
+public actual fun DROP_Memory.storeIntArray(
     offset: Int,
     source: IntArray,
     sourceOffset: Int,
@@ -353,7 +353,7 @@ public actual fun Memory.storeIntArray(
  * interpreting numbers in the network order (Big Endian).
  * @param sourceOffset items
  */
-public actual fun Memory.storeIntArray(
+public actual fun DROP_Memory.storeIntArray(
     offset: Long,
     source: IntArray,
     sourceOffset: Int,
@@ -384,7 +384,7 @@ public actual fun Memory.storeIntArray(
  * interpreting numbers in the network order (Big Endian).
  * @param sourceOffset items
  */
-public actual fun Memory.storeLongArray(
+public actual fun DROP_Memory.storeLongArray(
     offset: Int,
     source: LongArray,
     sourceOffset: Int,
@@ -398,7 +398,7 @@ public actual fun Memory.storeLongArray(
  * interpreting numbers in the network order (Big Endian).
  * @param sourceOffset items
  */
-public actual fun Memory.storeLongArray(
+public actual fun DROP_Memory.storeLongArray(
     offset: Long,
     source: LongArray,
     sourceOffset: Int,
@@ -429,7 +429,7 @@ public actual fun Memory.storeLongArray(
  * interpreting numbers in the network order (Big Endian).
  * @param sourceOffset items
  */
-public actual fun Memory.storeFloatArray(
+public actual fun DROP_Memory.storeFloatArray(
     offset: Int,
     source: FloatArray,
     sourceOffset: Int,
@@ -443,7 +443,7 @@ public actual fun Memory.storeFloatArray(
  * interpreting numbers in the network order (Big Endian).
  * @param sourceOffset items
  */
-public actual fun Memory.storeFloatArray(
+public actual fun DROP_Memory.storeFloatArray(
     offset: Long,
     source: FloatArray,
     sourceOffset: Int,
@@ -474,7 +474,7 @@ public actual fun Memory.storeFloatArray(
  * interpreting numbers in the network order (Big Endian).
  * @param sourceOffset items
  */
-public actual fun Memory.storeDoubleArray(
+public actual fun DROP_Memory.storeDoubleArray(
     offset: Int,
     source: DoubleArray,
     sourceOffset: Int,
@@ -488,7 +488,7 @@ public actual fun Memory.storeDoubleArray(
  * interpreting numbers in the network order (Big Endian).
  * @param sourceOffset items
  */
-public actual fun Memory.storeDoubleArray(
+public actual fun DROP_Memory.storeDoubleArray(
     offset: Long,
     source: DoubleArray,
     sourceOffset: Int,
@@ -538,9 +538,9 @@ internal inline fun requireRange(offset: Long, length: Long, size: Long, name: S
     }
 }
 
-internal inline fun Memory.isAlignedShort(offset: Long) = (pointer.toLong() + offset) and 0b1 == 0L
-internal inline fun Memory.isAlignedInt(offset: Long) = (pointer.toLong() + offset) and 0b11 == 0L
-internal inline fun Memory.isAlignedLong(offset: Long) = (pointer.toLong() + offset) and 0b111 == 0L
+internal inline fun DROP_Memory.isAlignedShort(offset: Long) = (pointer.toLong() + offset) and 0b1 == 0L
+internal inline fun DROP_Memory.isAlignedInt(offset: Long) = (pointer.toLong() + offset) and 0b11 == 0L
+internal inline fun DROP_Memory.isAlignedLong(offset: Long) = (pointer.toLong() + offset) and 0b111 == 0L
 
 @OptIn(UnsafeNumber::class)
 private fun copy(

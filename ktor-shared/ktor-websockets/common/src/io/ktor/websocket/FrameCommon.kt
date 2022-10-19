@@ -61,7 +61,7 @@ public expect sealed class Frame private constructor(
         rsv3: Boolean = false
     ) : Frame {
         public constructor(fin: Boolean, data: ByteArray)
-        public constructor(fin: Boolean, packet: ByteReadPacket)
+        public constructor(fin: Boolean, packet: DROP_ByteReadPacket)
     }
 
     /**
@@ -81,7 +81,7 @@ public expect sealed class Frame private constructor(
     ) : Frame {
         public constructor(fin: Boolean, data: ByteArray)
         public constructor(text: String)
-        public constructor(fin: Boolean, packet: ByteReadPacket)
+        public constructor(fin: Boolean, packet: DROP_ByteReadPacket)
     }
 
     /**
@@ -90,7 +90,7 @@ public expect sealed class Frame private constructor(
      */
     public class Close(data: ByteArray) : Frame {
         public constructor(reason: CloseReason)
-        public constructor(packet: ByteReadPacket)
+        public constructor(packet: DROP_ByteReadPacket)
         public constructor()
     }
 
@@ -99,7 +99,7 @@ public expect sealed class Frame private constructor(
      * Usually there is no need to send/handle it unless you have a RAW WebSocket session.
      */
     public class Ping(data: ByteArray) : Frame {
-        public constructor(packet: ByteReadPacket)
+        public constructor(packet: DROP_ByteReadPacket)
     }
 
     /**
@@ -110,7 +110,7 @@ public expect sealed class Frame private constructor(
         data: ByteArray,
         disposableHandle: DisposableHandle = NonDisposableHandle
     ) : Frame {
-        public constructor(packet: ByteReadPacket)
+        public constructor(packet: DROP_ByteReadPacket)
     }
 
     /**

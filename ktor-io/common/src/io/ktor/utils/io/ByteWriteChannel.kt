@@ -45,7 +45,7 @@ public interface ByteWriteChannel {
      */
     public suspend fun writeAvailable(src: ByteArray, offset: Int, length: Int): Int
 
-    public suspend fun writeAvailable(src: ChunkBuffer): Int
+    public suspend fun writeAvailable(src: DROP_ChunkBuffer): Int
 
     /**
      * Writes all [src] bytes and suspends until all bytes written. Causes flush if buffer filled up or when [autoFlush]
@@ -53,9 +53,9 @@ public interface ByteWriteChannel {
      */
     public suspend fun writeFully(src: ByteArray, offset: Int, length: Int)
 
-    public suspend fun writeFully(src: Buffer)
+    public suspend fun writeFully(src: DROP_Buffer)
 
-    public suspend fun writeFully(memory: Memory, startIndex: Int, endIndex: Int)
+    public suspend fun writeFully(memory: DROP_Memory, startIndex: Int, endIndex: Int)
 
     @Suppress("DEPRECATION")
     @Deprecated("Use write { } instead.")
@@ -64,7 +64,7 @@ public interface ByteWriteChannel {
     /**
      * Writes a [packet] fully or fails if channel get closed before the whole packet has been written
      */
-    public suspend fun writePacket(packet: ByteReadPacket)
+    public suspend fun writePacket(packet: DROP_ByteReadPacket)
 
     /**
      * Writes long number and suspends until written.
@@ -191,11 +191,11 @@ public suspend fun ByteWriteChannel.writeChar(ch: Char) {
     return writeShort(ch.code)
 }
 
-public suspend inline fun ByteWriteChannel.writePacket(builder: BytePacketBuilder.() -> Unit) {
+public suspend inline fun ByteWriteChannel.writePacket(builder: DROP_BytePacketBuilder.() -> Unit) {
     return writePacket(buildPacket(builder))
 }
 
-public suspend fun ByteWriteChannel.writePacketSuspend(builder: suspend BytePacketBuilder.() -> Unit) {
+public suspend fun ByteWriteChannel.writePacketSuspend(builder: suspend DROP_BytePacketBuilder.() -> Unit) {
     return writePacket(buildPacket { builder() })
 }
 

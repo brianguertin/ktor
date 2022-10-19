@@ -7,21 +7,21 @@ import kotlinx.cinterop.*
  * Read at most [limit] bytes to the specified [dst] address
  * @return number of bytes copied
  */
-public fun ByteReadPacket.readAvailable(dst: CPointer<ByteVar>, limit: Int): Int =
+public fun DROP_ByteReadPacket.readAvailable(dst: CPointer<ByteVar>, limit: Int): Int =
     readAsMuchAsPossible(dst, limit.toLong(), 0L).toInt()
 
 /**
  * Read at most [limit] bytes to the specified [dst] address
  * @return number of bytes copied
  */
-public fun ByteReadPacket.readAvailable(dst: CPointer<ByteVar>, limit: Long): Long =
+public fun DROP_ByteReadPacket.readAvailable(dst: CPointer<ByteVar>, limit: Long): Long =
     readAsMuchAsPossible(dst, limit, 0L)
 
 /**
  * Read exactly [size] bytes to the specified [dst] address
  * @return number of bytes copied
  */
-public fun ByteReadPacket.readFully(dst: CPointer<ByteVar>, size: Int): Int {
+public fun DROP_ByteReadPacket.readFully(dst: CPointer<ByteVar>, size: Int): Int {
     val rc = readAsMuchAsPossible(dst, size.toLong(), 0L)
     if (rc != size.toLong()) {
         throw EOFException("Not enough data in packet to fill buffer: ${size.toLong() - rc} more bytes required")
@@ -33,19 +33,19 @@ public fun ByteReadPacket.readFully(dst: CPointer<ByteVar>, size: Int): Int {
  * Read exactly [size] bytes to the specified [dst] address
  * @return number of bytes copied
  */
-public fun ByteReadPacket.readFully(dst: CPointer<ByteVar>, size: Long): Long {
+public fun DROP_ByteReadPacket.readFully(dst: CPointer<ByteVar>, size: Long): Long {
     val rc = readAsMuchAsPossible(dst, size, 0L)
     if (rc != size) throw EOFException("Not enough data in packet to fill buffer: ${size - rc} more bytes required")
     return rc
 }
 
-private tailrec fun ByteReadPacket.readAsMuchAsPossible(
+private tailrec fun DROP_ByteReadPacket.readAsMuchAsPossible(
     buffer: CPointer<ByteVar>,
     destinationCapacity: Long,
     copied: Long
 ): Long {
     if (destinationCapacity == 0L) return copied
-    val current: ChunkBuffer = prepareRead(1) ?: return copied
+    val current: DROP_ChunkBuffer = prepareRead(1) ?: return copied
 
     val available = current.readRemaining.toLong()
 
@@ -64,12 +64,12 @@ private tailrec fun ByteReadPacket.readAsMuchAsPossible(
 /**
  * Write all remaining [src] buffer bytes and change its position accordingly
  */
-public fun BytePacketBuilder.writeFully(src: CPointer<ByteVar>, size: Int) {
+public fun DROP_BytePacketBuilder.writeFully(src: CPointer<ByteVar>, size: Int) {
     var remaining = size
     var offset = 0
 
     while (remaining > 0) {
-        write(1) { buffer: Buffer ->
+        write(1) { buffer: DROP_Buffer ->
             val srcSize = remaining
             val capacity = buffer.writeRemaining
 

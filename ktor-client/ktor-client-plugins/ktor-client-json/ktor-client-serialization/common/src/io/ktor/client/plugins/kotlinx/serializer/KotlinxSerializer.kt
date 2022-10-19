@@ -35,7 +35,7 @@ public class KotlinxSerializer(
         json.encodeToString(buildSerializer(data, json.serializersModule), data)
 
     @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
-    override fun read(type: TypeInfo, body: Input): Any {
+    override fun read(type: TypeInfo, body: DROP_Input): Any {
         val text = body.readText()
         val deserializationStrategy = json.serializersModule.getContextual(type.type)
         val mapper = deserializationStrategy ?: (type.kotlinType?.let { serializer(it) } ?: type.type.serializer())

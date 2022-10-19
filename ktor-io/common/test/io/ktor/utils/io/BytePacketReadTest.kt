@@ -51,7 +51,7 @@ class BytePacketReadTest {
         segment1.writeByte(0xc6.toByte())
         segment2.writeByte(0x86.toByte())
 
-        val packet = ByteReadPacket(segment1, pool)
+        val packet = DROP_ByteReadPacket(segment1, pool)
 
         assertEquals("\u0186", packet.readText())
         assertTrue { packet.isEmpty }
@@ -73,7 +73,7 @@ class BytePacketReadTest {
         }
         segment2.writeByte(0x86.toByte())
 
-        val packet = ByteReadPacket(segment1, pool)
+        val packet = DROP_ByteReadPacket(segment1, pool)
 
         assertEquals("\u0186", packet.readText())
         assertTrue { packet.isEmpty }
@@ -89,7 +89,7 @@ class BytePacketReadTest {
         segment1.writeByte(0xc6.toByte())
         segment2.writeByte(0x86.toByte())
 
-        val packet = ByteReadPacket(segment1, pool)
+        val packet = DROP_ByteReadPacket(segment1, pool)
         assertEquals(2, packet.remaining)
 
         assertEquals("\u0186", packet.readText(charset = Charsets.UTF_8))
@@ -311,7 +311,7 @@ class BytePacketReadTest {
         val chunk = pool.borrow()
         chunk.writeFully(byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8))
 
-        ByteReadPacket(chunk, 8L, pool).use { pkt ->
+        DROP_ByteReadPacket(chunk, 8L, pool).use { pkt ->
             assertEquals(0x0102030405060708L, pkt.readLong())
         }
     }
@@ -329,7 +329,7 @@ class BytePacketReadTest {
             assertEquals(-1, pkt.tryPeek())
         }
 
-        assertEquals(-1, ByteReadPacket.Empty.tryPeek())
+        assertEquals(-1, DROP_ByteReadPacket.Empty.tryPeek())
 
         val segment1 = pool.borrow()
         val segment2 = pool.borrow()
@@ -338,15 +338,15 @@ class BytePacketReadTest {
         segment1.next = segment2
         segment2.writeByte(1)
 
-        ByteReadPacket(segment1, pool).use { pkt ->
+        DROP_ByteReadPacket(segment1, pool).use { pkt ->
             assertEquals(1, pkt.tryPeek())
             pkt.discardExact(1)
             assertEquals(-1, pkt.tryPeek())
         }
     }
 
-    private inline fun buildPacket(block: BytePacketBuilder.() -> Unit): ByteReadPacket {
-        val builder = BytePacketBuilder(pool)
+    private inline fun buildPacket(block: DROP_BytePacketBuilder.() -> Unit): DROP_ByteReadPacket {
+        val builder = DROP_BytePacketBuilder(pool)
         try {
             block(builder)
             return builder.build()

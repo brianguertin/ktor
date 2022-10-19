@@ -15,7 +15,7 @@ open class ByteBufferChannelScenarioTest : ByteChannelTestBase(true) {
         launch {
             expect(3)
 
-            val bb = ChunkBuffer.NoPool.borrow()
+            val bb = DROP_ChunkBuffer.NoPool.borrow()
 
             // should suspend
             val rc = ch.readAvailable(bb)
@@ -46,7 +46,7 @@ open class ByteBufferChannelScenarioTest : ByteChannelTestBase(true) {
         launch {
             expect(3)
 
-            val bb = ChunkBuffer.NoPool.borrow()
+            val bb = DROP_ChunkBuffer.NoPool.borrow()
             bb.resetForWrite(4)
             ch.readFully(bb) // should suspend
 
@@ -77,7 +77,7 @@ open class ByteBufferChannelScenarioTest : ByteChannelTestBase(true) {
         launch {
             expect(3)
 
-            val bb = ChunkBuffer.NoPool.borrow()
+            val bb = DROP_ChunkBuffer.NoPool.borrow()
             bb.resetForWrite(10)
             val rc = ch.readAvailable(bb) // should NOT suspend
 
@@ -102,7 +102,7 @@ open class ByteBufferChannelScenarioTest : ByteChannelTestBase(true) {
         launch {
             expect(3)
 
-            val bb = ChunkBuffer.NoPool.borrow()
+            val bb = DROP_ChunkBuffer.NoPool.borrow()
             bb.resetForWrite(4)
             ch.readFully(bb) // should NOT suspend
 
@@ -122,7 +122,7 @@ open class ByteBufferChannelScenarioTest : ByteChannelTestBase(true) {
     fun testReadToEmpty() = runTest {
         expect(1)
 
-        val rc = ch.readAvailable(ChunkBuffer.NoPool.borrow().also { it.resetForWrite(0) })
+        val rc = ch.readAvailable(DROP_ChunkBuffer.NoPool.borrow().also { it.resetForWrite(0) })
 
         expect(2)
 
@@ -138,7 +138,7 @@ open class ByteBufferChannelScenarioTest : ByteChannelTestBase(true) {
         ch.close(ExpectedException())
 
         try {
-            ch.readAvailable(ChunkBuffer.NoPool.borrow().also { it.resetForWrite(0) })
+            ch.readAvailable(DROP_ChunkBuffer.NoPool.borrow().also { it.resetForWrite(0) })
             fail("Should throw exception")
         } catch (_: ExpectedException) {
         }
@@ -152,7 +152,7 @@ open class ByteBufferChannelScenarioTest : ByteChannelTestBase(true) {
 
         ch.close()
 
-        val rc = ch.readAvailable(ChunkBuffer.NoPool.borrow().also { it.resetForWrite(0) })
+        val rc = ch.readAvailable(DROP_ChunkBuffer.NoPool.borrow().also { it.resetForWrite(0) })
 
         expect(2)
 
@@ -167,7 +167,7 @@ open class ByteBufferChannelScenarioTest : ByteChannelTestBase(true) {
 
         ch.close()
 
-        ch.readFully(ChunkBuffer.NoPool.borrow().also { it.resetForWrite(0) })
+        ch.readFully(DROP_ChunkBuffer.NoPool.borrow().also { it.resetForWrite(0) })
 
         finish(2)
     }
@@ -178,7 +178,7 @@ open class ByteBufferChannelScenarioTest : ByteChannelTestBase(true) {
 
         ch.close()
         try {
-            ch.readFully(ChunkBuffer.NoPool.borrow().also { it.resetForWrite(1) })
+            ch.readFully(DROP_ChunkBuffer.NoPool.borrow().also { it.resetForWrite(1) })
             fail("Should throw exception")
         } catch (_: Throwable) {
         }
@@ -193,7 +193,7 @@ open class ByteBufferChannelScenarioTest : ByteChannelTestBase(true) {
         ch.close(ExpectedException())
 
         try {
-            ch.readFully(ChunkBuffer.NoPool.borrow().also { it.resetForWrite(0) })
+            ch.readFully(DROP_ChunkBuffer.NoPool.borrow().also { it.resetForWrite(0) })
             fail("Should throw exception")
         } catch (_: ExpectedException) {
         }
@@ -435,7 +435,7 @@ open class ByteBufferChannelScenarioTest : ByteChannelTestBase(true) {
         val size = 4096 - 8 - 3
 
         expect(1)
-        val buffer = ChunkBuffer.NoPool.borrow()
+        val buffer = DROP_ChunkBuffer.NoPool.borrow()
         buffer.resetForWrite(size)
         repeat(size) {
             buffer.writeByte(1)
@@ -486,7 +486,7 @@ open class ByteBufferChannelScenarioTest : ByteChannelTestBase(true) {
         ch.discardExact(16384)
     }
 
-    private fun debug(p: ByteReadPacket) {
+    private fun debug(p: DROP_ByteReadPacket) {
         p.release()
     }
 

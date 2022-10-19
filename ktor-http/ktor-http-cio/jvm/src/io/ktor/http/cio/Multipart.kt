@@ -27,7 +27,7 @@ public sealed class MultipartEvent {
      * Represents a multipart content preamble. A multipart stream could have at most one preamble.
      * @property body contains preamble's content
      */
-    public class Preamble(public val body: ByteReadPacket) : MultipartEvent() {
+    public class Preamble(public val body: DROP_ByteReadPacket) : MultipartEvent() {
         override fun release() {
             body.release()
         }
@@ -62,7 +62,7 @@ public sealed class MultipartEvent {
      * Represents a multipart content epilogue. A multipart stream could have at most one epilogue.
      * @property body contains epilogue's content
      */
-    public class Epilogue(public val body: ByteReadPacket) : MultipartEvent() {
+    public class Epilogue(public val body: DROP_ByteReadPacket) : MultipartEvent() {
         override fun release() {
             body.release()
         }
@@ -77,7 +77,7 @@ public sealed class MultipartEvent {
 public suspend fun parsePreamble(
     boundaryPrefixed: ByteBuffer,
     input: ByteReadChannel,
-    output: BytePacketBuilder,
+    output: DROP_BytePacketBuilder,
     limit: Long = Long.MAX_VALUE
 ): Long {
     return parsePreambleImpl(boundaryPrefixed, input, output, limit)
@@ -90,7 +90,7 @@ public suspend fun parsePreamble(
 private suspend fun parsePreambleImpl(
     boundaryPrefixed: ByteBuffer,
     input: ByteReadChannel,
-    output: BytePacketBuilder,
+    output: DROP_BytePacketBuilder,
     limit: Long = Long.MAX_VALUE
 ): Long {
     return copyUntilBoundary(
@@ -285,7 +285,7 @@ public fun CoroutineScope.parseMultipart(
         position(2)
     }
 
-    val preamble = BytePacketBuilder()
+    val preamble = DROP_BytePacketBuilder()
     parsePreambleImpl(firstBoundary, input, preamble, 8192)
 
     if (preamble.size > 0) {
