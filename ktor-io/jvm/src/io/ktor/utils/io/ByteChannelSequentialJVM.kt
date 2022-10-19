@@ -27,25 +27,9 @@ public class ByteChannelSequentialJVM(
         }
     }
 
-    override suspend fun writeAvailable(src: ByteBuffer): Int {
-        val count = tryWriteAvailable(src)
-        return when {
-            count > 0 -> count
-            !src.hasRemaining() -> 0
-            else -> writeAvailableSuspend(src)
-        }
-    }
-
     private suspend fun writeAvailableSuspend(src: ByteBuffer): Int {
         awaitAtLeastNBytesAvailableForWrite(1)
         return writeAvailable(src)
-    }
-
-    override suspend fun writeFully(src: ByteBuffer) {
-        tryWriteAvailable(src)
-        if (!src.hasRemaining()) return
-
-        writeFullySuspend(src)
     }
 
     private suspend fun writeFullySuspend(src: ByteBuffer) {
@@ -152,51 +136,5 @@ public class ByteChannelSequentialJVM(
      */
     override suspend fun awaitContent() {
         await(1)
-    }
-
-    override fun writeAvailable(min: Int, block: (ByteBuffer) -> Unit): Int {
-        if (closed) {
-            throw closedCause ?: ClosedSendChannelException("Channel closed for write")
-        }
-
-        if (availableForWrite < min) {
-            return 0
-        }
-
-        var result: Int
-        writable.writeDirect(min) {
-            val position = it.position()
-            block(it)
-            result = it.position() - position
-        }
-
-        return result
-    }
-
-    override suspend fun write(min: Int, block: (ByteBuffer) -> Unit) {
-        if (closed) {
-            throw closedCause ?: ClosedSendChannelException("Channel closed for write")
-        }
-
-        awaitAtLeastNBytesAvailableForWrite(min)
-        val count = writable.writeByteBufferDirect(min) { block(it) }
-        afterWrite(count)
-    }
-
-    override suspend fun writeWhile(block: (ByteBuffer) -> Boolean) {
-        while (true) {
-            if (closed) {
-                throw closedCause ?: ClosedSendChannelException("Channel closed for write")
-            }
-
-            var shouldContinue: Boolean
-            awaitAtLeastNBytesAvailableForWrite(1)
-            val result = writable.writeByteBufferDirect(1) {
-                shouldContinue = block(it)
-            }
-
-            afterWrite(result)
-            if (!shouldContinue) break
-        }
     }
 }

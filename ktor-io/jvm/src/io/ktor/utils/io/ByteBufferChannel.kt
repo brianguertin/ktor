@@ -49,7 +49,7 @@ internal open class ByteBufferChannel(
         }
 
     @Volatile
-    private var joining: JoiningState? = null
+    internal var joining: JoiningState? = null
 
     private val _readOp: AtomicRef<Continuation<Boolean>?> = atomic(null)
     private var readOp: Continuation<Boolean>?
@@ -67,14 +67,12 @@ internal open class ByteBufferChannel(
         }
 
     private var readPosition = 0
-    private var writePosition = 0
+    internal var writePosition = 0
 
     @Volatile
     private var attachedJob: Job? = null
 
     internal fun currentState(): ReadWriteBufferState = state
-
-    internal fun getJoining(): JoiningState? = joining
 
     @OptIn(InternalCoroutinesApi::class)
     override fun attachJob(job: Job) {
@@ -199,7 +197,7 @@ internal open class ByteBufferChannel(
         buffer.prepareBuffer(writePosition, lockedSpace)
     }
 
-    private fun ByteBuffer.prepareBuffer(position: Int, available: Int) {
+    internal fun ByteBuffer.prepareBuffer(position: Int, available: Int) {
         require(position >= 0)
         require(available >= 0)
 
@@ -433,7 +431,7 @@ internal open class ByteBufferChannel(
     private fun ByteBuffer.carryIndex(idx: Int): Int =
         if (idx >= capacity() - reservedSize) idx - (capacity() - reservedSize) else idx
 
-    private inline fun writing(block: ByteBufferChannel.(ByteBuffer, RingBufferCapacity) -> Unit) {
+    internal inline fun writing(block: ByteBufferChannel.(ByteBuffer, RingBufferCapacity) -> Unit) {
         val current = joining?.let { resolveDelegation(this, it) } ?: this
         val buffer = current.setupStateForWrite() ?: return
         val capacity = current.state.capacity
@@ -813,7 +811,7 @@ internal open class ByteBufferChannel(
         buffer.bytesWritten(capacity, count)
     }
 
-    private fun ByteBuffer.bytesWritten(capacity: RingBufferCapacity, count: Int) {
+    internal fun ByteBuffer.bytesWritten(capacity: RingBufferCapacity, count: Int) {
         require(count >= 0)
 
         writePosition = carryIndex(writePosition + count)
@@ -834,7 +832,7 @@ internal open class ByteBufferChannel(
         return joining?.let { resolveDelegation(this, it) } ?: this
     }
 
-    private fun resolveDelegation(current: ByteBufferChannel, joining: JoiningState): ByteBufferChannel? {
+    internal fun resolveDelegation(current: ByteBufferChannel, joining: JoiningState): ByteBufferChannel? {
         var currentChannel: ByteBufferChannel = current
         var currentJoining: JoiningState = joining
 
@@ -972,16 +970,6 @@ internal open class ByteBufferChannel(
         writeSuspend(1)
     }
 
-    override suspend fun writeAvailable(src: ByteBuffer): Int {
-        joining?.let { resolveDelegation(this, it)?.let { return it.writeAvailable(src) } }
-
-        val copied = writeAsMuchAsPossible(src)
-        if (copied > 0) return copied
-
-        joining?.let { resolveDelegation(this, it)?.let { return it.writeAvailableSuspend(src) } }
-        return writeAvailableSuspend(src)
-    }
-
     override suspend fun writeAvailable(src: ChunkBuffer): Int {
         joining?.let { resolveDelegation(this, it)?.let { return it.writeAvailable(src) } }
 
@@ -992,7 +980,7 @@ internal open class ByteBufferChannel(
         return writeAvailableSuspend(src)
     }
 
-    private suspend fun writeAvailableSuspend(src: ByteBuffer): Int {
+    internal suspend fun writeAvailableSuspend(src: ByteBuffer): Int {
         writeSuspend(1) // here we don't need to restoreStateAfterWrite as write copy loop doesn't hold state
 
         joining?.let { resolveDelegation(this, it)?.let { return it.writeAvailableSuspend(src) } }
@@ -1006,15 +994,6 @@ internal open class ByteBufferChannel(
         joining?.let { resolveDelegation(this, it)?.let { return it.writeAvailableSuspend(src) } }
 
         return writeAvailable(src)
-    }
-
-    override suspend fun writeFully(src: ByteBuffer) {
-        joining?.let { resolveDelegation(this, it)?.let { return it.writeFully(src) } }
-
-        writeAsMuchAsPossible(src)
-        if (!src.hasRemaining()) return
-
-        return writeFullySuspend(src)
     }
 
     override suspend fun writeFully(src: Buffer) {
@@ -1032,7 +1011,7 @@ internal open class ByteBufferChannel(
         writeFully(slice.buffer)
     }
 
-    private suspend fun writeFullySuspend(src: ByteBuffer) {
+    internal suspend fun writeFullySuspend(src: ByteBuffer) {
         while (src.hasRemaining()) {
             tryWriteSuspend(1)
 
@@ -1242,7 +1221,7 @@ internal open class ByteBufferChannel(
         joined.complete()
     }
 
-    private fun writeAsMuchAsPossible(src: ByteBuffer): Int {
+    internal fun writeAsMuchAsPossible(src: ByteBuffer): Int {
         writing { dst, state ->
             var written = 0
             val srcLimit = src.limit()
@@ -1369,81 +1348,12 @@ internal open class ByteBufferChannel(
         }
     }
 
-    override fun writeAvailable(min: Int, block: (ByteBuffer) -> Unit): Int {
-        require(min > 0) { "min should be positive" }
-        require(min <= BYTE_BUFFER_CAPACITY) { "Min($min) shouldn't be greater than $BYTE_BUFFER_CAPACITY" }
-
-        var result = 0
-        var written = false
-
-        writing { dst, state ->
-            val locked = state.tryWriteAtLeast(min)
-            if (locked <= 0) {
-                return@writing
-            }
-
-            // here we have locked all remaining for write bytes
-            // however we don't know how many bytes will be actually written
-            // so later we have to return (locked - actuallyWritten) bytes back
-
-            // it is important to lock bytes to fail concurrent tryLockForRelease
-            // once we have locked some bytes, tryLockForRelease will fail so it is safe to use buffer
-
-            dst.prepareBuffer(writePosition, locked)
-
-            val position = dst.position()
-            val l = dst.limit()
-            block(dst)
-            check(l == dst.limit()) { "Buffer limit modified" }
-
-            result = dst.position() - position
-            check(result >= 0) { "Position has been moved backward: pushback is not supported" }
-            if (result < 0) throw IllegalStateException()
-
-            dst.bytesWritten(state, result)
-
-            if (result < locked) {
-                state.completeRead(locked - result) // return back extra bytes (see note above)
-                // we use completeRead in spite of that it is write block
-                // we don't need to resume write as we are already in writing block
-            }
-
-            written = true
-        }
-
-        if (!written) {
-            return -1
-        }
-
-        return result
-    }
-
-    override suspend fun write(min: Int, block: (ByteBuffer) -> Unit) {
-        require(min > 0) { "min should be positive" }
-        require(min <= BYTE_BUFFER_CAPACITY) { "Min($min) should'nt be greater than ($BYTE_BUFFER_CAPACITY)" }
-
-        while (true) {
-            val writeAvailable = writeAvailable(min, block)
-            if (writeAvailable >= 0) {
-                break
-            }
-
-            awaitFreeSpaceOrDelegate(min, block)
-        }
-    }
-
-    private suspend fun awaitFreeSpaceOrDelegate(min: Int, block: (ByteBuffer) -> Unit) {
+    internal suspend fun awaitFreeSpaceOrDelegate(min: Int, block: (ByteBuffer) -> Unit) {
         writeSuspend(min)
         joining?.let { resolveDelegation(this, it)?.let { return it.write(min, block) } }
     }
 
-    override suspend fun writeWhile(block: (ByteBuffer) -> Boolean) {
-        if (!writeWhileNoSuspend(block)) return
-        closed?.let { rethrowClosed(it.sendException) }
-        return writeWhileSuspend(block)
-    }
-
-    private fun writeWhileNoSuspend(block: (ByteBuffer) -> Boolean): Boolean {
+    internal fun writeWhileNoSuspend(block: (ByteBuffer) -> Boolean): Boolean {
         var continueWriting = true
 
         writing { dst, capacity ->
@@ -1453,7 +1363,7 @@ internal open class ByteBufferChannel(
         return continueWriting
     }
 
-    private suspend fun writeWhileSuspend(block: (ByteBuffer) -> Boolean) {
+    internal suspend fun writeWhileSuspend(block: (ByteBuffer) -> Boolean) {
         var continueWriting = true
 
         writing { dst, capacity ->
@@ -2195,7 +2105,7 @@ internal open class ByteBufferChannel(
     }
 }
 
-private fun rethrowClosed(cause: Throwable): Nothing {
+internal fun rethrowClosed(cause: Throwable): Nothing {
     val clone = try {
         tryCopyException(cause, cause)
     } catch (_: Throwable) {

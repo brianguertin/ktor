@@ -59,7 +59,7 @@ internal class WriteSessionImpl(channel: ByteBufferChannel) : WriterSuspendSessi
     }
 
     override suspend fun tryAwait(n: Int) {
-        val joining = current.getJoining()
+        val joining = current.joining
         if (joining != null) {
             return tryAwaitJoinSwitch(n)
         }

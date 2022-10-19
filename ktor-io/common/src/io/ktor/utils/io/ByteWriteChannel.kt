@@ -11,7 +11,7 @@ import io.ktor.utils.io.core.internal.*
  * Operations on this channel cannot be invoked concurrently, unless explicitly specified otherwise
  * in description. Exceptions are [close] and [flush].
  */
-public expect interface ByteWriteChannel {
+public interface ByteWriteChannel {
     /**
      * Returns number of bytes that can be written without suspension. Write operations do no suspend and return
      * immediately when this number is at least the number of bytes requested for write.
