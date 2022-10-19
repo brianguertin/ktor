@@ -30,14 +30,14 @@ public abstract class ByteChannelSequentialBase(
     private val _closed = atomic<CloseElement?>(null)
     private val isCancelled: Boolean get() = _closed.value?.cause != null
 
-    protected var closed: Boolean
+    internal var closed: Boolean
         get() = _closed.value != null
         set(_) {
             error("Setting is not allowed for closed")
         }
 
-    protected val writable: BytePacketBuilder = BytePacketBuilder(pool)
-    protected val readable: ByteReadPacket = ByteReadPacket(initial, pool)
+    internal val writable: BytePacketBuilder = BytePacketBuilder(pool)
+    internal val readable: ByteReadPacket = ByteReadPacket(initial, pool)
 
     private var lastReadAvailable: Int by atomic(0)
     private var lastReadView: ChunkBuffer by atomic(ChunkBuffer.Empty)
@@ -123,7 +123,7 @@ public abstract class ByteChannelSequentialBase(
      *
      * This method is reader-only safe.
      */
-    protected fun prepareFlushedBytes() {
+    internal fun prepareFlushedBytes() {
         synchronized(flushMutex) {
             readable.unsafeAppend(flushBuffer)
         }
@@ -330,7 +330,7 @@ public abstract class ByteChannelSequentialBase(
         return result
     }
 
-    protected fun afterRead(count: Int) {
+    internal fun afterRead(count: Int) {
         addBytesRead(count)
         slot.resume()
     }
@@ -545,7 +545,7 @@ public abstract class ByteChannelSequentialBase(
         return readFullySuspend(dst, offset + rc, length - rc)
     }
 
-    private suspend fun readFullySuspend(dst: ByteArray, offset: Int, length: Int) {
+    internal suspend fun readFullySuspend(dst: ByteArray, offset: Int, length: Int) {
         var written = 0
 
         while (written < length) {
@@ -599,7 +599,7 @@ public abstract class ByteChannelSequentialBase(
         awaitSuspend(1)
     }
 
-    protected suspend fun awaitSuspend(atLeast: Int): Boolean {
+    internal suspend fun awaitSuspend(atLeast: Int): Boolean {
         require(atLeast >= 0)
 
         awaitAtLeastNBytesAvailableForRead(atLeast)

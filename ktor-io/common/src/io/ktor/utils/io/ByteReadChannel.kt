@@ -10,7 +10,7 @@ import io.ktor.utils.io.core.internal.*
  *
  * Operations on this channel cannot be invoked concurrently.
  */
-public expect interface ByteReadChannel {
+public interface ByteReadChannel {
     /**
      * Returns number of bytes that can be read without suspension. Read operations do no suspend and return
      * immediately when this number is at least the number of bytes requested for read.
@@ -191,7 +191,7 @@ public expect interface ByteReadChannel {
     ): Long
 
     public companion object {
-        public val Empty: ByteReadChannel
+        public val Empty: ByteReadChannel = EmptyByteReadChannel
     }
 }
 

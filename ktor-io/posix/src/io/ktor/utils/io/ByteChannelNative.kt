@@ -90,7 +90,7 @@ internal class ByteChannelNative(
      *
      * @return number of consumed bytes or -1 if the block wasn't executed.
      */
-    override fun readAvailable(min: Int, block: (Buffer) -> Unit): Int {
+    public fun readAvailable(min: Int, block: (Buffer) -> Unit): Int {
         if (availableForRead < min) {
             return -1
         }
@@ -108,54 +108,7 @@ internal class ByteChannelNative(
         return result
     }
 
-    override suspend fun readAvailable(dst: CPointer<ByteVar>, offset: Int, length: Int): Int =
-        readAvailable(dst, offset.toLong(), length.toLong())
-
-    override suspend fun readAvailable(dst: CPointer<ByteVar>, offset: Long, length: Long): Int {
-        require(offset >= 0L)
-        require(length >= 0L)
-        closedCause?.let { throw it }
-        if (closed && availableForRead == 0) return -1
-
-        if (length == 0L) return 0
-
-        if (availableForRead == 0) {
-            awaitSuspend(1)
-        }
-
-        if (!readable.canRead()) {
-            prepareFlushedBytes()
-        }
-
-        val size = tryReadCPointer(dst, offset, length)
-        afterRead(size)
-        return size
-    }
-
-    override suspend fun readFully(dst: CPointer<ByteVar>, offset: Int, length: Int) {
-        readFully(dst, offset.toLong(), length.toLong())
-    }
-
-    override suspend fun readFully(dst: CPointer<ByteVar>, offset: Long, length: Long) {
-        require(offset >= 0L)
-        require(length >= 0L)
-
-        return when {
-            closedCause != null -> throw closedCause!!
-            readable.remaining >= length -> {
-                val size = tryReadCPointer(dst, offset, length)
-                afterRead(size)
-            }
-
-            closed -> throw EOFException(
-                "Channel is closed and not enough bytes available: required $length but $availableForRead available"
-            )
-
-            else -> readFullySuspend(dst, offset, length)
-        }
-    }
-
-    private suspend fun readFullySuspend(dst: CPointer<ByteVar>, offset: Long, length: Long) {
+    internal suspend fun readFullySuspend(dst: CPointer<ByteVar>, offset: Long, length: Long) {
         var position = offset
         var rem = length
 
@@ -270,7 +223,7 @@ internal class ByteChannelNative(
         return size
     }
 
-    private fun tryReadCPointer(dst: CPointer<ByteVar>, offset: Long, length: Long): Int {
+    internal fun tryReadCPointer(dst: CPointer<ByteVar>, offset: Long, length: Long): Int {
         val size = minOf(length, availableForRead.toLong(), Int.MAX_VALUE.toLong()).toInt()
         val ptr: CPointer<ByteVar> = (dst + offset)!!
         readable.readFully(ptr, 0, size)

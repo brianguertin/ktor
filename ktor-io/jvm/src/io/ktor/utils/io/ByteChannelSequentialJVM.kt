@@ -81,43 +81,9 @@ public class ByteChannelSequentialJVM(
         return count
     }
 
-    override suspend fun readAvailable(dst: ByteBuffer): Int {
-        val rc = tryReadAvailable(dst)
-        if (rc != 0) return rc
-        if (!dst.hasRemaining()) return 0
-        return readAvailableSuspend(dst)
-    }
-
-    override fun readAvailable(min: Int, block: (ByteBuffer) -> Unit): Int {
-        closedCause?.let { throw it }
-
-        if (availableForRead < min) {
-            return -1
-        }
-
-        prepareFlushedBytes()
-
-        var result: Int
-        readable.readDirect(min) {
-            val position = it.position()
-            block(it)
-            result = it.position() - position
-        }
-
-        return result
-    }
-
     private suspend fun readAvailableSuspend(dst: ByteBuffer): Int {
         if (!await(1)) return -1
         return readAvailable(dst)
-    }
-
-    override suspend fun readFully(dst: ByteBuffer): Int {
-        val rc = tryReadAvailable(dst)
-        if (rc == -1) throw EOFException("Channel closed")
-        if (!dst.hasRemaining()) return rc
-
-        return readFullySuspend(dst, rc)
     }
 
     private suspend fun readFullySuspend(dst: ByteBuffer, rc0: Int): Int {
@@ -149,14 +115,6 @@ public class ByteChannelSequentialJVM(
         return count
     }
 
-    @Deprecated("Use read { } instead.")
-    override fun <R> lookAhead(visitor: LookAheadSession.() -> R): R =
-        visitor(Session(this))
-
-    @Deprecated("Use read { } instead.")
-    override suspend fun <R> lookAheadSuspend(visitor: suspend LookAheadSuspendSession.() -> R): R =
-        visitor(Session(this))
-
     private class Session(private val channel: ByteChannelSequentialJVM) : LookAheadSuspendSession {
         override suspend fun awaitAtLeast(n: Int): Boolean {
             channel.closedCause?.let { throw it }
@@ -186,16 +144,6 @@ public class ByteChannelSequentialJVM(
             buffer.position(head.readPosition + skip)
             buffer.limit(head.writePosition)
             return buffer
-        }
-    }
-
-    override suspend fun read(min: Int, consumer: (ByteBuffer) -> Unit) {
-        require(min >= 0)
-
-        if (!await(min)) throw EOFException("Channel closed while $min bytes expected")
-
-        readable.readDirect(min) { bb ->
-            consumer(bb)
         }
     }
 

@@ -5,7 +5,6 @@
 package io.ktor.utils.io.internal
 
 import io.ktor.utils.io.*
-import io.ktor.utils.io.ByteBufferChannel
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 import java.nio.*
