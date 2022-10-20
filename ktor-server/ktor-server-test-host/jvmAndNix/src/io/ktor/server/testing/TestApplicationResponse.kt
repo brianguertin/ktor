@@ -6,6 +6,7 @@ package io.ktor.server.testing
 
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.server.engine.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -33,7 +34,7 @@ public class TestApplicationResponse(
     val content: String?
         get() {
             val charset = headers[HttpHeaders.ContentType]?.let { ContentType.parse(it).charset() } ?: Charsets.UTF_8
-            return byteContent?.let { charset.newDecoder().decode(ByteReadPacket(it)) }
+            return byteContent?.let { charset.newDecoder().decode(Packet(it)) }
         }
 
     /**
@@ -77,24 +78,20 @@ public class TestApplicationResponse(
 
     @OptIn(DelicateCoroutinesApi::class)
     override suspend fun responseChannel(): ByteWriteChannel {
-        val result = ByteChannel(autoFlush = true)
-
-        if (readResponse) {
-            launchResponseJob(result)
-        }
-
-        val job = GlobalScope.reader(responseJob ?: EmptyCoroutineContext) {
-            channel.copyAndClose(result, Long.MAX_VALUE)
-        }
+        val job = responseJob ?: Job()
+        responseJob = job
 
         if (responseJob == null) {
             responseJob = job
         }
 
-        responseChannel = result
-        responseChannelDeferred.complete()
-
-        return job.channel
+        return GlobalScope.reader(Dispatchers.Unconfined + job) {
+            responseChannel = channel
+            responseChannelDeferred.complete()
+            if (readResponse) {
+                launchResponseJob(channel)
+            }
+        }
     }
 
     private fun launchResponseJob(source: ByteReadChannel) {

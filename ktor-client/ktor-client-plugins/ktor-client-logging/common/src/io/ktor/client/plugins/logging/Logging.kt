@@ -150,15 +150,16 @@ public class Logging private constructor(
 
         val charset = content.contentType?.charset() ?: Charsets.UTF_8
 
-        val channel = ByteChannel()
-        GlobalScope.launch(Dispatchers.Unconfined) {
-            val text = channel.tryReadText(charset) ?: "[request body omitted]"
-            requestLog.appendLine("BODY START")
-            requestLog.appendLine(text)
-            requestLog.append("BODY END")
-        }.invokeOnCompletion {
-            logger.logRequest(requestLog.toString())
-            logger.closeRequestLog()
+        val channel = GlobalScope.reader {
+            try {
+                val text = tryReadText(charset) ?: "[request body omitted]"
+                requestLog.appendLine("BODY START")
+                requestLog.appendLine(text)
+                requestLog.append("BODY END")
+            } finally {
+                logger.logRequest(requestLog.toString())
+                logger.closeRequestLog()
+            }
         }
 
         return content.observe(channel)

@@ -13,6 +13,7 @@ import io.ktor.client.request.*
 import io.ktor.client.utils.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.test.dispatcher.*
 import io.ktor.util.reflect.*
 import io.ktor.utils.io.core.*
@@ -48,7 +49,7 @@ object MockSerializer : JsonSerializer {
         error("Can't serialize $data")
     }
 
-    override fun read(type: TypeInfo, body: DROP_Input): Any {
+    override fun read(type: TypeInfo, body: Packet): Any {
         error("can't read $type")
     }
 }

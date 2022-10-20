@@ -30,7 +30,7 @@ kotlin {
             kotlin.srcDir("android/test")
             dependencies {
                 implementation(project(":ktor-client:ktor-client-cio"))
-                implementation(kotlin("test"))
+                implementation( "org.jetbrains.kotlin:kotlin-test:1.7.10")
                 implementation(kotlin("test-junit"))
                 implementation("org.mockito:mockito-core:3.3.3")
             }

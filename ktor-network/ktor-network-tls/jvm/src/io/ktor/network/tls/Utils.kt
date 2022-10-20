@@ -4,43 +4,23 @@
 
 package io.ktor.network.tls
 
-import io.ktor.network.util.*
+import io.ktor.io.*
 import io.ktor.utils.io.core.*
-import java.security.*
 
-internal fun Digest(): Digest = Digest(DROP_BytePacketBuilder())
+internal fun Digest(): Digest = Digest(Packet())
 
 @JvmInline
-internal value class Digest(val state: DROP_BytePacketBuilder) : Closeable {
+internal value class Digest(val state: Packet) : Closeable {
 
-    fun update(packet: DROP_ByteReadPacket) = synchronized(state) {
+    fun update(packet: Packet) = synchronized(state) {
         if (packet.isEmpty) return
-        state.writePacket(packet.copy())
+        state.writePacket(packet.clone())
     }
 
-    fun doHash(hashName: String): ByteArray = synchronized(state) {
-        state.preview { handshakes: DROP_ByteReadPacket ->
-            val digest = MessageDigest.getInstance(hashName)!!
-
-            val buffer = DefaultByteBufferPool.borrow()
-            try {
-                while (!handshakes.isEmpty) {
-                    val rc = handshakes.readAvailable(buffer)
-                    if (rc == -1) break
-                    buffer.flip()
-                    digest.update(buffer)
-                    buffer.clear()
-                }
-
-                return@preview digest.digest()
-            } finally {
-                DefaultByteBufferPool.recycle(buffer)
-            }
-        }
-    }
+    fun doHash(hashName: String): ByteArray = TODO()
 
     override fun close() {
-        state.release()
+        state.close()
     }
 }
 
@@ -49,8 +29,8 @@ internal operator fun Digest.plusAssign(record: TLSHandshake) {
 
     update(
         buildPacket {
-            writeTLSHandshakeType(record.type, record.packet.remaining.toInt())
-            if (record.packet.remaining > 0) writePacket(record.packet.copy())
+            writeTLSHandshakeType(record.type, record.packet.availableForRead)
+            if (record.packet.isNotEmpty) writePacket(record.packet.clone())
         }
     )
 }

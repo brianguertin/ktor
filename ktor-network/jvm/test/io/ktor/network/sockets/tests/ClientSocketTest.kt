@@ -63,10 +63,9 @@ class ClientSocketTest {
         }
 
         client { socket ->
-            val bb = ByteBuffer.allocate(3)
-            val channel = socket.openReadChannel()
-            channel.readFully(bb)
-            assertEquals("123", String(bb.array()))
+            val channel = socket.attachForReading()
+            val array = channel.readArray(3)
+            assertEquals("123", String(array))
         }
     }
 
@@ -77,8 +76,8 @@ class ClientSocketTest {
         }
 
         client { socket ->
-            val channel = socket.openWriteChannel(true)
-            channel.writeStringUtf8("123")
+            val channel = socket.attachForWriting()
+            channel.writeString("123")
         }
     }
 
@@ -92,7 +91,7 @@ class ClientSocketTest {
         }
 
         client { socket ->
-            assertEquals("0123456789", socket.openReadChannel().readUTF8Line())
+            assertEquals("0123456789", socket.attachForReading().readString())
         }
     }
 

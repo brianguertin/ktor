@@ -6,6 +6,7 @@ package io.ktor.server.testing
 
 import io.ktor.http.*
 import io.ktor.http.cio.RequestResponseBuilder
+import io.ktor.io.*
 import io.ktor.utils.io.core.*
 import java.net.*
 import java.nio.*
@@ -64,10 +65,7 @@ public class HighLoadHttpGenerator(
     private val remote = InetSocketAddress(host, port)
     private val request = RequestResponseBuilder().apply(builder).build()
 
-    private val requestByteBuffer = ByteBuffer.allocateDirect(request.remaining.toInt())!!.apply {
-        request.copy().readFully(this)
-        clear()
-    }
+    private val requestByteBuffer = ByteBuffer.wrap(request.clone().toByteArray())
 
     private val count = AtomicLong(0)
     private val codeCounts = Array(1000) { AtomicLong(0) }

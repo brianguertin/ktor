@@ -4,6 +4,7 @@
 
 package io.ktor.server.config.yaml
 
+import io.ktor.io.*
 import io.ktor.server.config.*
 import io.ktor.utils.io.core.*
 import io.ktor.utils.io.errors.*
@@ -46,7 +47,7 @@ private fun readFile(path: String): String {
     val packet = buildPacket {
         do {
             read = fileDescriptor.readFileChunk(bytes, size)
-            writeFully(bytes, 0, read)
+            writeByteArray(bytes, 0, read)
         } while (read > 0)
     }
     ByteArrayPool.recycle(bytes)
@@ -58,7 +59,7 @@ private fun readFile(path: String): String {
     if (fclose(fileDescriptor) != 0) {
         throw ApplicationConfigurationException("Can not read $path", PosixException.forErrno())
     }
-    return packet.readText()
+    return packet.readString()
 }
 
 @OptIn(UnsafeNumber::class)

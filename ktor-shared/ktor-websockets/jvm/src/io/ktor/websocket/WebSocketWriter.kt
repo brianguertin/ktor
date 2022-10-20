@@ -118,7 +118,7 @@ public class WebSocketWriter(
             buffer.flip()
 
             do {
-                writeChannel.writeFully(buffer)
+                writeChannel.writeByteBuffer(buffer)
 
                 if (!serializer.hasOutstandingBytes && !buffer.hasRemaining()) {
                     flush?.let {

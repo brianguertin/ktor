@@ -12,6 +12,7 @@ import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.client.tests.utils.*
 import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.utils.io.core.*
 import kotlin.test.*
@@ -217,7 +218,7 @@ class LoggingMockedTests {
         config {
             engine {
                 addHandler {
-                    val body = it.body.toByteReadPacket().readText()
+                    val body = it.body.toByteReadPacket().readString()
                     assertTrue { body.contains("Hello") }
                     respondOk()
                 }
@@ -230,7 +231,7 @@ class LoggingMockedTests {
         }
 
         test { client ->
-            val input = buildPacket { writeText("Hello") }
+            val input = buildPacket { writeString("Hello") }
             client.submitFormWithBinaryData(
                 "http://localhost/",
                 formData {

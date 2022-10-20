@@ -136,9 +136,8 @@ class DeflaterReadChannelTest : CoroutineScope {
     }
 
     private fun testWriteChannel(expected: String, src: ByteReadChannel) {
-        val channel = ByteChannel(true)
-        launch {
-            src.copyAndClose((channel as ByteWriteChannel).deflated())
+        val channel = ByteReadChannel {
+            src.copyAndClose(deflated())
         }
 
         val result = channel.toInputStream().ungzip().reader().readText()
@@ -146,27 +145,15 @@ class DeflaterReadChannelTest : CoroutineScope {
     }
 
     private fun testFaultyWriteChannel(src: ByteReadChannel) = runBlocking {
-        var deflateInputChannel: ByteWriteChannel?
 
         withContext(Dispatchers.IO) {
-            val channel = ByteChannel(true)
-            deflateInputChannel = (channel as ByteWriteChannel).deflated(coroutineContext = coroutineContext)
-
-            // The copy operation will throw the IOException, but in order to simulate a real scenario
-            // we don't want it to stop the execution, we want the deflating process to become aware of the error,
-            // i.e. that it doesn't have an output channel on which to write the gzipped data, so it should stop.
-            launch {
-                try {
-                    src.copyAndClose(deflateInputChannel!!)
-                } catch (_: Exception) {
-                }
+            val channel = ByteReadChannel {
+                val destination = deflated()
+                src.copyAndClose(destination)
+                destination.close(IOException("Broken pipe"))
             }
 
-            launch {
-                channel.close(IOException("Broken pipe"))
-            }
+            assertFailsWith(IOException::class) { throw channel.closedCause!! }
         }
-
-        assertFailsWith(IOException::class) { throw deflateInputChannel!!.closedCause!! }
     }
 }

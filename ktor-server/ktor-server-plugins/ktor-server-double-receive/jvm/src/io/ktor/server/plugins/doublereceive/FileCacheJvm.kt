@@ -21,25 +21,7 @@ internal actual class FileCache actual constructor(
 
     @OptIn(DelicateCoroutinesApi::class)
     private val saveJob = GlobalScope.launch(context + Dispatchers.IO) {
-        val buffer = ByteBuffer.allocate(bufferSize)
-
-        @Suppress("BlockingMethodInNonBlockingContext")
-        FileOutputStream(file).use { stream ->
-            stream.channel.use { out ->
-                out.truncate(0L)
-                buffer.position(buffer.limit())
-
-                while (true) {
-                    while (buffer.hasRemaining()) {
-                        out.write(buffer)
-                    }
-                    buffer.clear()
-
-                    if (body.readAvailable(buffer) == -1) break
-                    buffer.flip()
-                }
-            }
-        }
+        TODO()
     }
 
     actual override fun read(): ByteReadChannel = file.readChannel()

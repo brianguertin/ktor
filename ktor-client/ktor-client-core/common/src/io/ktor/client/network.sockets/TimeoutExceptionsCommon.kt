@@ -31,17 +31,7 @@ public fun CoroutineScope.mapEngineExceptions(input: ByteReadChannel, request: H
         return input
     }
 
-    val replacementChannel = ByteChannelWithMappedExceptions(request)
-
-    writer(channel = replacementChannel) {
-        try {
-            input.copyAndClose(replacementChannel)
-        } catch (cause: Throwable) {
-            input.cancel(cause)
-        }
-    }
-
-    return replacementChannel
+    return input // TODO
 }
 
 /**
@@ -50,25 +40,5 @@ public fun CoroutineScope.mapEngineExceptions(input: ByteReadChannel, request: H
  */
 @InternalAPI
 public fun CoroutineScope.mapEngineExceptions(output: ByteWriteChannel, request: HttpRequestData): ByteWriteChannel {
-    if (PlatformUtils.IS_NATIVE) {
-        return output
-    }
-
-    val replacementChannel = ByteChannelWithMappedExceptions(request)
-
-    writer(channel = replacementChannel) {
-        try {
-            replacementChannel.copyAndClose(output)
-        } catch (cause: Throwable) {
-            replacementChannel.close(cause)
-        }
-    }
-
-    return replacementChannel
+    return output // TODO
 }
-
-/**
- * Creates [ByteChannel] that maps close exceptions (close the channel with [SocketTimeoutException] if asked to
- * close it with [SocketTimeoutException]).
- */
-internal expect fun ByteChannelWithMappedExceptions(request: HttpRequestData): ByteChannel

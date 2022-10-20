@@ -1,8 +1,7 @@
 package io.ktor.utils.io
 
-import io.ktor.utils.io.bits.*
+import io.ktor.io.*
 import io.ktor.utils.io.core.*
-import io.ktor.utils.io.core.internal.*
 
 /**
  * Channel for asynchronous writing of sequences of bytes.
@@ -13,99 +12,16 @@ import io.ktor.utils.io.core.internal.*
  */
 public interface ByteWriteChannel {
     /**
-     * Returns number of bytes that can be written without suspension. Write operations do no suspend and return
-     * immediately when this number is at least the number of bytes requested for write.
-     */
-    public val availableForWrite: Int
-
-    /**
      * Returns `true` is channel has been closed and attempting to write to the channel will cause an exception.
      */
     public val isClosedForWrite: Boolean
-
-    /**
-     * Returns `true` if channel flushes automatically all pending bytes after every write function call.
-     * If `false` then flush only happens at manual [flush] invocation or when the buffer is full.
-     */
-    public val autoFlush: Boolean
-
-    /**
-     * Number of bytes written to the channel.
-     * It is not guaranteed to be atomic so could be updated in the middle of write operation.
-     */
-    public val totalBytesWritten: Long
 
     /**
      * A closure causes exception or `null` if closed successfully or not yet closed
      */
     public val closedCause: Throwable?
 
-    /**
-     * Writes as much as possible and only suspends if buffer is full
-     */
-    public suspend fun writeAvailable(src: ByteArray, offset: Int, length: Int): Int
-
-    public suspend fun writeAvailable(src: DROP_ChunkBuffer): Int
-
-    /**
-     * Writes all [src] bytes and suspends until all bytes written. Causes flush if buffer filled up or when [autoFlush]
-     * Crashes if channel get closed while writing.
-     */
-    public suspend fun writeFully(src: ByteArray, offset: Int, length: Int)
-
-    public suspend fun writeFully(src: DROP_Buffer)
-
-    public suspend fun writeFully(memory: DROP_Memory, startIndex: Int, endIndex: Int)
-
-    @Suppress("DEPRECATION")
-    @Deprecated("Use write { } instead.")
-    public suspend fun writeSuspendSession(visitor: suspend WriterSuspendSession.() -> Unit)
-
-    /**
-     * Writes a [packet] fully or fails if channel get closed before the whole packet has been written
-     */
-    public suspend fun writePacket(packet: DROP_ByteReadPacket)
-
-    /**
-     * Writes long number and suspends until written.
-     * Crashes if channel get closed while writing.
-     */
-    public suspend fun writeLong(l: Long)
-
-    /**
-     * Writes int number and suspends until written.
-     * Crashes if channel get closed while writing.
-     */
-    public suspend fun writeInt(i: Int)
-
-    /**
-     * Writes short number and suspends until written.
-     * Crashes if channel get closed while writing.
-     */
-    public suspend fun writeShort(s: Short)
-
-    /**
-     * Writes byte and suspends until written.
-     * Crashes if channel get closed while writing.
-     */
-    public suspend fun writeByte(b: Byte)
-
-    /**
-     * Writes double number and suspends until written.
-     * Crashes if channel get closed while writing.
-     */
-    public suspend fun writeDouble(d: Double)
-
-    /**
-     * Writes float number and suspends until written.
-     * Crashes if channel get closed while writing.
-     */
-    public suspend fun writeFloat(f: Float)
-
-    /**
-     * Invokes [block] when at least 1 byte is available for write.
-     */
-    public suspend fun awaitFreeSpace()
+    public val writablePacket: Packet
 
     /**
      * Closes this channel with an optional exceptional [cause].
@@ -133,11 +49,8 @@ public interface ByteWriteChannel {
      * This function is thread-safe and can be invoked in any thread at any time.
      * It does nothing when invoked on a closed channel.
      */
-    public fun flush()
+    public suspend fun flush()
 }
-
-public suspend fun ByteWriteChannel.writeAvailable(src: ByteArray): Int = writeAvailable(src, 0, src.size)
-public suspend fun ByteWriteChannel.writeFully(src: ByteArray): Unit = writeFully(src, 0, src.size)
 
 public suspend fun ByteWriteChannel.writeShort(s: Int) {
     return writeShort((s and 0xffff).toShort())
@@ -164,22 +77,6 @@ public suspend fun ByteWriteChannel.writeInt(i: Long, byteOrder: ByteOrder) {
  */
 public fun ByteWriteChannel.close(): Boolean = close(null)
 
-public suspend fun ByteWriteChannel.writeStringUtf8(s: CharSequence) {
-    val packet = buildPacket {
-        writeText(s)
-    }
-
-    return writePacket(packet)
-}
-
-public suspend fun ByteWriteChannel.writeStringUtf8(s: String) {
-    val packet = buildPacket {
-        writeText(s)
-    }
-
-    return writePacket(packet)
-}
-
 public suspend fun ByteWriteChannel.writeBoolean(b: Boolean) {
     return writeByte(if (b) 1 else 0)
 }
@@ -189,14 +86,6 @@ public suspend fun ByteWriteChannel.writeBoolean(b: Boolean) {
  */
 public suspend fun ByteWriteChannel.writeChar(ch: Char) {
     return writeShort(ch.code)
-}
-
-public suspend inline fun ByteWriteChannel.writePacket(builder: DROP_BytePacketBuilder.() -> Unit) {
-    return writePacket(buildPacket(builder))
-}
-
-public suspend fun ByteWriteChannel.writePacketSuspend(builder: suspend DROP_BytePacketBuilder.() -> Unit) {
-    return writePacket(buildPacket { builder() })
 }
 
 /**

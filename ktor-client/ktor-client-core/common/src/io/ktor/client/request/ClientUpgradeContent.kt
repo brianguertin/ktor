@@ -12,12 +12,10 @@ import io.ktor.utils.io.*
 @Suppress("KDocMissingDocumentation")
 @InternalAPI
 public abstract class ClientUpgradeContent : OutgoingContent.NoContent() {
-    private val content: ByteChannel by lazy { ByteChannel() }
-
-    public val output: ByteWriteChannel get() = content
+    public val output: ByteWriteChannel get() = TODO()
 
     public suspend fun pipeTo(output: ByteWriteChannel) {
-        content.copyAndClose(output)
+        TODO()
     }
 
     public abstract fun verify(headers: Headers)

@@ -17,6 +17,7 @@ import io.ktor.client.statement.*
 import io.ktor.client.tests.utils.*
 import io.ktor.client.utils.*
 import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.serialization.gson.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -99,7 +100,7 @@ abstract class JsonTest : TestWithKtor() {
             engine {
                 addHandler { request ->
                     respond(
-                        request.body.toByteReadPacket().readText(),
+                        request.body.toByteReadPacket().readString(),
                         headers = buildHeaders {
                             append("X-ContentType", request.body.contentType.toString())
                         }

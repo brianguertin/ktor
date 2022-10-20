@@ -4,6 +4,7 @@
 
 package io.ktor.websocket
 
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.util.cio.*
 import io.ktor.util.logging.*
@@ -159,7 +160,7 @@ internal class DefaultWebSocketSessionImpl(
     private fun runIncomingProcessor(ponger: SendChannel<Frame.Ping>): Job = launch(
         IncomingProcessorCoroutineName + Dispatchers.Unconfined
     ) {
-        var last: DROP_BytePacketBuilder? = null
+        var last: Packet? = null
         var closeFramePresented = false
         try {
             @OptIn(ExperimentalCoroutinesApi::class)
@@ -181,19 +182,19 @@ internal class DefaultWebSocketSessionImpl(
 
                         if (!frame.fin) {
                             if (last == null) {
-                                last = DROP_BytePacketBuilder()
+                                last = Packet()
                             }
 
-                            last!!.writeFully(frame.data)
+                            last!!.writeByteArray(frame.data)
                             return@consumeEach
                         }
 
                         val frameToSend = last?.let { builder ->
-                            builder.writeFully(frame.data)
+                            builder.writeByteArray(frame.data)
                             Frame.byType(
                                 fin = true,
                                 frame.frameType,
-                                builder.build().readBytes(),
+                                builder.toByteArray(),
                                 frame.rsv1,
                                 frame.rsv2,
                                 frame.rsv3
@@ -211,7 +212,7 @@ internal class DefaultWebSocketSessionImpl(
             filtered.close(cause)
         } finally {
             ponger.close()
-            last?.release()
+            last?.close()
             filtered.close()
 
             if (!closeFramePresented) {
@@ -310,12 +311,12 @@ internal class DefaultWebSocketSessionImpl(
     }
 
     private suspend fun checkMaxFrameSize(
-        packet: DROP_BytePacketBuilder?,
+        packet: Packet?,
         frame: Frame
     ) {
-        val size = frame.data.size + (packet?.size ?: 0)
+        val size = frame.data.size + (packet?.availableForRead ?: 0)
         if (size > maxFrameSize) {
-            packet?.release()
+            packet?.close()
             close(CloseReason(CloseReason.Codes.TOO_BIG, "Frame is too big: $size. Max size is $maxFrameSize"))
             throw FrameTooBigException(size.toLong())
         }

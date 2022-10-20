@@ -4,6 +4,7 @@
 
 package io.ktor.util
 
+import io.ktor.io.*
 import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
 import kotlin.experimental.*
@@ -21,7 +22,7 @@ private val BASE64_INVERSE_ALPHABET = IntArray(256) {
  * Encode [String] in base64 format and UTF-8 character encoding.
  */
 public fun String.encodeBase64(): String = buildPacket {
-    writeText(this@encodeBase64)
+    writeString(this@encodeBase64)
 }.encodeBase64()
 
 /**
@@ -67,30 +68,30 @@ public fun ByteArray.encodeBase64(): String {
 }
 
 /**
- * Encode [DROP_ByteReadPacket] in base64 format
+ * Encode [Packet] in base64 format
  */
-public fun DROP_ByteReadPacket.encodeBase64(): String = readBytes().encodeBase64()
+public fun Packet.encodeBase64(): String = toByteArray().encodeBase64()
 
 /**
  * Decode [String] from base64 format encoded in UTF-8.
  */
-public fun String.decodeBase64String(): String = String(decodeBase64Bytes(), charset = Charsets.UTF_8)
+public fun String.decodeBase64String(charset: Charset = Charsets.UTF_8): String = TODO() // String(decodeBase64Bytes())
 
 /**
  * Decode [String] from base64 format
  */
 public fun String.decodeBase64Bytes(): ByteArray = buildPacket {
-    writeText(dropLastWhile { it == BASE64_PAD })
-}.decodeBase64Bytes().readBytes()
+    writeString(dropLastWhile { it == BASE64_PAD })
+}.decodeBase64Bytes().toByteArray()
 
 /**
- * Decode [DROP_ByteReadPacket] from base64 format
+ * Decode [Packet] from base64 format
  */
-public fun DROP_ByteReadPacket.decodeBase64Bytes(): DROP_Input = buildPacket {
+public fun Packet.decodeBase64Bytes(): Packet = buildPacket {
     val data = ByteArray(4)
 
-    while (remaining > 0) {
-        val read = readAvailable(data)
+    while (availableForRead > 0) {
+        val read: Int = TODO() //readAvailable(data)
 
         val chunk = data.foldIndexed(0) { index, result, current ->
             result or (current.fromBase64().toInt() shl ((3 - index) * 6))

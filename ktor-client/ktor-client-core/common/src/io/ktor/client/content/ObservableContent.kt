@@ -32,9 +32,9 @@ internal class ObservableContent(
         is ProtocolUpgrade -> throw UnsupportedContentTypeException(delegate)
         is NoContent -> ByteReadChannel.Empty
         is ReadChannelContent -> delegate.readFrom()
-        is WriteChannelContent -> GlobalScope.writer(callContext, autoFlush = true) {
+        is WriteChannelContent -> GlobalScope.writer(callContext) {
             delegate.writeTo(channel)
-        }.channel
+        }
     }
 
     @Suppress("CanBePrimaryConstructorProperty") // required to avoid InvalidMutabilityException on native

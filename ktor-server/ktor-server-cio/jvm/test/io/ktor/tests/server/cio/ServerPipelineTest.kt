@@ -5,6 +5,7 @@
 package io.ktor.tests.server.cio
 
 import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.server.cio.backend.*
 import io.ktor.server.cio.internal.*
 import io.ktor.util.*
@@ -15,6 +16,7 @@ import kotlinx.coroutines.debug.junit4.*
 import kotlinx.coroutines.scheduling.*
 import org.junit.*
 import org.junit.rules.*
+import java.nio.channels.*
 import java.util.concurrent.*
 import java.util.concurrent.atomic.*
 import kotlin.coroutines.*
@@ -39,7 +41,6 @@ class ServerPipelineTest : CoroutineScope {
     @get:Rule
     val timeout = CoroutinesTimeout(2000L, true)
 
-    @OptIn(InternalCoroutinesApi::class)
     @AfterTest
     fun cleanup() {
         job.cancel()
@@ -50,7 +51,7 @@ class ServerPipelineTest : CoroutineScope {
 
     @Test
     fun testSmoke(): Unit = runBlocking {
-        val connection = ServerIncomingConnection(ByteChannel(), ByteChannel(), null, null)
+        val connection = ServerIncomingConnection(ConflatedByteChannel(), ConflatedByteChannel(), null, null)
         val queue = WeakTimeoutQueue(10L) { 1L }
         val job = startServerConnectionPipeline(connection, queue) {
             error("Shouldn't reach here")
@@ -61,8 +62,8 @@ class ServerPipelineTest : CoroutineScope {
 
     @Test
     fun testSingleRequest(): Unit = runBlocking(coroutineContext) {
-        val input = ByteChannel()
-        val output = ByteChannel()
+        val input = ConflatedByteChannel()
+        val output = ConflatedByteChannel()
 
         val requestsReceived = ArrayList<String>()
 
@@ -79,25 +80,25 @@ class ServerPipelineTest : CoroutineScope {
 
             request.release()
 
-            output.writeStringUtf8("HTTP/1.1 200 OK\r\nConnection: close\r\n\r\n")
+            output.writeString("HTTP/1.1 200 OK\r\nConnection: close\r\n\r\n")
         }
 
-        input.writeStringUtf8("GET / HTTP/1.1\r\nConnection: close\r\n\r\n")
+        input.writeString("GET / HTTP/1.1\r\nConnection: close\r\n\r\n")
         input.flush()
 
-        assertEquals("HTTP/1.1 200 OK", output.readUTF8Line())
-        assertEquals("Connection: close", output.readUTF8Line())
-        assertEquals("", output.readUTF8Line())
+        assertEquals("HTTP/1.1 200 OK", output.readLine())
+        assertEquals("Connection: close", output.readLine())
+        assertEquals("", output.readLine())
         assertEquals("/", requestsReceived.single())
 
         input.close()
-        output.readRemaining().discard()
+        output.readRemaining().close()
     }
 
     @Test
     fun testSingleRequestUpgradeWithoutUpgrade(): Unit = runBlocking(coroutineContext) {
-        val input = ByteChannel()
-        val output = ByteChannel()
+        val input = ConflatedByteChannel()
+        val output = ConflatedByteChannel()
 
         val requestsReceived = ArrayList<String>()
 
@@ -115,25 +116,25 @@ class ServerPipelineTest : CoroutineScope {
 
             request.release()
 
-            output.writeStringUtf8("HTTP/1.1 200 OK\r\nConnection: close\r\n\r\n")
+            output.writeString("HTTP/1.1 200 OK\r\nConnection: close\r\n\r\n")
         }
 
-        input.writeStringUtf8("GET / HTTP/1.1\r\nUpgrade: test\r\nConnection: Upgrade\r\n\r\n")
+        input.writeString("GET / HTTP/1.1\r\nUpgrade: test\r\nConnection: Upgrade\r\n\r\n")
         input.flush()
 
-        assertEquals("HTTP/1.1 200 OK", output.readUTF8Line())
-        assertEquals("Connection: close", output.readUTF8Line())
-        assertEquals("", output.readUTF8Line())
+        assertEquals("HTTP/1.1 200 OK", output.readLine())
+        assertEquals("Connection: close", output.readLine())
+        assertEquals("", output.readLine())
         assertEquals("/", requestsReceived.single())
 
         input.close()
-        output.readRemaining().discard()
+        output.readRemaining().close()
     }
 
     @Test
     fun testSingleRequestUpgradeNoTimeout(): Unit = runBlocking(coroutineContext) {
-        val input = ByteChannel()
-        val output = ByteChannel()
+        val input = ConflatedByteChannel()
+        val output = ConflatedByteChannel()
 
         val requestsReceived = ArrayList<String>()
         val latch = Job()
@@ -152,19 +153,19 @@ class ServerPipelineTest : CoroutineScope {
 
             request.release()
 
-            output.writeStringUtf8("HTTP/1.1 101 Switching\r\nUpgrade: test\r\nConnection: Upgrade\r\n\r\n")
+            output.writeString("HTTP/1.1 101 Switching\r\nUpgrade: test\r\nConnection: Upgrade\r\n\r\n")
             output.flush()
 
             latch.join()
         }
 
-        input.writeStringUtf8("GET / HTTP/1.1\r\nUpgrade: test\r\nConnection: Upgrade\r\n\r\n")
+        input.writeString("GET / HTTP/1.1\r\nUpgrade: test\r\nConnection: Upgrade\r\n\r\n")
         input.flush()
 
-        assertEquals("HTTP/1.1 101 Switching", output.readUTF8Line())
-        assertEquals("Upgrade: test", output.readUTF8Line())
-        assertEquals("Connection: Upgrade", output.readUTF8Line())
-        assertEquals("", output.readUTF8Line())
+        assertEquals("HTTP/1.1 101 Switching", output.readLine())
+        assertEquals("Upgrade: test", output.readLine())
+        assertEquals("Connection: Upgrade", output.readLine())
+        assertEquals("", output.readLine())
         assertEquals("/", requestsReceived.single())
 
         delay(100)
@@ -172,13 +173,13 @@ class ServerPipelineTest : CoroutineScope {
         latch.complete()
 
         input.close()
-        output.readRemaining().discard()
+        output.readRemaining().close()
     }
 
     @Test
     fun testPipelineIdleTimeoutNoRequests(): Unit = runBlocking(coroutineContext) {
-        val input = ByteChannel()
-        val output = ByteChannel()
+        val input = ConflatedByteChannel()
+        val output = ConflatedByteChannel()
 
         val clock = AtomicLong(1L)
 
@@ -212,8 +213,8 @@ class ServerPipelineTest : CoroutineScope {
 
     @Test
     fun testPipelineIdleTimeoutAfterRequests(): Unit = runBlocking(coroutineContext) {
-        val input = ByteChannel()
-        val output = ByteChannel()
+        val input = ConflatedByteChannel()
+        val output = ConflatedByteChannel()
 
         val clock = AtomicLong(1L)
         val requestHandled = Job()
@@ -229,7 +230,7 @@ class ServerPipelineTest : CoroutineScope {
             }
 
             // send a single request
-            input.writeStringUtf8("GET / HTTP/1.1\r\nConnection: keep-alive\r\n\r\n")
+            input.writeString("GET / HTTP/1.1\r\nConnection: keep-alive\r\n\r\n")
             input.flush()
 
             // after processing the request, the idle timeout machinery should cancel all the stuff
@@ -262,7 +263,7 @@ class ServerPipelineTest : CoroutineScope {
         val queue = WeakTimeoutQueue(100000L)
 
         val root = launch(coroutineContext) {
-            val connection = ServerIncomingConnection(ByteChannel(), ByteChannel(), null, null)
+            val connection = ServerIncomingConnection(ConflatedByteChannel(), ConflatedByteChannel(), null, null)
             startServerConnectionPipeline(connection, queue) {
                 error("Shouldn't reach here")
             }
@@ -286,7 +287,7 @@ class ServerPipelineTest : CoroutineScope {
         val queue = WeakTimeoutQueue(10L)
 
         val root = launch {
-            val connection = ServerIncomingConnection(ByteChannel(), ByteChannel(), null, null)
+            val connection = ServerIncomingConnection(ConflatedByteChannel(), ConflatedByteChannel(), null, null)
             startServerConnectionPipeline(connection, queue) {
                 error("Shouldn't reach here")
             }

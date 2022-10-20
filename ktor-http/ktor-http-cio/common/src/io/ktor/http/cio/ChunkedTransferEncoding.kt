@@ -5,9 +5,11 @@
 package io.ktor.http.cio
 
 import io.ktor.http.cio.internals.*
+import io.ktor.io.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.bits.*
 import io.ktor.utils.io.core.*
+import io.ktor.utils.io.errors.*
 import io.ktor.utils.io.pool.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.*
@@ -23,25 +25,20 @@ private val ChunkSizeBufferPool: ObjectPool<StringBuilder> =
     }
 
 /**
- * Decoder job type
- */
-public typealias DecoderJob = WriterJob
-
-/**
  * Start a chunked stream decoder coroutine
  */
 @Deprecated(
     "Specify content length if known or pass -1L",
     ReplaceWith("decodeChunked(input, -1L)")
 )
-public fun CoroutineScope.decodeChunked(input: ByteReadChannel): DecoderJob =
+public fun CoroutineScope.decodeChunked(input: ByteReadChannel): ByteReadChannel =
     decodeChunked(input, -1L)
 
 /**
  * Start a chunked stream decoder coroutine
  */
 @Suppress("UNUSED_PARAMETER")
-public fun CoroutineScope.decodeChunked(input: ByteReadChannel, contentLength: Long): DecoderJob =
+public fun CoroutineScope.decodeChunked(input: ByteReadChannel, contentLength: Long): ByteReadChannel =
     writer(coroutineContext) {
         decodeChunked(input, channel)
     }
@@ -73,7 +70,7 @@ public suspend fun decodeChunked(input: ByteReadChannel, out: ByteWriteChannel, 
     try {
         while (true) {
             chunkSizeBuffer.clear()
-            if (!input.readUTF8LineTo(chunkSizeBuffer, MAX_CHUNK_SIZE_LENGTH)) {
+            if (!input.readUTF8LineTo(chunkSizeBuffer, MAX_CHUNK_SIZE_LENGTH.toLong())) {
                 throw EOFException("Chunked stream has ended unexpectedly: no chunk size")
             } else if (chunkSizeBuffer.isEmpty()) {
                 throw EOFException("Invalid chunk size: empty")
@@ -108,18 +105,13 @@ public suspend fun decodeChunked(input: ByteReadChannel, out: ByteWriteChannel, 
 }
 
 /**
- * Encoder job type
- */
-public typealias EncoderJob = ReaderJob
-
-/**
  * Start chunked stream encoding coroutine
  */
 @OptIn(DelicateCoroutinesApi::class)
 public suspend fun encodeChunked(
     output: ByteWriteChannel,
     coroutineContext: CoroutineContext
-): EncoderJob = GlobalScope.reader(coroutineContext, autoFlush = false) {
+): ByteWriteChannel = GlobalScope.reader(coroutineContext) {
     encodeChunked(output, channel)
 }
 
@@ -129,14 +121,12 @@ public suspend fun encodeChunked(
 public suspend fun encodeChunked(output: ByteWriteChannel, input: ByteReadChannel) {
     try {
         while (!input.isClosedForRead) {
-            input.read { source, startIndex, endIndex ->
-                if (endIndex == startIndex) return@read 0
-                output.writeChunk(source, startIndex.toInt(), endIndex.toInt())
-            }
+            val buffer = input.readBuffer()
+            TODO()
         }
 
         input.rethrowCloseCause()
-        output.writeFully(LastChunkBytes)
+        output.writeByteArray(LastChunkBytes)
     } catch (cause: Throwable) {
         output.close(cause)
         input.cancel(cause)
@@ -146,24 +136,20 @@ public suspend fun encodeChunked(output: ByteWriteChannel, input: ByteReadChanne
 }
 
 private fun ByteReadChannel.rethrowCloseCause() {
-    val cause = when (this) {
-        is ByteChannel -> closedCause
-        else -> null
-    }
-    if (cause != null) throw cause
+    TODO()
 }
 
 private const val CrLfShort: Short = 0x0d0a
 private val CrLf = "\r\n".toByteArray()
 private val LastChunkBytes = "0\r\n\r\n".toByteArray()
 
-private suspend fun ByteWriteChannel.writeChunk(memory: DROP_Memory, startIndex: Int, endIndex: Int): Int {
-    val size = endIndex - startIndex
+private suspend fun ByteWriteChannel.writeChunk(buffer: Buffer): Int {
+    val size = buffer.availableForRead
     writeIntHex(size)
     writeShort(CrLfShort)
 
-    writeFully(memory, startIndex, endIndex)
-    writeFully(CrLf)
+    writeBuffer(buffer)
+    writeByteArray(CrLf)
     flush()
 
     return size

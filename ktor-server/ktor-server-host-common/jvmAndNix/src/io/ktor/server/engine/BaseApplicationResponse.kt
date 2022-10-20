@@ -196,7 +196,7 @@ public abstract class BaseApplicationResponse(
 
         responseChannel().use {
             withContext(Dispatchers.Unconfined) {
-                writeFully(bytes)
+                writeByteArray(bytes)
             }
         }
     }

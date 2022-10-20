@@ -13,7 +13,6 @@ import org.w3c.fetch.Response
 import kotlin.coroutines.*
 
 internal fun CoroutineScope.readBodyBrowser(response: Response): ByteReadChannel {
-    @Suppress("UNCHECKED_CAST_TO_EXTERNAL_INTERFACE")
     val stream: ReadableStream<Uint8Array> = response.body ?: return ByteReadChannel.Empty
     return channelFromStream(stream)
 }
@@ -25,19 +24,19 @@ internal fun CoroutineScope.channelFromStream(
     while (true) {
         try {
             val chunk = reader.readChunk() ?: break
-            channel.writeFully(chunk.asByteArray())
+            channel.writeByteArray(chunk.asByteArray())
         } catch (cause: Throwable) {
             reader.cancel(cause)
             throw cause
         }
     }
-}.channel
+}
 
 internal suspend fun ReadableStreamDefaultReader<Uint8Array>.readChunk(): Uint8Array? =
     suspendCancellableCoroutine { continuation ->
         read().then {
             val chunk = it.value
-            val result = if (it.done || chunk == null) null else chunk
+            val result = if (it.done) null else chunk
             continuation.resumeWith(Result.success(result))
         }.catch { cause ->
             continuation.resumeWithException(cause)

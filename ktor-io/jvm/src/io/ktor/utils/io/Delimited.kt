@@ -62,50 +62,12 @@ private suspend fun ByteReadChannel.skipDelimiterSuspend(delimiter: ByteBuffer) 
     }
 }
 
-@Suppress("DEPRECATION")
 private suspend fun ByteReadChannel.readUntilDelimiterSuspend(
     delimiter: ByteBuffer,
     dst: ByteBuffer,
     copied0: Int
 ): Int {
-    require(delimiter !== dst)
-    require(copied0 >= 0)
-
-    var endFound = false
-    val copied = lookAheadSuspend {
-        var copied = copied0
-
-        do {
-            awaitAtLeast(1)
-            val rc = tryCopyUntilDelimiter(delimiter, dst)
-            if (rc == 0) {
-                if (startsWithDelimiter(delimiter) == delimiter.remaining()) {
-                    endFound = true
-                    break
-                }
-                if (isClosedForWrite) {
-                    break
-                } else {
-                    awaitAtLeast(delimiter.remaining())
-                    continue
-                }
-            }
-
-            val size = if (rc <= 0) {
-                endFound = true
-                -rc
-            } else rc
-            copied += size
-        } while (dst.hasRemaining() && !endFound)
-
-        copied
-    }
-
-    return when {
-        copied > 0 && isClosedForWrite && !endFound -> copied + readAvailable(dst).coerceAtLeast(0)
-        copied == 0 && isClosedForRead -> -1
-        else -> copied
-    }
+    TODO()
 }
 
 /**

@@ -16,7 +16,6 @@ import kotlinx.coroutines.*
 import kotlin.coroutines.*
 import kotlin.jvm.*
 
-@Suppress("DEPRECATION")
 internal class CIOApplicationResponse(
     call: CIOApplicationCall,
     private val output: ByteWriteChannel,
@@ -103,8 +102,8 @@ internal class CIOApplicationResponse(
     override suspend fun respondFromBytes(bytes: ByteArray) {
         sendResponseMessage(contentReady = true)
         val channel = preparedBodyChannel()
-        return withContext<Unit>(Dispatchers.Unconfined) {
-            channel.writeFully(bytes)
+        withContext(Dispatchers.Unconfined) {
+            channel.writeByteArray(bytes)
             channel.close()
         }
     }
@@ -146,12 +145,8 @@ internal class CIOApplicationResponse(
         val chunked = headers[HttpHeaders.TransferEncoding] == "chunked"
         if (!chunked) return output
 
-        val encoderJob = encodeChunked(output, Dispatchers.Unconfined)
-        val chunkedOutput = encoderJob.channel
-
-        chunkedChannel = chunkedOutput
-        chunkedJob = encoderJob
-
-        return chunkedOutput
+        val result = encodeChunked(output, Dispatchers.Unconfined)
+        chunkedChannel = result
+        return result
     }
 }

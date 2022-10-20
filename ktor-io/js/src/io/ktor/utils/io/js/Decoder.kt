@@ -18,13 +18,6 @@ internal interface Decoder {
     fun decode(buffer: ArrayBufferView, options: dynamic): String
 }
 
-@Suppress("NOTHING_TO_INLINE")
-internal inline fun Decoder.decodeStream(buffer: ArrayBufferView, stream: Boolean): String {
-    decodeWrap {
-        return decode(buffer, decodeOptions(stream))
-    }
-}
-
 internal fun decodeOptions(stream: Boolean): dynamic = Any().apply {
     with(this.asDynamic()) {
         this.stream = stream

@@ -10,7 +10,7 @@ plugins {
 
 kotlin.sourceSets.jvmMain {
     dependencies {
-        api(kotlin("test"))
+        api( "org.jetbrains.kotlin:kotlin-test:1.7.10")
         api(project(":ktor-client:ktor-client-plugins:ktor-client-content-negotiation"))
         api(project(":ktor-server:ktor-server-cio"))
         api(project(":ktor-client:ktor-client-cio"))

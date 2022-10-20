@@ -7,6 +7,7 @@ package io.ktor.client.engine.darwin.internal
 import io.ktor.client.engine.darwin.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.util.date.*
 import io.ktor.utils.io.core.*
 import io.ktor.websocket.*
@@ -16,6 +17,7 @@ import kotlinx.coroutines.channels.*
 import platform.Foundation.*
 import platform.darwin.*
 import kotlin.coroutines.*
+import kotlin.text.String
 
 @OptIn(UnsafeNumber::class, ExperimentalCoroutinesApi::class)
 internal class DarwinWebsocketSession(
@@ -105,9 +107,9 @@ internal class DarwinWebsocketSession(
                 }
 
                 FrameType.CLOSE -> {
-                    val data = buildPacket { writeFully(frame.data) }
+                    val data = buildPacket { writeByteArray(frame.data) }
                     val code = data.readShort().convert<NSInteger>()
-                    val reason = data.readBytes()
+                    val reason = data.toByteArray()
                     task.cancelWithCloseCode(code, reason.toNSData())
                     return@sendMessages
                 }
@@ -118,7 +120,7 @@ internal class DarwinWebsocketSession(
                             cancel("Error receiving pong", DarwinHttpRequestException(error))
                             return@sendPingWithPongReceiveHandler
                         }
-                        _incoming.trySend(Frame.Pong(DROP_ByteReadPacket.Empty))
+                        _incoming.trySend(Frame.Pong(Packet.Empty))
                     }
                 }
 
@@ -169,7 +171,7 @@ internal class DarwinWebsocketSession(
         reason: NSData?,
         webSocketTask: NSURLSessionWebSocketTask
     ) {
-        val closeReason = CloseReason(code.toShort(), reason?.toByteArray()?.let { String(it) } ?: "")
+        val closeReason = CloseReason(code.toShort(), reason?.toByteArray()?.let { io.ktor.io.String(it) } ?: "")
         if (!_incoming.isClosedForSend) {
             _incoming.trySend(Frame.Close(closeReason))
         }

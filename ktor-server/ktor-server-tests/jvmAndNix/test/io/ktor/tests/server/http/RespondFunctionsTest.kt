@@ -11,6 +11,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
 import io.ktor.util.reflect.*
+import io.ktor.utils.io.*
 import kotlin.test.*
 
 @Suppress("DEPRECATION")
@@ -25,7 +26,10 @@ class RespondFunctionsTest {
                 call.respondBytes { ByteArray(10) { it.toByte() } }
             }
             get("/bytes-writer") {
-                call.respondBytesWriter(contentLength = 2) { writeByte(1); writeByte(2) }
+                call.respondBytesWriter(contentLength = 2) {
+                    writeByte(1)
+                    writeByte(2)
+                }
             }
         }
 

@@ -5,7 +5,6 @@
 package io.ktor.network.sockets
 
 import io.ktor.network.selector.*
-import io.ktor.util.network.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import platform.posix.*
@@ -26,11 +25,11 @@ internal class TCPSocketNative(
     override val socketContext: Job
         get() = _context
 
-    override fun attachForReading(channel: ByteChannel): WriterJob =
-        attachForReadingImpl(channel, descriptor, selectable, selector)
+    override fun attachForReading(): ByteReadChannel =
+        attachForReadingImpl(descriptor, selectable, selector)
 
-    override fun attachForWriting(channel: ByteChannel): ReaderJob =
-        attachForWritingImpl(channel, descriptor, selectable, selector)
+    override fun attachForWriting(): ByteWriteChannel =
+        attachForWritingImpl(descriptor, selectable, selector)
 
     override fun close() {
         _context.complete()

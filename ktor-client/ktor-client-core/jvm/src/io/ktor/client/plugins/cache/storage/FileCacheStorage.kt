@@ -6,6 +6,7 @@ package io.ktor.client.plugins.cache.storage
 
 import io.ktor.client.plugins.cache.*
 import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.util.collections.*
 import io.ktor.util.date.*
@@ -84,7 +85,7 @@ private class FileCacheStorage(
     private suspend fun writeCache(urlHex: String, caches: List<CachedResponseData>) = coroutineScope {
         val mutex = mutexes.computeIfAbsent(urlHex) { Mutex() }
         mutex.withLock {
-            val channel = ByteChannel()
+            val channel = ConflatedByteChannel()
             try {
                 File(directory, urlHex).outputStream().buffered().use { output ->
                     launch {
@@ -126,38 +127,38 @@ private class FileCacheStorage(
         }
     }
 
-    private suspend fun writeCache(channel: ByteChannel, cache: CachedResponseData) {
-        channel.writeStringUtf8(cache.url.toString() + "\n")
+    private suspend fun writeCache(channel: ConflatedByteChannel, cache: CachedResponseData) {
+        channel.writeString(cache.url.toString() + "\n")
         channel.writeInt(cache.statusCode.value)
-        channel.writeStringUtf8(cache.statusCode.description + "\n")
-        channel.writeStringUtf8(cache.version.toString() + "\n")
+        channel.writeString(cache.statusCode.description + "\n")
+        channel.writeString(cache.version.toString() + "\n")
         val headers = cache.headers.flattenEntries()
         channel.writeInt(headers.size)
         for ((key, value) in headers) {
-            channel.writeStringUtf8(key + "\n")
-            channel.writeStringUtf8(value + "\n")
+            channel.writeString(key + "\n")
+            channel.writeString(value + "\n")
         }
         channel.writeLong(cache.requestTime.timestamp)
         channel.writeLong(cache.responseTime.timestamp)
         channel.writeLong(cache.expires.timestamp)
         channel.writeInt(cache.varyKeys.size)
         for ((key, value) in cache.varyKeys) {
-            channel.writeStringUtf8(key + "\n")
-            channel.writeStringUtf8(value + "\n")
+            channel.writeString(key + "\n")
+            channel.writeString(value + "\n")
         }
         channel.writeInt(cache.body.size)
-        channel.writeFully(cache.body)
+        channel.writeByteArray(cache.body)
     }
 
     private suspend fun readCache(channel: ByteReadChannel): CachedResponseData {
-        val url = channel.readUTF8Line()!!
-        val status = HttpStatusCode(channel.readInt(), channel.readUTF8Line()!!)
-        val version = HttpProtocolVersion.parse(channel.readUTF8Line()!!)
+        val url = channel.readLine()!!
+        val status = HttpStatusCode(channel.readInt(), channel.readLine()!!)
+        val version = HttpProtocolVersion.parse(channel.readLine()!!)
         val headersCount = channel.readInt()
         val headers = HeadersBuilder()
         for (j in 0 until headersCount) {
-            val key = channel.readUTF8Line()!!
-            val value = channel.readUTF8Line()!!
+            val key = channel.readLine()!!
+            val value = channel.readLine()!!
             headers.append(key, value)
         }
         val requestTime = GMTDate(channel.readLong())
@@ -166,8 +167,8 @@ private class FileCacheStorage(
         val varyKeysCount = channel.readInt()
         val varyKeys = buildMap {
             for (j in 0 until varyKeysCount) {
-                val key = channel.readUTF8Line()!!
-                val value = channel.readUTF8Line()!!
+                val key = channel.readLine()!!
+                val value = channel.readLine()!!
                 put(key, value)
             }
         }

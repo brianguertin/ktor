@@ -6,7 +6,7 @@ package io.ktor.util
 
 import io.ktor.util.cio.*
 import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
+import io.ktor.utils.io.bits.*
 import kotlinx.coroutines.*
 import java.nio.*
 import java.util.zip.*
@@ -66,7 +66,7 @@ private fun CoroutineScope.inflate(
 
     if (gzip) {
         val header = source.readPacket(GZIP_HEADER_SIZE)
-        val magic = header.readShortLittleEndian()
+        val magic = header.readShort().reverseByteOrder()
         val format = header.readByte()
         val flags = header.readByte().toInt()
 
@@ -78,7 +78,7 @@ private fun CoroutineScope.inflate(
         // val osType = header.readByte()
 
         // however we have to discard them to prevent a memory leak
-        header.discard()
+        header.close()
 
         // skip the extra header if present
         if (flags and GzipHeaderFlags.EXTRA != 0) {
@@ -99,8 +99,9 @@ private fun CoroutineScope.inflate(
 
     try {
         var totalSize = 0
-        while (!source.isClosedForRead) {
-            if (source.readAvailable(readBuffer) <= 0) continue
+        while (true) {
+            if (source.availableForRead == 0 && !source.awaitBytes()) break
+            val readBuffer = source.readAvailable()
             readBuffer.flip()
 
             inflater.setInput(readBuffer.array(), readBuffer.position(), readBuffer.remaining())
@@ -143,7 +144,7 @@ private fun CoroutineScope.inflate(
         KtorDefaultPool.recycle(readBuffer)
         KtorDefaultPool.recycle(writeBuffer)
     }
-}.channel
+}
 
 private suspend fun Inflater.inflateTo(channel: ByteWriteChannel, buffer: ByteBuffer, checksum: Checksum): Int {
     buffer.clear()
@@ -154,6 +155,6 @@ private suspend fun Inflater.inflateTo(channel: ByteWriteChannel, buffer: ByteBu
 
     checksum.updateKeepPosition(buffer)
 
-    channel.writeFully(buffer)
+    channel.writeByteBuffer(buffer)
     return inflated
 }

@@ -4,6 +4,7 @@
 
 package io.ktor.network.tls.extensions
 
+import io.ktor.io.*
 import io.ktor.network.tls.*
 import io.ktor.util.*
 import io.ktor.utils.io.core.*
@@ -103,22 +104,22 @@ public val SupportedSignatureAlgorithms: List<HashAndSign> = listOf(
     HashAndSign(HashAlgorithm.SHA1, SignatureAlgorithm.RSA, OID.RSAwithSHA1Encryption)
 )
 
-internal fun DROP_ByteReadPacket.parseSignatureAlgorithms(): List<HashAndSign> {
+internal fun Packet.parseSignatureAlgorithms(): List<HashAndSign> {
     val length = readShort().toInt() and 0xffff
 
     val result = mutableListOf<HashAndSign>()
-    while (remaining > 0) {
+    while (availableForRead > 0) {
         result += readHashAndSign() ?: continue
     }
 
-    if (remaining.toInt() != length) {
+    if (availableForRead != length) {
         throw TLSException("Invalid hash and sign packet size: expected $length, actual ${result.size}")
     }
 
     return result
 }
 
-internal fun DROP_ByteReadPacket.readHashAndSign(): HashAndSign? {
+internal fun Packet.readHashAndSign(): HashAndSign? {
     val hash = readByte()
     val sign = readByte()
     return HashAndSign.byCode(hash, sign)

@@ -9,7 +9,9 @@ import io.ktor.client.call.*
 import io.ktor.client.plugins.observer.*
 import io.ktor.client.request.*
 import io.ktor.client.tests.utils.*
+import io.ktor.io.*
 import io.ktor.util.*
+import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import kotlin.test.*
 
@@ -48,7 +50,7 @@ class PluginsTest : ClientLoader() {
         val task = Job()
         config {
             ResponseObserver { response ->
-                val text = response.content.readRemaining().readText()
+                val text = response.content.readRemaining().readString()
                 assertEquals(body, text)
                 task.complete()
             }

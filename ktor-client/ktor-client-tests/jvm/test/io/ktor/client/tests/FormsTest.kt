@@ -10,7 +10,8 @@ import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.tests.utils.*
 import io.ktor.http.*
-import io.ktor.utils.io.streams.*
+import io.ktor.io.*
+import io.ktor.utils.io.*
 import java.io.*
 import kotlin.test.*
 
@@ -22,16 +23,12 @@ class FormsTest {
             engine {
                 addHandler {
                     val content = it.body.toByteReadPacket()
-                    respondOk(content.readText())
+                    respondOk(content.readString())
                 }
             }
         }
 
         test { client ->
-            val input = object : InputStream() {
-                override fun read(): Int = -1
-            }.asInput()
-
             val builder = HttpRequestBuilder().apply {
                 setBody(
                     MultiPartFormDataContent(
@@ -42,7 +39,7 @@ class FormsTest {
                                     append(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
                                     append(HttpHeaders.ContentDisposition, "filename=myfile.txt")
                                 }
-                            ) { input }
+                            ) { Packet.Empty }
                         }
                     )
                 )

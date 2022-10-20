@@ -14,8 +14,8 @@ public actual suspend fun Socket.tls(
     coroutineContext: CoroutineContext,
     config: TLSConfig
 ): Socket {
-    val reader = openReadChannel()
-    val writer = openWriteChannel()
+    val reader = attachForReading()
+    val writer = attachForWriting()
 
     return try {
         openTLSSession(this, reader, writer, config, coroutineContext)

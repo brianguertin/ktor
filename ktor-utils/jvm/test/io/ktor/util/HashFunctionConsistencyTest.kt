@@ -4,6 +4,7 @@
 
 package io.ktor.util
 
+import io.ktor.io.*
 import io.ktor.utils.io.core.*
 import java.security.*
 import kotlin.random.*
@@ -43,9 +44,9 @@ class HashFunctionConsistencyTest {
                 val length = random.nextInt(size - offset)
 
                 hashFunction.update(byteArray, offset, length)
-                writeFully(byteArray, offset, length)
+                writeByteArray(byteArray, offset, length)
             }
-        }.readBytes()
+        }.toByteArray()
 
         val jdkHash = MessageDigest.getInstance(algorithm).digest(byteArray)
 

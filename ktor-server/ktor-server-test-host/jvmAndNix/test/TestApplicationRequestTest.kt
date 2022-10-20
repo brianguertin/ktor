@@ -30,7 +30,7 @@ class TestApplicationRequestTest {
         client.post("/") {
             setBody(object : OutgoingContent.WriteChannelContent() {
                 override suspend fun writeTo(channel: ByteWriteChannel) {
-                    channel.writeFully(ByteArray(25 * 1024))
+                    channel.writeByteArray(ByteArray(25 * 1024))
                 }
             })
         }

@@ -6,6 +6,7 @@ package io.ktor.client.request.forms
 
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
@@ -50,38 +51,42 @@ public class MultiPartFormDataContent(
     private val PART_OVERHEAD_SIZE = RN_BYTES.size * 2 + BOUNDARY_BYTES.size
 
     private val rawParts: List<PreparedPart> = parts.map { part ->
-        val headersBuilder = DROP_BytePacketBuilder()
+        val headersBuilder = Packet()
         for ((key, values) in part.headers.entries()) {
-            headersBuilder.writeText("$key: ${values.joinToString("; ")}")
-            headersBuilder.writeFully(RN_BYTES)
+            headersBuilder.writeString("$key: ${values.joinToString("; ")}")
+            headersBuilder.writeByteArray(RN_BYTES)
         }
 
         val bodySize = part.headers[HttpHeaders.ContentLength]?.toLong()
         when (part) {
             is PartData.FileItem -> {
-                val headers = headersBuilder.build().readBytes()
+                val headers = headersBuilder.toByteArray()
                 val size = bodySize?.plus(PART_OVERHEAD_SIZE)?.plus(headers.size)
-                PreparedPart.InputPart(headers, part.provider, size)
+                PreparedPart.ChannelPart(headers, part.provider, size)
             }
             is PartData.BinaryItem -> {
-                val headers = headersBuilder.build().readBytes()
+                val headers = headersBuilder.toByteArray()
                 val size = bodySize?.plus(PART_OVERHEAD_SIZE)?.plus(headers.size)
-                PreparedPart.InputPart(headers, part.provider, size)
+                PreparedPart.ChannelPart(headers, { ByteReadChannel(part.provider()) }, size)
             }
             is PartData.FormItem -> {
-                val bytes = buildPacket { writeText(part.value) }.readBytes()
-                val provider = { buildPacket { writeFully(bytes) } }
+                val bytes = buildPacket { writeString(part.value) }.toByteArray()
+                val provider = {
+                    ByteReadChannel {
+                        writeString(part.value)
+                    }
+                }
                 if (bodySize == null) {
-                    headersBuilder.writeText("${HttpHeaders.ContentLength}: ${bytes.size}")
-                    headersBuilder.writeFully(RN_BYTES)
+                    headersBuilder.writeString("${HttpHeaders.ContentLength}: ${bytes.size}")
+                    headersBuilder.writeByteArray(RN_BYTES)
                 }
 
-                val headers = headersBuilder.build().readBytes()
+                val headers = headersBuilder.toByteArray()
                 val size = bytes.size + PART_OVERHEAD_SIZE + headers.size
-                PreparedPart.InputPart(headers, provider, size.toLong())
+                PreparedPart.ChannelPart(headers, provider, size.toLong())
             }
             is PartData.BinaryChannelItem -> {
-                val headers = headersBuilder.build().readBytes()
+                val headers = headersBuilder.toByteArray()
                 val size = bodySize?.plus(PART_OVERHEAD_SIZE)?.plus(headers.size)
                 PreparedPart.ChannelPart(headers, part.provider, size)
             }
@@ -112,25 +117,20 @@ public class MultiPartFormDataContent(
     override suspend fun writeTo(channel: ByteWriteChannel) {
         try {
             for (part in rawParts) {
-                channel.writeFully(BOUNDARY_BYTES)
-                channel.writeFully(part.headers)
-                channel.writeFully(RN_BYTES)
+                channel.writeByteArray(BOUNDARY_BYTES)
+                channel.writeByteArray(part.headers)
+                channel.writeByteArray(RN_BYTES)
 
                 when (part) {
-                    is PreparedPart.InputPart -> {
-                        part.provider().use { input ->
-                            input.copyTo(channel)
-                        }
-                    }
                     is PreparedPart.ChannelPart -> {
                         part.provider().copyTo(channel)
                     }
                 }
 
-                channel.writeFully(RN_BYTES)
+                channel.writeByteArray(RN_BYTES)
             }
 
-            channel.writeFully(LAST_BOUNDARY_BYTES)
+            channel.writeByteArray(LAST_BOUNDARY_BYTES)
         } catch (cause: Throwable) {
             channel.close(cause)
         } finally {
@@ -146,23 +146,9 @@ private fun generateBoundary(): String = buildString {
 }.take(70)
 
 private sealed class PreparedPart(val headers: ByteArray, val size: Long?) {
-    class InputPart(headers: ByteArray, val provider: () -> DROP_Input, size: Long?) : PreparedPart(headers, size)
     class ChannelPart(
         headers: ByteArray,
         val provider: () -> ByteReadChannel,
         size: Long?
     ) : PreparedPart(headers, size)
-}
-
-private suspend fun DROP_Input.copyTo(channel: ByteWriteChannel) {
-    if (this is DROP_ByteReadPacket) {
-        channel.writePacket(this)
-        return
-    }
-
-    while (!this@copyTo.endOfInput) {
-        channel.write { freeSpace, startOffset, endExclusive ->
-            this@copyTo.readAvailable(freeSpace, startOffset, endExclusive - startOffset).toInt()
-        }
-    }
 }

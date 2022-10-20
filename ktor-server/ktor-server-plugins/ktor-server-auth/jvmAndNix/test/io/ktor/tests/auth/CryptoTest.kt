@@ -4,6 +4,7 @@
 
 package io.ktor.tests.auth
 
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*

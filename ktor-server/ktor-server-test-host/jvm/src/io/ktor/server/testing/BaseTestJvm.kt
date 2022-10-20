@@ -9,6 +9,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.debug.junit4.*
 import org.junit.*
 import org.junit.rules.*
+import kotlin.coroutines.*
 import kotlin.time.*
 import kotlin.time.Duration.Companion.seconds
 

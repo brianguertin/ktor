@@ -9,6 +9,7 @@ import io.ktor.client.plugins.compression.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.client.tests.utils.*
+import io.ktor.io.*
 import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import kotlin.test.*
@@ -24,7 +25,7 @@ class HttpStatementTest : ClientLoader() {
                     repeat(42) {
                         writeInt(42)
                     }
-                }.readBytes(42)
+                }.readByteArray(42)
 
                 val actual = it.readBytes(42)
 

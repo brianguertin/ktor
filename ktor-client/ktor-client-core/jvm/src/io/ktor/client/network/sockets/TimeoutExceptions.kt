@@ -27,15 +27,3 @@ public actual class SocketTimeoutException actual constructor(
     message: String,
     override val cause: Throwable?
 ) : java.net.SocketTimeoutException(message)
-
-/**
- * Creates [ByteChannel] that maps close exceptions (close the channel with [SocketTimeoutException] if asked to
- * close it with [SocketTimeoutException]).
- */
-@OptIn(InternalAPI::class)
-internal actual fun ByteChannelWithMappedExceptions(request: HttpRequestData): ByteChannel = ByteChannel { cause ->
-    when (cause?.rootCause) {
-        is java.net.SocketTimeoutException -> SocketTimeoutException(request, cause)
-        else -> cause
-    }
-}

@@ -85,7 +85,7 @@ val disabledExplicitApiModeProjects = listOf(
     "ktor-server-test-host",
     "ktor-server-test-suites",
     "ktor-server-tests",
-    "ktor-client-content-negotiation-tests",
+    "ktor-client-content-negotiation-tests"
 )
 
 apply(from = "gradle/compatibility.gradle")

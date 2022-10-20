@@ -48,7 +48,7 @@ class ResponseConsumerTest {
             assertEquals("4", responseBody.headers[io.ktor.http.HttpHeaders.ContentLength])
             assertEquals("text/plain", responseBody.headers[io.ktor.http.HttpHeaders.ContentType])
             assertEquals(HttpProtocolVersion.HTTP_2_0, responseBody.version)
-            assertEquals("ktor", (responseBody.body as ByteReadChannel).readUTF8Line())
+            assertEquals("ktor", (responseBody.body as ByteReadChannel).readLine())
         }
     }
 }

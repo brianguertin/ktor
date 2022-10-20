@@ -4,6 +4,7 @@
 
 package io.ktor.network.tls.cipher
 
+import io.ktor.io.*
 import io.ktor.network.util.*
 import io.ktor.utils.io.core.*
 import io.ktor.utils.io.pool.*
@@ -12,7 +13,7 @@ import javax.crypto.*
 
 internal val CryptoBufferPool: ObjectPool<ByteBuffer> = ByteBufferPool(128, 65536)
 
-internal fun DROP_ByteReadPacket.cipherLoop(cipher: Cipher, header: DROP_BytePacketBuilder.() -> Unit = {}): DROP_ByteReadPacket {
+internal fun Packet.cipherLoop(cipher: Cipher, header: Packet.() -> Unit = {}): Packet {
     val srcBuffer = DefaultByteBufferPool.borrow()
     var dstBuffer = CryptoBufferPool.borrow()
     var dstBufferFromPool = true
@@ -23,7 +24,7 @@ internal fun DROP_ByteReadPacket.cipherLoop(cipher: Cipher, header: DROP_BytePac
             header()
 
             while (true) {
-                val rc = if (srcBuffer.hasRemaining()) readAvailable(srcBuffer) else 0
+                val rc = TODO() // if (srcBuffer.hasRemaining()) readAvailable(srcBuffer) else 0
                 srcBuffer.flip()
 
                 if (!srcBuffer.hasRemaining() && (rc == -1 || this@cipherLoop.isEmpty)) break
@@ -40,7 +41,7 @@ internal fun DROP_ByteReadPacket.cipherLoop(cipher: Cipher, header: DROP_BytePac
 
                 cipher.update(srcBuffer, dstBuffer)
                 dstBuffer.flip()
-                writeFully(dstBuffer)
+                writeByteBuffer(dstBuffer)
                 srcBuffer.compact()
             }
 
@@ -50,7 +51,7 @@ internal fun DROP_ByteReadPacket.cipherLoop(cipher: Cipher, header: DROP_BytePac
             val requiredBufferSize = cipher.getOutputSize(0)
             if (requiredBufferSize == 0) return@buildPacket
             if (requiredBufferSize > dstBuffer.capacity()) {
-                writeFully(cipher.doFinal())
+                writeByteArray(cipher.doFinal())
                 return@buildPacket
             }
 
@@ -59,11 +60,11 @@ internal fun DROP_ByteReadPacket.cipherLoop(cipher: Cipher, header: DROP_BytePac
             dstBuffer.flip()
 
             if (!dstBuffer.hasRemaining()) { // workaround JDK bug
-                writeFully(cipher.doFinal())
+                writeByteArray(cipher.doFinal())
                 return@buildPacket
             }
 
-            writeFully(dstBuffer)
+            writeByteBuffer(dstBuffer)
         }
     } finally {
         DefaultByteBufferPool.recycle(srcBuffer)

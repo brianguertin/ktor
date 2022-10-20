@@ -4,6 +4,7 @@
 
 package io.ktor.network.tls
 
+import io.ktor.io.*
 import io.ktor.network.tls.extensions.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
@@ -17,18 +18,18 @@ internal suspend fun ByteWriteChannel.writeRecord(record: TLSRecord) = with(reco
     writeByte(type.code.toByte())
     writeByte((version.code shr 8).toByte())
     writeByte(version.code.toByte())
-    writeShort(packet.remaining.toShort())
+    writeShort(packet.availableForRead.toShort())
     writePacket(packet)
     flush()
 }
 
-internal fun DROP_BytePacketBuilder.writeTLSHandshakeType(type: TLSHandshakeType, length: Int) {
+internal fun Packet.writeTLSHandshakeType(type: TLSHandshakeType, length: Int) {
     if (length > 0xffffff) throw TLSException("TLS handshake size limit exceeded: $length")
     val v = (type.code shl 24) or length
     writeInt(v)
 }
 
-internal fun DROP_BytePacketBuilder.writeTLSClientHello(
+internal fun Packet.writeTLSClientHello(
     version: TLSVersion,
     suites: List<CipherSuite>,
     random: ByteArray,
@@ -36,7 +37,7 @@ internal fun DROP_BytePacketBuilder.writeTLSClientHello(
     serverName: String? = null
 ) {
     writeShort(version.code.toShort())
-    writeFully(random)
+    writeByteArray(random)
 
     val sessionIdLength = sessionId.size
     if (sessionIdLength < 0 || sessionIdLength > 0xff || sessionIdLength > sessionId.size) {
@@ -44,7 +45,7 @@ internal fun DROP_BytePacketBuilder.writeTLSClientHello(
     }
 
     writeByte(sessionIdLength.toByte())
-    writeFully(sessionId, 0, sessionIdLength)
+    writeByteArray(sessionId, 0, sessionIdLength)
 
     writeShort((suites.size * 2).toShort())
     for (suite in suites) {
@@ -55,7 +56,7 @@ internal fun DROP_BytePacketBuilder.writeTLSClientHello(
     writeByte(1)
     writeByte(0)
 
-    val extensions = ArrayList<DROP_ByteReadPacket>()
+    val extensions = ArrayList<Packet>()
     extensions += buildSignatureAlgorithmsExtension()
     extensions += buildECCurvesExtension()
     extensions += buildECPointFormatExtension()
@@ -64,26 +65,26 @@ internal fun DROP_BytePacketBuilder.writeTLSClientHello(
         extensions += buildServerNameExtension(name)
     }
 
-    writeShort(extensions.sumOf { it.remaining.toInt() }.toShort())
-    for (e in extensions) {
-        writePacket(e)
+    writeShort(extensions.sumOf { it.availableForRead }.toShort())
+    for (extension in extensions) {
+        writePacket(extension)
     }
 }
 
-internal fun DROP_BytePacketBuilder.writeTLSCertificates(certificates: Array<X509Certificate>) {
+internal fun Packet.writeTLSCertificates(certificates: Array<X509Certificate>) {
     val chain = buildPacket {
         for (certificate in certificates) {
             val certificateBytes = certificate.encoded!!
             writeTripleByteLength(certificateBytes.size)
-            writeFully(certificateBytes)
+            writeByteArray(certificateBytes)
         }
     }
 
-    writeTripleByteLength(chain.remaining.toInt())
+    writeTripleByteLength(chain.availableForRead)
     writePacket(chain)
 }
 
-internal fun DROP_BytePacketBuilder.writeEncryptedPreMasterSecret(
+internal fun Packet.writeEncryptedPreMasterSecret(
     preSecret: ByteArray,
     publicKey: PublicKey,
     random: SecureRandom
@@ -97,18 +98,18 @@ internal fun DROP_BytePacketBuilder.writeEncryptedPreMasterSecret(
     if (encryptedSecret.size > 0xffff) throw TLSException("Encrypted premaster secret is too long")
 
     writeShort(encryptedSecret.size.toShort())
-    writeFully(encryptedSecret)
+    writeByteArray(encryptedSecret)
 }
 
 internal fun finished(digest: ByteArray, secretKey: SecretKey) = buildPacket {
     val prf = PRF(secretKey, CLIENT_FINISHED_LABEL, digest, 12)
-    writeFully(prf)
+    writeByteArray(prf)
 }
 
 internal fun serverFinished(handshakeHash: ByteArray, secretKey: SecretKey, length: Int = 12): ByteArray =
     PRF(secretKey, SERVER_FINISHED_LABEL, handshakeHash, length)
 
-internal fun DROP_BytePacketBuilder.writePublicKeyUncompressed(key: PublicKey) = when (key) {
+internal fun Packet.writePublicKeyUncompressed(key: PublicKey) = when (key) {
     is ECPublicKey -> {
         val fieldSize = key.params.curve.field.fieldSize
         writeECPoint(key.w, fieldSize)
@@ -116,20 +117,20 @@ internal fun DROP_BytePacketBuilder.writePublicKeyUncompressed(key: PublicKey) =
     else -> throw TLSException("Unsupported public key type: $key")
 }
 
-internal fun DROP_BytePacketBuilder.writeECPoint(point: ECPoint, fieldSize: Int) {
+internal fun Packet.writeECPoint(point: ECPoint, fieldSize: Int) {
     val pointData = buildPacket {
         writeByte(4) // 4 - uncompressed
         writeAligned(point.affineX.toByteArray(), fieldSize)
         writeAligned(point.affineY.toByteArray(), fieldSize)
     }
 
-    writeByte(pointData.remaining.toByte())
+    writeByte(pointData.availableForRead.toByte())
     writePacket(pointData)
 }
 
 private fun buildSignatureAlgorithmsExtension(
     algorithms: List<HashAndSign> = SupportedSignatureAlgorithms
-): DROP_ByteReadPacket = buildPacket {
+): Packet = buildPacket {
     writeShort(TLSExtensionType.SIGNATURE_ALGORITHMS.code) // signature_algorithms extension
 
     val size = algorithms.size
@@ -143,7 +144,7 @@ private fun buildSignatureAlgorithmsExtension(
 }
 
 private const val MAX_SERVER_NAME_LENGTH: Int = Short.MAX_VALUE - 5
-private fun buildServerNameExtension(name: String): DROP_ByteReadPacket = buildPacket {
+private fun buildServerNameExtension(name: String): Packet = buildPacket {
     require(name.length < MAX_SERVER_NAME_LENGTH) {
         "Server name length limit exceeded: at most $MAX_SERVER_NAME_LENGTH characters allowed"
     }
@@ -153,12 +154,12 @@ private fun buildServerNameExtension(name: String): DROP_ByteReadPacket = buildP
     writeShort((name.length + 2 + 1).toShort()) // list length
     writeByte(0) // type: host_name
     writeShort(name.length.toShort()) // name length
-    writeText(name)
+    writeString(name)
 }
 
 private const val MAX_CURVES_QUANTITY: Int = Short.MAX_VALUE / 2 - 1
 
-private fun buildECCurvesExtension(curves: List<NamedCurve> = SupportedNamedCurves): DROP_ByteReadPacket = buildPacket {
+private fun buildECCurvesExtension(curves: List<NamedCurve> = SupportedNamedCurves): Packet = buildPacket {
     require(curves.size <= MAX_CURVES_QUANTITY) {
         "Too many named curves provided: at most $MAX_CURVES_QUANTITY could be provided"
     }
@@ -176,7 +177,7 @@ private fun buildECCurvesExtension(curves: List<NamedCurve> = SupportedNamedCurv
 
 private fun buildECPointFormatExtension(
     formats: List<PointFormat> = SupportedPointFormats
-): DROP_ByteReadPacket = buildPacket {
+): Packet = buildPacket {
     writeShort(TLSExtensionType.EC_POINT_FORMAT.code)
 
     val size = formats.size
@@ -188,16 +189,16 @@ private fun buildECPointFormatExtension(
     }
 }
 
-private fun DROP_BytePacketBuilder.writeAligned(src: ByteArray, fieldSize: Int) {
+private fun Packet.writeAligned(src: ByteArray, fieldSize: Int) {
     val expectedSize = (fieldSize + 7) ushr 3
     val index = src.indexOfFirst { it != 0.toByte() }
     val padding = expectedSize - (src.size - index)
 
-    if (padding > 0) writeFully(ByteArray(padding))
-    writeFully(src, index, src.size - index)
+    if (padding > 0) writeByteArray(ByteArray(padding))
+    writeByteArray(src, index, src.size - index)
 }
 
-private fun DROP_BytePacketBuilder.writeTripleByteLength(value: Int) {
+private fun Packet.writeTripleByteLength(value: Int) {
     val high = (value ushr 16) and 0xff
     val low = value and 0xffff
     writeByte(high.toByte())

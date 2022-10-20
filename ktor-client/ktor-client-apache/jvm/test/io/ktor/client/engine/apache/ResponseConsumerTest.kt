@@ -22,7 +22,7 @@ class ResponseConsumerTest {
     fun testConsumeContent() {
         val body = object : OutgoingContent.WriteChannelContent() {
             override suspend fun writeTo(channel: ByteWriteChannel) {
-                channel.writeFully(ByteArray(4088))
+                channel.writeByteArray(ByteArray(4088))
             }
         }
 

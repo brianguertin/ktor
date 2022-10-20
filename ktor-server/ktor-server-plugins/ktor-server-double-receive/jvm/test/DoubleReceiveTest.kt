@@ -1,3 +1,4 @@
+import io.ktor.io.*
 import io.ktor.server.plugins.doublereceive.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
@@ -22,7 +23,7 @@ class DoubleReceiveTest {
         )
 
         repeat(3) {
-            val received = cache.read().readRemaining().readBytes()
+            val received = cache.read().readRemaining().toByteArray()
             assertArrayEquals(content, received)
         }
     }
@@ -37,7 +38,7 @@ class DoubleReceiveTest {
 
         repeat(3) {
             val channel = cache.read()
-            val received = channel.readRemaining().readBytes()
+            val received = channel.readRemaining().toByteArray()
             assertArrayEquals(content, received)
         }
     }

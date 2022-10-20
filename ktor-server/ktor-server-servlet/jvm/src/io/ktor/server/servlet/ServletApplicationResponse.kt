@@ -32,7 +32,7 @@ public abstract class ServletApplicationResponse(
         override fun getEngineHeaderValues(name: String): List<String> = servletResponse.getHeaders(name).toList()
     }
 
-    protected abstract fun createResponseJob(): ReaderJob
+    protected abstract fun createResponseJob(): ByteWriteChannel
 
     @Volatile
     protected var completed: Boolean = false
@@ -41,8 +41,8 @@ public abstract class ServletApplicationResponse(
         createResponseJob()
     }
 
-    private val responseChannel = lazy {
-        responseJob.value.channel
+    private val responseChannel: Lazy<ByteWriteChannel> = lazy {
+        responseJob.value
     }
 
     public final override suspend fun responseChannel(): ByteWriteChannel = responseChannel.value
@@ -54,8 +54,7 @@ public abstract class ServletApplicationResponse(
 
             if (responseJob.isInitialized()) {
                 responseJob.value.apply {
-                    channel.close()
-                    join()
+                    close()
                 }
                 return@intercept
             }

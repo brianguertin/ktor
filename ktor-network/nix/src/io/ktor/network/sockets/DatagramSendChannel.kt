@@ -4,11 +4,10 @@
 
 package io.ktor.network.sockets
 
+import io.ktor.io.*
 import io.ktor.network.selector.*
 import io.ktor.network.util.*
-import io.ktor.utils.io.core.*
 import io.ktor.utils.io.errors.*
-import io.ktor.utils.io.pool.*
 import kotlinx.atomicfu.*
 import kotlinx.cinterop.*
 import kotlinx.coroutines.*
@@ -50,7 +49,7 @@ internal class DatagramSendChannel(
         return true
     }
 
-    @OptIn(InternalCoroutinesApi::class, UnsafeNumber::class)
+    @OptIn(InternalCoroutinesApi::class)
     override fun trySend(element: Datagram): ChannelResult<Unit> {
         if (!lock.tryLock()) return ChannelResult.failure()
         if (remote != null) {
@@ -62,30 +61,31 @@ internal class DatagramSendChannel(
         var result = false
 
         try {
-            DefaultDatagramChunkBufferPool.useInstance { buffer ->
-                element.packet.copy().readAvailable(buffer)
-
-                val bytes = element.packet.copy().readBytes()
-                val bytesWritten = sento(element, bytes)
-
-                result = when (bytesWritten) {
-                    0 -> throw IOException("Failed writing to closed socket")
-                    -1 -> {
-                        if (errno == EAGAIN) {
-                            false
-                        } else {
-                            throw PosixException.forErrno()
-                        }
-                    }
-                    else -> true
-                }
-            }
+            TODO()
+//            DefaultDatagramChunkBufferPool.useInstance { buffer ->
+//                element.packet.copy().readAvailable(buffer)
+//
+//                val bytes = element.packet.copy().readBytes()
+//                val bytesWritten = sento(element, bytes)
+//
+//                result = when (bytesWritten) {
+//                    0 -> throw IOException("Failed writing to closed socket")
+//                    -1 -> {
+//                        if (errno == EAGAIN) {
+//                            false
+//                        } else {
+//                            throw PosixException.forErrno()
+//                        }
+//                    }
+//                    else -> true
+//                }
+//            }
         } finally {
             lock.unlock()
         }
 
         if (result) {
-            element.packet.release()
+            element.packet.close()
         }
 
         return ChannelResult.success(Unit)
@@ -103,47 +103,45 @@ internal class DatagramSendChannel(
         }
     }
 
-    private fun sento(datagram: Datagram, bytes: ByteArray): Int {
+    private fun sento(datagram: Datagram): Int {
         var bytesWritten: Int? = null
-        bytes.usePinned { pinned ->
-            if (remote == null) {
-                datagram.address.address.nativeAddress { address, addressSize ->
-                    bytesWritten = sendto(
-                        descriptor,
-                        pinned.addressOf(0),
-                        bytes.size.convert(),
-                        0,
-                        address,
-                        addressSize
-                    ).toInt()
-                }
-            } else {
-                bytesWritten = sendto(
-                    descriptor,
-                    pinned.addressOf(0),
-                    bytes.size.convert(),
-                    0,
-                    null,
-                    0
-                ).toInt()
-            }
-        }
+        TODO()
+//        bytes.usePinned { pinned ->
+//            if (remote == null) {
+//                datagram.address.address.nativeAddress { address, addressSize ->
+//                    bytesWritten = sendto(
+//                        descriptor,
+//                        pinned.addressOf(0),
+//                        bytes.size.convert(),
+//                        0,
+//                        address,
+//                        addressSize
+//                    ).toInt()
+//                }
+//            } else {
+//                bytesWritten = sendto(
+//                    descriptor,
+//                    pinned.addressOf(0),
+//                    bytes.size.convert(),
+//                    0,
+//                    null,
+//                    0
+//                ).toInt()
+//            }
+//        }
         return bytesWritten ?: error("bytesWritten cannot be null")
     }
 
     @OptIn(UnsafeNumber::class)
-    private tailrec suspend fun sendImpl(
-        datagram: Datagram,
-        bytes: ByteArray = datagram.packet.readBytes()
-    ) {
-        val bytesWritten: Int = sento(datagram, bytes)
+    private tailrec suspend fun sendImpl(datagram: Datagram) {
+        val bytesWritten: Int = sento(datagram)
 
         when (bytesWritten) {
             0 -> throw IOException("Failed writing to closed socket")
             -1 -> {
                 if (errno == EAGAIN) {
                     socket.selector.select(socket.selectable, SelectInterest.WRITE)
-                    sendImpl(datagram, bytes)
+                    sendImpl(datagram)
                 } else {
                     throw PosixException.forErrno()
                 }

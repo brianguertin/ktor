@@ -20,13 +20,12 @@ import kotlinx.coroutines.channels.*
 import java.net.*
 import kotlin.coroutines.*
 
-@OptIn(InternalAPI::class)
 internal class NettyHttp2ApplicationRequest(
     call: ApplicationCall,
     coroutineContext: CoroutineContext,
     context: ChannelHandlerContext,
     val nettyHeaders: Http2Headers,
-    val contentByteChannel: ByteChannel = ByteChannel()
+    val contentByteChannel: ByteReadChannel
 ) : NettyApplicationRequest(
     call,
     coroutineContext,
@@ -54,7 +53,8 @@ internal class NettyHttp2ApplicationRequest(
         Dispatchers.Unconfined,
         kotlinx.coroutines.channels.Channel.UNLIMITED
     ) {
-        http2frameLoop(contentByteChannel)
+        TODO()
+//        http2frameLoop(contentByteChannel)
     }
 
     override val local = Http2LocalConnectionPoint(

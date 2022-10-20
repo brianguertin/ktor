@@ -48,7 +48,7 @@ actual abstract class EngineTestBase<
         java.lang.management.ManagementFactory.getRuntimeMXBean().inputArguments.orEmpty()
             .any { "-agentlib:jdwp" in it }
 
-    protected actual var port: Int = findFreePort()
+    protected actual var port: Int = 8080 // findFreePort()
     protected actual var sslPort: Int = findFreePort()
     protected actual var server: TEngine? = null
     protected var callGroupSize: Int = -1
@@ -246,13 +246,16 @@ actual abstract class EngineTestBase<
         builder: suspend HttpRequestBuilder.() -> Unit,
         block: suspend HttpResponse.(Int) -> Unit
     ) {
+        println("MAking http")
         withUrl("http://127.0.0.1:$port$path", port, builder, block)
 
         if (enableSsl) {
+            println("making ssl")
             withUrl("https://127.0.0.1:$sslPort$path", sslPort, builder, block)
         }
 
         if (enableHttp2 && enableSsl) {
+            println("making http2")
             withHttp2("https://127.0.0.1:$sslPort$path", sslPort, builder, block)
         }
     }

@@ -88,12 +88,12 @@ public sealed class OutgoingContent {
         public open fun readFrom(range: LongRange): ByteReadChannel = if (range.isEmpty()) {
             ByteReadChannel.Empty
         } else {
-            GlobalScope.writer(Dispatchers.Unconfined, autoFlush = true) {
+            GlobalScope.writer(Dispatchers.Unconfined) {
                 val source = readFrom()
                 source.discard(range.start)
                 val limit = range.endInclusive - range.start + 1
                 source.copyTo(channel, limit)
-            }.channel
+            }
         }
     }
 

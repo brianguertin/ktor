@@ -8,6 +8,7 @@ import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.util.date.*
 import io.ktor.utils.io.*
@@ -70,7 +71,7 @@ internal class SavedHttpResponse(
  */
 @OptIn(InternalAPI::class)
 public suspend fun HttpClientCall.save(): HttpClientCall {
-    val responseBody = response.content.readRemaining().readBytes()
+    val responseBody = response.content.readRemaining().toByteArray()
 
     return SavedHttpCall(client, request, response, responseBody)
 }

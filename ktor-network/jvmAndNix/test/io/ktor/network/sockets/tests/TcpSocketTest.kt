@@ -5,14 +5,12 @@
 package io.ktor.network.sockets.tests
 
 import io.ktor.network.sockets.*
-import io.ktor.util.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import kotlin.test.*
 
 class TcpSocketTest {
 
-    @OptIn(InternalAPI::class)
     @Test
     fun testEcho() = testSockets { selector ->
         val tcp = aSocket(selector).tcp()
@@ -25,25 +23,25 @@ class TcpSocketTest {
         val clientConnection = tcp.connect("localhost", 8000)
         val serverConnection = serverConnectionPromise.await()
 
-        val clientOutput = clientConnection.openWriteChannel()
+        val clientOutput = clientConnection.attachForWriting()
         try {
-            clientOutput.writeStringUtf8("Hello, world\n")
+            clientOutput.writeString("Hello, world\n")
             clientOutput.flush()
         } finally {
             clientOutput.close()
         }
 
-        val serverInput = serverConnection.openReadChannel()
-        val message = serverInput.readUTF8Line()
+        val serverInput = serverConnection.attachForReading()
+        val message = serverInput.readLine()
         assertEquals("Hello, world", message)
 
-        val serverOutput = serverConnection.openWriteChannel()
+        val serverOutput = serverConnection.attachForWriting()
         try {
-            serverOutput.writeStringUtf8("Hello From Server\n")
+            serverOutput.writeString("Hello From Server\n")
             serverOutput.flush()
 
-            val clientInput = clientConnection.openReadChannel()
-            val echo = clientInput.readUTF8Line()
+            val clientInput = clientConnection.attachForReading()
+            val echo = clientInput.readLine()
 
             assertEquals("Hello From Server", echo)
         } finally {
@@ -72,25 +70,25 @@ class TcpSocketTest {
         val clientConnection = tcp.connect(UnixSocketAddress(socketPath))
         val serverConnection = serverConnectionPromise.await()
 
-        val clientOutput = clientConnection.openWriteChannel()
+        val clientOutput = clientConnection.attachForWriting()
         try {
-            clientOutput.writeStringUtf8("Hello, world\n")
+            clientOutput.writeString("Hello, world\n")
             clientOutput.flush()
         } finally {
             clientOutput.close()
         }
 
-        val serverInput = serverConnection.openReadChannel()
-        val message = serverInput.readUTF8Line()
+        val serverInput = serverConnection.attachForReading()
+        val message = serverInput.readLine()
         assertEquals("Hello, world", message)
 
-        val serverOutput = serverConnection.openWriteChannel()
+        val serverOutput = serverConnection.attachForWriting()
         try {
-            serverOutput.writeStringUtf8("Hello From Server\n")
+            serverOutput.writeString("Hello From Server\n")
             serverOutput.flush()
 
-            val clientInput = clientConnection.openReadChannel()
-            val echo = clientInput.readUTF8Line()
+            val clientInput = clientConnection.attachForReading()
+            val echo = clientInput.readLine()
 
             assertEquals("Hello From Server", echo)
         } finally {
@@ -105,3 +103,4 @@ class TcpSocketTest {
         removeFile(socketPath)
     }
 }
+

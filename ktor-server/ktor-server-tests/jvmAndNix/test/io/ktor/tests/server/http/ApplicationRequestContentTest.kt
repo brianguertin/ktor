@@ -5,6 +5,7 @@
 package io.ktor.tests.server.http
 
 import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.plugins.contentnegotiation.*
@@ -112,7 +113,7 @@ class ApplicationRequestContentTest {
                 if (call.receiveType != typeInfo<IntList>()) return@intercept
                 val message = body as? ByteReadChannel ?: return@intercept
 
-                val string = message.readRemaining().readText()
+                val string = message.readRemaining().readString()
                 val transformed = IntList.parse(string)
                 proceedWith(transformed)
             }
@@ -196,7 +197,7 @@ class ApplicationRequestContentTest {
             assertEquals("bodyContent", call.receiveText())
 
             // this also works because we already have a byte array cached
-            assertEquals("bodyContent", call.receiveChannel().readUTF8Line())
+            assertEquals("bodyContent", call.receiveChannel().readLine())
         }
 
         handleRequest(HttpMethod.Get, "") {
@@ -210,10 +211,10 @@ class ApplicationRequestContentTest {
 
         application.intercept(ApplicationCallPipeline.Call) {
             call.receiveChannel().readRemaining().use { packet ->
-                assertEquals(11, packet.remaining)
+                assertEquals(11, packet.availableForRead)
             }
             call.receiveChannel().readRemaining().use { packet ->
-                assertEquals(11, packet.remaining)
+                assertEquals(11, packet.availableForRead)
             }
         }
 

@@ -35,7 +35,7 @@ internal class CurlClientEngine(
 
         return with(responseData) {
             val headerBytes = ByteReadChannel(headersBytes).apply {
-                readUTF8Line()
+                readString()
             }
             val rawHeaders = parseHeaders(headerBytes)
 

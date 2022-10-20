@@ -2,6 +2,7 @@
 * Copyright 2014-2021 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.
 */
 import io.ktor.client.plugins.kotlinx.serializer.*
+import io.ktor.io.*
 import io.ktor.util.reflect.*
 import io.ktor.utils.io.core.*
 import kotlinx.serialization.*
@@ -47,7 +48,7 @@ class ContextualSerializationTest {
         assertEquals("{\"id\":1,\"name\":\"kotlin\"}", simpleString)
 
         val makeInput = { text: String ->
-            buildPacket { writeText(text) }
+            buildPacket { writeString(text) }
         }
 
         assertEquals(data, contextual.read(typeInfo<UserData>(), makeInput(contextualString)))

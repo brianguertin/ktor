@@ -289,7 +289,7 @@ abstract class ContentTestSuite<TEngine : ApplicationEngine, TConfiguration : Ap
                 call.respond(
                     object : OutgoingContent.WriteChannelContent() {
                         override suspend fun writeTo(channel: ByteWriteChannel) {
-                            channel.writeFully(data)
+                            channel.writeByteArray(data)
                             channel.close()
                         }
                     }
@@ -298,9 +298,9 @@ abstract class ContentTestSuite<TEngine : ApplicationEngine, TConfiguration : Ap
             get("/pseudo-chunked") {
                 call.respond(
                     object : OutgoingContent.WriteChannelContent() {
-                        override val contentLength: Long? get() = size
+                        override val contentLength: Long get() = size
                         override suspend fun writeTo(channel: ByteWriteChannel) {
-                            channel.writeFully(data)
+                            channel.writeByteArray(data)
                             channel.close()
                         }
                     }
@@ -569,7 +569,7 @@ abstract class ContentTestSuite<TEngine : ApplicationEngine, TConfiguration : Ap
                     when (part) {
                         is PartData.FormItem -> response.append("${part.name}=${part.value}\n")
                         is PartData.FileItem -> response.append(
-                            "file:${part.name},${part.originalFileName},${part.provider().readText()}\n"
+                            "file:${part.name},${part.originalFileName},${part.provider().readString()}\n"
                         )
                         is PartData.BinaryItem -> {
                         }

@@ -44,16 +44,16 @@ class ConnectionTest {
             .connect("www.google.com", port = 443)
             .tls(Dispatchers.Default)
 
-        val channel = socket.openWriteChannel()
+        val channel = socket.attachForWriting()
 
         channel.apply {
-            writeStringUtf8("GET / HTTP/1.1\r\n")
-            writeStringUtf8("Host: www.google.com\r\n")
-            writeStringUtf8("Connection: close\r\n\r\n")
+            writeString("GET / HTTP/1.1\r\n")
+            writeString("Host: www.google.com\r\n")
+            writeString("Connection: close\r\n\r\n")
             flush()
         }
 
-        socket.openReadChannel().readRemaining()
+        socket.attachForReading().readRemaining()
         Unit
     }
 
@@ -119,7 +119,7 @@ class ConnectionTest {
                         .first()
                 }
         }.use {
-            it.openWriteChannel(autoFlush = true).use { close() }
+            it.attachForWriting().use { close() }
         }
     }
 

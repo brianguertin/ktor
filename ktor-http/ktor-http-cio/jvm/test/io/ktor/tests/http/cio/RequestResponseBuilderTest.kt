@@ -6,7 +6,7 @@ package io.ktor.tests.http.cio
 
 import io.ktor.http.*
 import io.ktor.http.cio.*
-import io.ktor.utils.io.streams.*
+import io.ktor.io.*
 import kotlin.test.*
 
 class RequestResponseBuilderTest {
@@ -27,7 +27,7 @@ class RequestResponseBuilderTest {
         }
 
         val packet = builder.build()
-        val request = packet.inputStream().reader().readText()
+        val request = packet.readString()
 
         assertEquals("GET / HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n", request)
     }
@@ -43,7 +43,7 @@ class RequestResponseBuilderTest {
         }
 
         val packet = builder.build()
-        val response = packet.inputStream().reader().readText()
+        val response = packet.readString()
 
         assertEquals(
             "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\nHello, World!\r\n",

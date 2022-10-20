@@ -6,6 +6,7 @@ package io.ktor.tests.resources
 
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.resources.*
 import io.ktor.resources.serialization.*
 import io.ktor.server.plugins.*
@@ -31,7 +32,7 @@ inline fun <reified T> ApplicationTestBuilder.urlShouldBeHandled(resource: T, co
         if (content != null) {
             it("should have a response with content '$content'") {
                 runBlocking {
-                    assertEquals(content, result.content.readRemaining().readText())
+                    assertEquals(content, result.content.readRemaining().readString())
                 }
             }
         }

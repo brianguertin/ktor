@@ -56,16 +56,17 @@ internal class DatagramSendChannel(
         var result = false
 
         try {
-            DefaultDatagramByteBufferPool.useInstance { buffer ->
-                element.packet.copy().readAvailable(buffer)
-                result = channel.send(buffer, element.address.toJavaAddress()) == 0
-            }
+//            DefaultDatagramByteBufferPool.useInstance { buffer ->
+//                element.packet.copy().readAvailable(buffer)
+//                result = channel.send(buffer, element.address.toJavaAddress()) == 0
+//            }
+            TODO()
         } finally {
             lock.unlock()
         }
 
         if (result) {
-            element.packet.release()
+            element.packet.close()
         }
 
         return ChannelResult.success(Unit)
@@ -148,6 +149,6 @@ private fun failInvokeOnClose(handler: ((cause: Throwable?) -> Unit)?) {
 }
 
 private fun Datagram.writeMessageTo(buffer: ByteBuffer) {
-    packet.readAvailable(buffer)
+    TODO()
     buffer.flip()
 }

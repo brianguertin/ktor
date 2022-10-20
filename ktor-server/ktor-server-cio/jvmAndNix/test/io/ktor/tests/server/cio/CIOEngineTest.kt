@@ -26,13 +26,12 @@ class CIOHttpServerTest : HttpServerCommonTestSuite<CIOApplicationEngine, CIOApp
     fun testChunkedResponse() {
         createAndStartServer {
             get("/") {
-                val byteStream = ByteChannel(autoFlush = true)
-                byteStream.writeStringUtf8("test")
-                byteStream.close(null)
                 call.respond(object : OutgoingContent.ReadChannelContent() {
                     override val status: HttpStatusCode = HttpStatusCode.OK
                     override val headers: Headers = Headers.Empty
-                    override fun readFrom() = byteStream
+                    override fun readFrom() = ByteReadChannel {
+                        writeString("test")
+                    }
                 })
             }
         }

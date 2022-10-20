@@ -4,6 +4,7 @@
 
 package io.ktor.network.tls
 
+import io.ktor.io.*
 import io.ktor.network.tls.extensions.*
 
 /**
@@ -62,7 +63,7 @@ public enum class ServerKeyExchangeType(public val code: Int) {
 internal class TLSServerHello(
     val version: TLSVersion,
     val serverSeed: ByteArray,
-    val sessionId: ByteArray,
+    val sessionId: Packet,
     suite: Short,
     val compressionMethod: Short,
     val extensions: List<TLSExtension> = emptyList()

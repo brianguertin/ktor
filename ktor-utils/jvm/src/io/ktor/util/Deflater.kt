@@ -9,7 +9,7 @@ import io.ktor.utils.io.*
 import io.ktor.utils.io.bits.*
 import io.ktor.utils.io.pool.*
 import kotlinx.coroutines.*
-import java.nio.ByteBuffer
+import java.nio.*
 import java.util.zip.*
 import kotlin.coroutines.*
 
@@ -36,7 +36,7 @@ internal fun Checksum.updateKeepPosition(buffer: ByteBuffer) {
 private suspend fun ByteWriteChannel.putGzipHeader() {
     writeShort(GZIP_MAGIC.reverseByteOrder())
     writeByte(Deflater.DEFLATED.toByte())
-    writeFully(GZIP_HEADER_PADDING)
+    writeByteArray(GZIP_HEADER_PADDING)
 }
 
 private suspend fun ByteWriteChannel.putGzipTrailer(crc: Checksum, deflater: Deflater) {
@@ -49,7 +49,7 @@ private suspend fun ByteWriteChannel.deflateWhile(deflater: Deflater, buffer: By
         buffer.clear()
         deflater.deflateTo(buffer)
         buffer.flip()
-        writeFully(buffer)
+        writeByteBuffer(buffer)
     }
 }
 
@@ -64,7 +64,6 @@ private suspend fun ByteReadChannel.deflateTo(
 ) {
     val crc = CRC32()
     val deflater = Deflater(Deflater.DEFAULT_COMPRESSION, true)
-    val input = pool.borrow()
     val compressed = pool.borrow()
 
     try {
@@ -72,11 +71,14 @@ private suspend fun ByteReadChannel.deflateTo(
             destination.putGzipHeader()
         }
 
-        while (!isClosedForRead) {
-            input.clear()
-            if (readAvailable(input) <= 0) continue
-            input.flip()
+        while (true) {
+            if (availableForRead == 0) {
+                awaitBytes()
+            }
+            if (isClosedForRead) break
 
+            val input = readAvailable()
+            input.flip()
             crc.updateKeepPosition(input)
             deflater.setInputBuffer(input)
             destination.deflateWhile(deflater, compressed) { !deflater.needsInput() }
@@ -92,7 +94,6 @@ private suspend fun ByteReadChannel.deflateTo(
         }
     } finally {
         deflater.end()
-        pool.recycle(input)
         pool.recycle(compressed)
     }
 }
@@ -106,9 +107,9 @@ public fun ByteReadChannel.deflated(
     gzip: Boolean = true,
     pool: ObjectPool<ByteBuffer> = KtorDefaultPool,
     coroutineContext: CoroutineContext = Dispatchers.Unconfined
-): ByteReadChannel = GlobalScope.writer(coroutineContext, autoFlush = true) {
+): ByteReadChannel = GlobalScope.writer(coroutineContext) {
     this@deflated.deflateTo(channel, gzip, pool)
-}.channel
+}
 
 /**
  * Launch a coroutine on [coroutineContext] that does deflate compression
@@ -119,6 +120,6 @@ public fun ByteWriteChannel.deflated(
     gzip: Boolean = true,
     pool: ObjectPool<ByteBuffer> = KtorDefaultPool,
     coroutineContext: CoroutineContext = Dispatchers.Unconfined
-): ByteWriteChannel = GlobalScope.reader(coroutineContext, autoFlush = true) {
+): ByteWriteChannel = GlobalScope.reader(coroutineContext) {
     channel.deflateTo(this@deflated, gzip, pool)
-}.channel
+}

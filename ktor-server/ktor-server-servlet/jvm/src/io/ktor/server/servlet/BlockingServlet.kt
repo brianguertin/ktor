@@ -50,15 +50,14 @@ internal class BlockingServletApplicationResponse(
     override val coroutineContext: CoroutineContext,
     managedByEngineHeaders: Set<String> = emptySet()
 ) : ServletApplicationResponse(call, servletResponse, managedByEngineHeaders), CoroutineScope {
-    override fun createResponseJob(): ReaderJob =
-        reader(UnsafeBlockingTrampoline, autoFlush = false) {
-            val buffer = ArrayPool.borrow()
-            try {
-                writeLoop(buffer, channel, servletResponse.outputStream)
-            } finally {
-                ArrayPool.recycle(buffer)
-            }
+    override fun createResponseJob(): ByteWriteChannel = reader(UnsafeBlockingTrampoline) {
+        val buffer = ArrayPool.borrow()
+        try {
+            writeLoop(buffer, channel, servletResponse.outputStream)
+        } finally {
+            ArrayPool.recycle(buffer)
         }
+    }
 
     @Suppress("BlockingMethodInNonBlockingContext")
     private suspend fun writeLoop(buffer: ByteArray, from: ByteReadChannel, to: ServletOutputStream) {

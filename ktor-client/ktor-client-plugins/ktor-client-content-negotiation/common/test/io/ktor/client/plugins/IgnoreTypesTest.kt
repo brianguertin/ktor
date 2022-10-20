@@ -12,6 +12,7 @@ import io.ktor.client.statement.*
 import io.ktor.client.utils.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.serialization.*
 import io.ktor.test.dispatcher.*
 import io.ktor.util.*
@@ -108,7 +109,7 @@ class IgnoreTypesTest {
         val client = HttpClient(MockEngine) {
             engine {
                 addHandler { request ->
-                    assertEquals(jsonBody, request.body.toByteReadPacket().readText())
+                    assertEquals(jsonBody, request.body.toByteReadPacket().readString())
                     respond(
                         jsonBody,
                         HttpStatusCode.OK,

@@ -12,13 +12,9 @@ import java.nio.*
  * Read data chunks from [ByteReadChannel] using buffer
  */
 @InternalAPI
-public suspend inline fun ByteReadChannel.pass(buffer: ByteBuffer, block: (ByteBuffer) -> Unit) {
-    while (!isClosedForRead) {
-        buffer.clear()
-        readAvailable(buffer)
-
-        buffer.flip()
-        block(buffer)
+public suspend inline fun ByteReadChannel.pass(block: (ByteBuffer) -> Unit) {
+    while (availableForRead > 0 || awaitBytes()) {
+        block(readAvailable())
     }
 
     closedCause?.let { throw it }

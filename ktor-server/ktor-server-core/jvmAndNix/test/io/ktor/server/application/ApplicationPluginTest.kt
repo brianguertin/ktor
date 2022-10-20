@@ -321,9 +321,8 @@ class ApplicationPluginTest {
                 transformBody { data ->
                     if (data !is MyInt) return@transformBody data
 
-                    return@transformBody ByteChannel(false).apply {
+                    return@transformBody ByteReadChannel {
                         writeInt(data.x)
-                        close()
                     }
                 }
             }

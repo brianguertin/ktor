@@ -61,7 +61,7 @@ abstract class CompressionTestSuite<TEngine : ApplicationEngine, TConfiguration 
                 call.respond(
                     object : OutgoingContent.WriteChannelContent() {
                         override suspend fun writeTo(channel: ByteWriteChannel) {
-                            channel.writeStringUtf8("Hello!")
+                            channel.writeString("Hello!")
                         }
                     }
                 )

@@ -4,6 +4,7 @@
 
 package io.ktor.websocket
 
+import io.ktor.io.*
 import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
@@ -61,7 +62,7 @@ public expect sealed class Frame private constructor(
         rsv3: Boolean = false
     ) : Frame {
         public constructor(fin: Boolean, data: ByteArray)
-        public constructor(fin: Boolean, packet: DROP_ByteReadPacket)
+        public constructor(fin: Boolean, packet: Packet)
     }
 
     /**
@@ -81,7 +82,7 @@ public expect sealed class Frame private constructor(
     ) : Frame {
         public constructor(fin: Boolean, data: ByteArray)
         public constructor(text: String)
-        public constructor(fin: Boolean, packet: DROP_ByteReadPacket)
+        public constructor(fin: Boolean, packet: Packet)
     }
 
     /**
@@ -90,7 +91,7 @@ public expect sealed class Frame private constructor(
      */
     public class Close(data: ByteArray) : Frame {
         public constructor(reason: CloseReason)
-        public constructor(packet: DROP_ByteReadPacket)
+        public constructor(packet: Packet)
         public constructor()
     }
 
@@ -99,7 +100,7 @@ public expect sealed class Frame private constructor(
      * Usually there is no need to send/handle it unless you have a RAW WebSocket session.
      */
     public class Ping(data: ByteArray) : Frame {
-        public constructor(packet: DROP_ByteReadPacket)
+        public constructor(packet: Packet)
     }
 
     /**
@@ -110,7 +111,7 @@ public expect sealed class Frame private constructor(
         data: ByteArray,
         disposableHandle: DisposableHandle = NonDisposableHandle
     ) : Frame {
-        public constructor(packet: DROP_ByteReadPacket)
+        public constructor(packet: Packet)
     }
 
     /**
@@ -139,7 +140,7 @@ public expect sealed class Frame private constructor(
  */
 public fun Frame.Text.readText(): String {
     require(fin) { "Text could be only extracted from non-fragmented frame" }
-    return Charsets.UTF_8.newDecoder().decode(buildPacket { writeFully(data) })
+    return String(data)
 }
 
 /**
@@ -158,10 +159,10 @@ public fun Frame.Close.readReason(): CloseReason? {
         return null
     }
 
-    val packet = buildPacket { writeFully(data) }
+    val packet = buildPacket { writeByteArray(data) }
 
     val code = packet.readShort()
-    val message = packet.readText()
+    val message = packet.readString()
 
     return CloseReason(code, message)
 }

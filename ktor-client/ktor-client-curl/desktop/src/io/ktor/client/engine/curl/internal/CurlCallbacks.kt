@@ -4,8 +4,8 @@
 
 package io.ktor.client.engine.curl.internal
 
+import io.ktor.io.*
 import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
 import kotlinx.atomicfu.*
 import kotlinx.cinterop.*
 import kotlinx.coroutines.*
@@ -20,9 +20,9 @@ internal fun onHeadersReceived(
     userdata: COpaquePointer
 ): Long {
     val packet = userdata.fromCPointer<CurlResponseBuilder>().headersBytes
-    val chunkSize = (size * count).toLong()
-    packet.writeFully(buffer, 0, chunkSize)
-    return chunkSize
+    val chunkSize = (size * count)
+    packet.writeCPointer(buffer, chunkSize.toInt())
+    return chunkSize.toLong()
 }
 
 internal fun onBodyChunkReceived(
@@ -42,21 +42,18 @@ internal fun onBodyChunkReceived(
     }
 
     val chunkSize = (size * count).toInt()
-    val written = body.writeAvailable(1) { dst: DROP_Buffer ->
-        val toWrite = minOf(chunkSize - wrapper.bytesWritten.value, dst.writeRemaining)
-        dst.writeFully(buffer, wrapper.bytesWritten.value, toWrite)
-    }
-    if (written > 0) {
-        wrapper.bytesWritten += written
-    }
+    body.writablePacket.writeCPointer(buffer, chunkSize)
+    wrapper.bytesWritten += chunkSize
     if (wrapper.bytesWritten.value == chunkSize) {
         wrapper.bytesWritten.value = 0
         return chunkSize
     }
 
+    TODO("backpressure")
+
     CoroutineScope(wrapper.callContext).launch {
         try {
-            body.awaitFreeSpace()
+            body.flush()
         } catch (_: Throwable) {
             // no op, error will be handled on next write on cURL thread
         } finally {
@@ -79,16 +76,29 @@ internal fun onBodyChunkRequested(
     if (body.isClosedForRead) {
         return if (body.closedCause != null) -1 else 0
     }
-    val readCount = body.readAvailable(1) { source: DROP_Buffer ->
-        source.readAvailable(buffer, 0, requested)
+
+    val source = body.readablePacket.peek()
+
+    if (source is WithRawMemory) {
+        val count = source.raw { address, length ->
+            val toRead = minOf(requested, length)
+            memcpy(address, buffer, toRead.convert())
+            return@raw toRead
+        }
+
+        body.readablePacket.discard(count)
+        return count
     }
-    if (readCount > 0) {
-        return readCount
+
+    val data: ByteArray = body.readArray()
+    if (data.isNotEmpty()) {
+        memcpy(data.refTo(0), buffer, data.size.convert())
+        return data.size
     }
 
     CoroutineScope(wrapper.callContext).launch {
         try {
-            body.awaitContent()
+            body.awaitBytes()
         } catch (_: Throwable) {
             // no op, error will be handled on next read on cURL thread
         } finally {

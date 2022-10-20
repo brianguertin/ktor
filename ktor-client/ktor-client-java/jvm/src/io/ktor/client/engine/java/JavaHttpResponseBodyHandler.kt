@@ -34,9 +34,7 @@ internal class JavaHttpResponseBodyHandler(
 
         private val consumerJob = Job(callContext[Job])
         override val coroutineContext: CoroutineContext = callContext + consumerJob
-        private val responseChannel = ByteChannel().apply {
-            attachJob(consumerJob)
-        }
+        private val responseChannel: ByteWriteChannel get() = TODO()
 
         private val httpResponse = HttpResponseData(
             HttpStatusCode.fromValue(response.statusCode()),
@@ -67,7 +65,7 @@ internal class JavaHttpResponseBodyHandler(
                                 buffer = queue.receive()
                             }
 
-                            responseChannel.writeFully(buffer)
+                            responseChannel.writeByteBuffer(buffer)
                         }
                     }
                 } catch (_: ClosedReceiveChannelException) {
@@ -137,7 +135,7 @@ internal class JavaHttpResponseBodyHandler(
                 subscription.getAndSet(null)?.cancel()
             } finally {
                 consumerJob.completeExceptionally(cause)
-                responseChannel.cancel(cause)
+                responseChannel.close(cause)
             }
         }
     }

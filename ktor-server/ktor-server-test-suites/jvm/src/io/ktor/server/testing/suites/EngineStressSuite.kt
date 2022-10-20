@@ -10,13 +10,13 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.http.cio.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
 import io.ktor.utils.io.*
-import io.ktor.utils.io.streams.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.debug.junit4.*
 import org.junit.*
@@ -29,6 +29,7 @@ import java.util.*
 import java.util.concurrent.*
 import kotlin.concurrent.*
 import kotlin.coroutines.*
+import kotlin.text.toByteArray
 import kotlin.time.*
 import kotlin.time.Duration.Companion.seconds
 
@@ -224,7 +225,7 @@ abstract class EngineStressSuite<TEngine : ApplicationEngine, TConfiguration : A
                         ): Job {
                             return launch(engineContext) {
                                 try {
-                                    output.writeFully(endMarkerCrLfBytes)
+                                    output.writeByteArray(endMarkerCrLfBytes)
                                     output.flush()
                                     delay(200)
                                 } finally {
@@ -255,7 +256,7 @@ abstract class EngineStressSuite<TEngine : ApplicationEngine, TConfiguration : A
             }.build()
 
             getOutputStream().apply {
-                writePacket(r)
+                write(r.toByteArray())
                 flush()
             }
 
@@ -310,7 +311,7 @@ abstract class EngineStressSuite<TEngine : ApplicationEngine, TConfiguration : A
                             for (i in 1..1024 * 1024) {
                                 bb.clear()
                                 while (bb.hasRemaining()) {
-                                    channel.writeFully(bb)
+                                    channel.writeByteBuffer(bb)
                                 }
                             }
 

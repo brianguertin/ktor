@@ -70,7 +70,7 @@ internal fun OutgoingContent.convertToHttpRequestBody(
     is OutgoingContent.WriteChannelContent -> JavaHttpRequestBodyPublisher(
         coroutineContext = callContext,
         contentLength = contentLength ?: -1
-    ) { GlobalScope.writer(callContext) { writeTo(channel) }.channel }
+    ) { GlobalScope.writer(callContext) { writeTo(channel) } }
     is OutgoingContent.NoContent -> HttpRequest.BodyPublishers.noBody()
     else -> throw UnsupportedContentTypeException(this)
 }

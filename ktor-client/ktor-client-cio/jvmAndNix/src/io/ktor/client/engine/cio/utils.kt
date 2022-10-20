@@ -11,6 +11,7 @@ import io.ktor.client.utils.*
 import io.ktor.http.*
 import io.ktor.http.cio.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.util.date.*
 import io.ktor.utils.io.*
@@ -90,15 +91,14 @@ internal suspend fun writeRequest(
         return@withContext
     }
 
-    val chunkedJob: EncoderJob? = if (chunked) encodeChunked(output, callContext) else null
-    val channel = chunkedJob?.channel ?: output
+    val channel = if (chunked) encodeChunked(output, callContext) else output
 
     val scope = CoroutineScope(callContext + CoroutineName("Request body writer"))
     scope.launch {
         try {
             when (body) {
                 is OutgoingContent.NoContent -> return@launch
-                is OutgoingContent.ByteArrayContent -> channel.writeFully(body.bytes())
+                is OutgoingContent.ByteArrayContent -> channel.writeByteArray(body.bytes())
                 is OutgoingContent.ReadChannelContent -> body.readFrom().copyAndClose(channel)
                 is OutgoingContent.WriteChannelContent -> body.writeTo(channel)
                 is OutgoingContent.ProtocolUpgrade -> throw UnsupportedContentTypeException(body)
@@ -108,8 +108,6 @@ internal suspend fun writeRequest(
             throw cause
         } finally {
             channel.flush()
-            chunkedJob?.channel?.close()
-            chunkedJob?.join()
 
             output.closedCause?.unwrapCancellationException()?.takeIf { it !is CancellationException }?.let {
                 throw it
@@ -152,12 +150,12 @@ internal suspend fun readResponse(
                 status.isInformational() -> {
                 ByteReadChannel.Empty
             }
+
             else -> {
                 val coroutineScope = CoroutineScope(callContext + CoroutineName("Response"))
-                val httpBodyParser = coroutineScope.writer(autoFlush = true) {
+                coroutineScope.writer {
                     parseHttpBody(version, contentLength, transferEncoding, connectionType, input, channel)
                 }
-                httpBodyParser.channel
             }
         }
 
@@ -226,23 +224,27 @@ internal fun HttpStatusCode.isInformational(): Boolean = (value / 100) == 1
 /**
  * Wrap channel so that [ByteWriteChannel.close] of the resulting channel doesn't lead to closing of the base channel.
  */
-@OptIn(DelicateCoroutinesApi::class)
 internal fun ByteWriteChannel.withoutClosePropagation(
     coroutineContext: CoroutineContext,
     closeOnCoroutineCompletion: Boolean = true
-): ByteWriteChannel {
-    if (closeOnCoroutineCompletion) {
-        // Pure output represents a socket output channel that is closed when request fully processed or after
-        // request sent in case TCP half-close is allowed.
-        coroutineContext[Job]!!.invokeOnCompletion {
-            close()
-        }
+): ByteWriteChannel = object : ByteWriteChannel {
+    private val delegate = this@withoutClosePropagation
+    override val isClosedForWrite: Boolean
+        get() = delegate.isClosedForWrite
+
+    override val closedCause: Throwable?
+        get() = delegate.closedCause
+
+    override val writablePacket: Packet
+        get() = delegate.writablePacket
+
+    override fun close(cause: Throwable?): Boolean {
+        return false
     }
 
-    return GlobalScope.reader(coroutineContext, autoFlush = true) {
-        channel.copyTo(this@withoutClosePropagation, Long.MAX_VALUE)
-        this@withoutClosePropagation.flush()
-    }.channel
+    override suspend fun flush() {
+        delegate.flush()
+    }
 }
 
 /**

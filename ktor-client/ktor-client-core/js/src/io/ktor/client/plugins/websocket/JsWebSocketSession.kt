@@ -4,7 +4,9 @@
 
 package io.ktor.client.plugins.websocket
 
+import io.ktor.io.*
 import io.ktor.util.*
+import io.ktor.util.Identity.decode
 import io.ktor.utils.io.core.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.*
@@ -94,7 +96,7 @@ internal class JsWebSocketSession(
                 when (it.frameType) {
                     FrameType.TEXT -> {
                         val text = it.data
-                        websocket.send(String(text))
+                        websocket.send(text.decodeToString())
                     }
                     FrameType.BINARY -> {
                         val source = it.data as Int8Array
@@ -106,9 +108,9 @@ internal class JsWebSocketSession(
                         websocket.send(frameData)
                     }
                     FrameType.CLOSE -> {
-                        val data = buildPacket { writeFully(it.data) }
+                        val data = buildPacket { writeByteArray(it.data) }
                         val code = data.readShort()
-                        val reason = data.readText()
+                        val reason = data.readString()
                         _closeReason.complete(CloseReason(code, reason))
                         if (code.isReservedStatusCode()) {
                             websocket.close()
@@ -119,6 +121,8 @@ internal class JsWebSocketSession(
                     FrameType.PING, FrameType.PONG -> {
                         // ignore
                     }
+
+                    else -> { error("Unsupported frame type ${it.frameType}") }
                 }
             }
         }

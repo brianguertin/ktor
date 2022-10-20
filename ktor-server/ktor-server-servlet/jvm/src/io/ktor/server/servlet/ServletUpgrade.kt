@@ -33,7 +33,7 @@ public interface ServletUpgrade {
 
 /**
  * The default servlet upgrade implementation using Servlet API.
- * Please note that some servlet containers may not support it or it may be broken.
+ * Please note that some servlet containers may not support it, or it may be broken.
  */
 public object DefaultServletUpgrade : ServletUpgrade {
     @OptIn(InternalAPI::class)
@@ -68,7 +68,7 @@ public class UpgradeRequest(
 
 private val ServletUpgradeCoroutineName = CoroutineName("servlet-upgrade")
 
-// this class is instantiated by a servlet container
+// this class is instantiated by a servlet container,
 // so we can't pass [UpgradeRequest] through a constructor
 // we also can't make it internal due to the same reason
 @InternalAPI
@@ -97,12 +97,11 @@ public class ServletUpgradeHandler : HttpUpgradeHandler, CoroutineScope {
                 context = up.userContext + upgradeJob,
                 pool = KtorDefaultPool
             )
-            else -> servletReader(webConnection.inputStream, Int.MAX_VALUE).channel
+            else -> servletReader(webConnection.inputStream, Int.MAX_VALUE)
         }
 
-        val outputChannel = servletWriter(webConnection.outputStream).channel
+        val outputChannel = servletWriter(webConnection.outputStream)
 
-        @OptIn(ExperimentalCoroutinesApi::class)
         launch(up.userContext + ServletUpgradeCoroutineName, start = CoroutineStart.UNDISPATCHED) {
             val job = up.upgradeMessage.upgrade(
                 inputChannel,

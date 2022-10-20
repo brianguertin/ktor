@@ -28,12 +28,14 @@ private data class JettyResponseChunk(val buffer: ByteBuffer, val callback: Call
 internal class JettyResponseListener(
     private val request: HttpRequestData,
     private val session: HTTP2ClientSession,
-    private val channel: ByteWriteChannel,
     private val callContext: CoroutineContext
 ) : Stream.Listener {
     private val headersBuilder: HeadersBuilder = HeadersBuilder()
     private val onHeadersReceived = CompletableDeferred<HttpStatusCode?>()
     private val backendChannel = Channel<JettyResponseChunk>(Channel.UNLIMITED)
+
+    public val response: ByteReadChannel get() = TODO()
+    private val channel: ByteWriteChannel get() = TODO()
 
     init {
         runResponseProcessing()
@@ -119,7 +121,7 @@ internal class JettyResponseListener(
         while (true) {
             val (buffer, callback) = backendChannel.receiveCatching().getOrNull() ?: break
             try {
-                if (buffer.remaining() > 0) channel.writeFully(buffer)
+                if (buffer.remaining() > 0) channel.writeByteBuffer(buffer)
                 callback.succeeded()
             } catch (cause: ClosedWriteChannelException) {
                 callback.failed(cause)

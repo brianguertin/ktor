@@ -16,46 +16,51 @@
 
 package io.ktor.utils.io
 
+import io.ktor.io.*
 import io.ktor.utils.io.charsets.*
-import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 
 /**
- * Channel for asynchronous reading and writing of sequences of bytes.
- * This is a buffered **single-reader single-writer channel**.
- *
- * Read operations can be invoked concurrently with write operations, but multiple reads or multiple writes
- * cannot be invoked concurrently with themselves. Exceptions are [close] and [flush] which can be invoked
- * concurrently with any other operations and between themselves at any time.
+ * Creates channel for reading from the specified byte array. Please note that it could use [content] directly
+ * or copy its bytes depending on the platform.
  */
-public interface ByteChannel : ByteReadChannel, ByteWriteChannel {
-    public fun attachJob(job: Job)
+public fun ByteReadChannel(content: ByteArray, offset: Int = 0, length: Int = content.size): ByteReadChannel {
+    require(offset >= 0) { "offset shouldn't be negative: $offset" }
+    require(length >= 0) { "length shouldn't be negative: $length" }
+    require(offset + length <= content.size) {
+        "offset + length shouldn't be greater than content size: ${content.size}"
+    }
+
+    return ByteReadChannel {
+        writeByteArray(content, offset, length)
+    }
 }
 
-/**
- * Creates buffered channel for asynchronous reading and writing of sequences of bytes.
- */
-public expect fun ByteChannel(autoFlush: Boolean = false): ByteChannel
+public fun ByteReadChannel(packet: Packet): ByteReadChannel = object : ByteReadChannel {
+    override val isClosedForRead: Boolean
+        get() = packet.isEmpty
 
-/**
- * Creates channel for reading from the specified byte array. Please note that it could use [content] directly
- * or copy its bytes depending on the platform.
- */
-public fun ByteReadChannel(content: ByteArray): ByteReadChannel =
-    ByteReadChannel(content, 0, content.size)
+    override var closedCause: Throwable? = null
+        private set
 
-/**
- * Creates channel for reading from the specified byte array. Please note that it could use [content] directly
- * or copy its bytes depending on the platform.
- */
-public fun ByteReadChannel(content: ByteArray, offset: Int): ByteReadChannel =
-    ByteReadChannel(content, offset, content.size)
+    override val readablePacket: Packet = packet
 
-/**
- * Creates channel for reading from the specified byte array. Please note that it could use [content] directly
- * or copy its bytes depending on the platform
- */
-public expect fun ByteReadChannel(content: ByteArray, offset: Int, length: Int): ByteReadChannel
+    override suspend fun awaitBytes(predicate: () -> Boolean): Boolean = predicate()
 
-public fun ByteReadChannel(text: String, charset: Charset = Charsets.UTF_8): ByteReadChannel =
-    ByteReadChannel(text.toByteArray(charset)) // TODO optimize to encode parts on demand
+    override fun cancel(cause: Throwable?): Boolean {
+        if (closedCause != null || packet.isEmpty) return false
+        readablePacket.close()
+        closedCause = cause
+        return true
+    }
+}
+
+public fun ByteReadChannel(
+    block: suspend ByteWriteChannel.() -> Unit
+): ByteReadChannel = GlobalScope.writer(Dispatchers.Unconfined) {
+    block()
+}
+
+public fun ByteReadChannel(text: String, charset: Charset = Charsets.UTF_8): ByteReadChannel = ByteReadChannel {
+    writeString(text, charset)
+}

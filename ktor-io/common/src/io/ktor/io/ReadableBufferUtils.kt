@@ -24,3 +24,8 @@ internal fun ReadableBuffer.ensureCanRead(index: Int, count: Int) {
         throw IndexOutOfBoundsException("Can't read $count bytes at index $index. Capacity: $capacity.")
     }
 }
+
+public fun ReadableBuffer.discard(count: Int) {
+    require(count in 0..availableForRead) { "Can't discard $count bytes, available $availableForRead" }
+    readIndex += count
+}

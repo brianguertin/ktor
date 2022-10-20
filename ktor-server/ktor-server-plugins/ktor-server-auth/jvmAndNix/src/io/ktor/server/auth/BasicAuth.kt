@@ -5,6 +5,7 @@
 package io.ktor.server.auth
 
 import io.ktor.http.auth.*
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -113,7 +114,7 @@ public fun ApplicationRequest.basicAuthenticationCredentials(charset: Charset? =
             if (!authHeader.authScheme.equals("Basic", ignoreCase = true)) return null
 
             val userPass = try {
-                String(authHeader.blob.decodeBase64Bytes(), charset = charset ?: Charsets.ISO_8859_1)
+                authHeader.blob.decodeBase64String(charset ?: Charsets.ISO_8859_1)
             } catch (e: Throwable) {
                 return null
             }

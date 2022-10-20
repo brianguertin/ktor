@@ -7,6 +7,7 @@
 
 package io.ktor.util
 
+import io.ktor.io.*
 import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
 import kotlin.native.concurrent.*
@@ -55,12 +56,7 @@ public expect fun generateNonce(): String
 /**
  * Generates a nonce bytes of [size]. Could block if the system's entropy source is empty
  */
-public fun generateNonce(size: Int): ByteArray = buildPacket {
-    while (this.size < size) {
-        writeText(generateNonce())
-    }
-}.readBytes(size)
-
+public fun generateNonce(size: Int): ByteArray = TODO()
 /**
  * Compute SHA-1 hash for the specified [bytes]
  */
@@ -106,6 +102,7 @@ public suspend fun Digest.build(bytes: ByteArray): ByteArray {
  */
 @InternalAPI
 public suspend fun Digest.build(string: String, charset: Charset = Charsets.UTF_8): ByteArray {
-    this += string.toByteArray(charset)
+    TODO()
+//    this += string.toByteArray(charset)
     return build()
 }

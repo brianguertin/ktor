@@ -11,6 +11,7 @@ import io.ktor.server.engine.*
 import io.ktor.utils.io.*
 import io.netty.channel.*
 import io.netty.handler.codec.http.*
+import kotlinx.coroutines.*
 import kotlin.coroutines.*
 
 public abstract class NettyApplicationResponse(
@@ -63,10 +64,10 @@ public abstract class NettyApplicationResponse(
     }
 
     override suspend fun responseChannel(): ByteWriteChannel {
-        val channel = ByteChannel()
         val chunked = headers[HttpHeaders.TransferEncoding] == "chunked"
-        sendResponse(chunked, content = channel)
-        return channel
+        return GlobalScope.reader {
+            sendResponse(chunked, content = channel)
+        }
     }
 
     override suspend fun respondNoContent(content: OutgoingContent.NoContent) {

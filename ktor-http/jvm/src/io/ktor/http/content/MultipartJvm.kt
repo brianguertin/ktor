@@ -4,10 +4,11 @@
 
 package io.ktor.http.content
 
-import io.ktor.util.*
+import io.ktor.utils.io.*
 import java.io.*
 
 /**
  * Provides file item's content as an [InputStream]
  */
 public val PartData.FileItem.streamProvider: () -> InputStream get() = { provider().asStream() }
+

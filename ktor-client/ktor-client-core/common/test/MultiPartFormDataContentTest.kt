@@ -1,8 +1,8 @@
 import io.ktor.client.request.forms.*
+import io.ktor.io.*
 import io.ktor.test.dispatcher.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.charsets.*
-import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import kotlin.test.*
 
@@ -20,11 +20,11 @@ class MultiPartFormDataContentTest {
             }
         )
 
-        val channel = ByteChannel()
-        formData.writeTo(channel)
-        channel.close()
+        val channel = ByteReadChannel {
+            formData.writeTo(this)
+        }
 
-        val actual = channel.readRemaining().readBytes()
+        val actual = channel.readRemaining().toByteArray()
 
         assertNotEquals('\r'.code.toByte(), actual[0])
         assertNotEquals('\n'.code.toByte(), actual[1])
@@ -233,15 +233,10 @@ class MultiPartFormDataContentTest {
     }
 
     private suspend fun MultiPartFormDataContent.readBytes(): ByteArray = coroutineScope {
-        val channel = ByteChannel()
-        val writeJob = launch {
-            writeTo(channel)
-            channel.close()
+        val channel = ByteReadChannel {
+            writeTo(this)
         }
 
-        val result = channel.readRemaining().readBytes()
-        writeJob.join()
-
-        result
+        channel.readRemaining().toByteArray()
     }
 }

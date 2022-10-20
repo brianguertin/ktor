@@ -89,6 +89,9 @@ public class HttpClient(
 
     private val clientJob: CompletableJob = Job(engine.coroutineContext[Job])
 
+    /**
+     * [CoroutineContext] for this client.
+     */
     public override val coroutineContext: CoroutineContext = engine.coroutineContext + clientJob
 
     /**
@@ -139,6 +142,9 @@ public class HttpClient(
 
         engine.install(this)
 
+        /**
+         * Install default plugins.
+         */
         sendPipeline.intercept(HttpSendPipeline.Receive) { call ->
             check(call is HttpClientCall) { "Error: HttpClientCall expected, but found $call(${call::class})." }
             val response = receivePipeline.execute(Unit, call.response)
@@ -146,6 +152,9 @@ public class HttpClient(
             proceedWith(call)
         }
 
+        /**
+         * Install user plugins.
+         */
         with(userConfig) {
             config.install(HttpRequestLifecycle)
             config.install(BodyProgress)

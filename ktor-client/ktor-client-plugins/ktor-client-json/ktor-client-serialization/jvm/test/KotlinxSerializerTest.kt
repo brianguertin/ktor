@@ -5,8 +5,8 @@
 @file:Suppress("DEPRECATION")
 
 import io.ktor.client.plugins.kotlinx.serializer.*
+import io.ktor.io.*
 import io.ktor.util.reflect.*
-import io.ktor.utils.io.streams.*
 import kotlinx.serialization.*
 import kotlinx.serialization.builtins.*
 import kotlinx.serialization.json.*
@@ -25,7 +25,8 @@ class KotlinxSerializerTest {
         }
 
         val kotlinxSerializer = KotlinxSerializer(serializer)
-        val json = """
+        val json = Packet(
+            """
             {
                 "something": "something",
                 "data": [
@@ -33,7 +34,8 @@ class KotlinxSerializerTest {
                     {"a": "bye", "b": 4242}
                 ]
             }
-        """.trimIndent().byteInputStream().asInput()
+        """.trimIndent()
+        )
 
         @Suppress("UNCHECKED_CAST")
         val data = kotlinxSerializer.read(typeInfo<List<TestEntry>>(), json) as List<TestEntry>

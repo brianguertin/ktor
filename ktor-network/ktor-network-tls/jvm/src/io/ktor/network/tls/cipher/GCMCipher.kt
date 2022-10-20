@@ -21,7 +21,7 @@ internal class GCMCipher(
             suite,
             keyMaterial,
             record.type,
-            record.packet.remaining.toInt(),
+            record.packet.availableForRead,
             outputCounter,
             outputCounter
         )
@@ -38,14 +38,14 @@ internal class GCMCipher(
 
     override fun decrypt(record: TLSRecord): TLSRecord {
         val packet = record.packet
-        val packetSize = packet.remaining
+        val packetSize = packet.availableForRead
         val recordIv = packet.readLong()
 
         val cipher = gcmDecryptCipher(
             suite,
             keyMaterial,
             record.type,
-            packetSize.toInt(),
+            packetSize,
             recordIv,
             inputCounter++
         )

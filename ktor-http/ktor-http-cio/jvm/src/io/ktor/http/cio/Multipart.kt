@@ -5,6 +5,7 @@
 package io.ktor.http.cio
 
 import io.ktor.http.cio.internals.*
+import io.ktor.io.*
 import io.ktor.network.util.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
@@ -27,9 +28,9 @@ public sealed class MultipartEvent {
      * Represents a multipart content preamble. A multipart stream could have at most one preamble.
      * @property body contains preamble's content
      */
-    public class Preamble(public val body: DROP_ByteReadPacket) : MultipartEvent() {
+    public class Preamble(public val body: Packet) : MultipartEvent() {
         override fun release() {
-            body.release()
+            body.close()
         }
     }
 
@@ -62,9 +63,9 @@ public sealed class MultipartEvent {
      * Represents a multipart content epilogue. A multipart stream could have at most one epilogue.
      * @property body contains epilogue's content
      */
-    public class Epilogue(public val body: DROP_ByteReadPacket) : MultipartEvent() {
+    public class Epilogue(public val body: Packet) : MultipartEvent() {
         override fun release() {
-            body.release()
+            body.close()
         }
     }
 }
@@ -77,7 +78,7 @@ public sealed class MultipartEvent {
 public suspend fun parsePreamble(
     boundaryPrefixed: ByteBuffer,
     input: ByteReadChannel,
-    output: DROP_BytePacketBuilder,
+    output: Packet,
     limit: Long = Long.MAX_VALUE
 ): Long {
     return parsePreambleImpl(boundaryPrefixed, input, output, limit)
@@ -90,14 +91,14 @@ public suspend fun parsePreamble(
 private suspend fun parsePreambleImpl(
     boundaryPrefixed: ByteBuffer,
     input: ByteReadChannel,
-    output: DROP_BytePacketBuilder,
+    output: Packet,
     limit: Long = Long.MAX_VALUE
 ): Long {
     return copyUntilBoundary(
         "preamble/prologue",
         boundaryPrefixed,
         input,
-        { output.writeFully(it) },
+        { TODO() /*output.writeFully(it)*/ },
         limit
     )
 }
@@ -174,7 +175,7 @@ private suspend fun parsePartBodyImpl(
         if (cl > limit) throw IOException("Multipart part content length limit of $limit exceeded (actual size is $cl)")
         input.copyTo(output, cl)
     } else {
-        copyUntilBoundary("part", boundaryPrefixed, input, { output.writeFully(it) }, limit)
+        copyUntilBoundary("part", boundaryPrefixed, input, { output.writeByteBuffer(it) }, limit)
     }
     output.flush()
 
@@ -279,74 +280,75 @@ public fun CoroutineScope.parseMultipart(
     input: ByteReadChannel,
     totalLength: Long?
 ): ReceiveChannel<MultipartEvent> = produce {
-    @Suppress("DEPRECATION")
-    val readBeforeParse = input.totalBytesRead
-    val firstBoundary = boundaryPrefixed.duplicate()!!.apply {
-        position(2)
-    }
-
-    val preamble = DROP_BytePacketBuilder()
-    parsePreambleImpl(firstBoundary, input, preamble, 8192)
-
-    if (preamble.size > 0) {
-        send(MultipartEvent.Preamble(preamble.build()))
-    }
-
-    if (skipBoundary(firstBoundary, input)) {
-        return@produce
-    }
-
-    val trailingBuffer = BoundaryTrailingBuffer.duplicate()
-
-    do {
-        input.readUntilDelimiter(CrLf, trailingBuffer)
-        if (input.readUntilDelimiter(CrLf, trailingBuffer) != 0) {
-            throw IOException("Failed to parse multipart: boundary line is too long")
-        }
-        input.skipDelimiter(CrLf)
-
-        val body = ByteChannel()
-        val headers = CompletableDeferred<HttpHeadersMap>()
-        val part = MultipartEvent.MultipartPart(headers, body)
-        send(part)
-
-        var hh: HttpHeadersMap? = null
-        try {
-            hh = parsePartHeadersImpl(input)
-            if (!headers.complete(hh)) {
-                hh.release()
-                throw kotlin.coroutines.cancellation.CancellationException("Multipart processing has been cancelled")
-            }
-            parsePartBodyImpl(boundaryPrefixed, input, body, hh)
-        } catch (t: Throwable) {
-            if (headers.completeExceptionally(t)) {
-                hh?.release()
-            }
-            body.close(t)
-            throw t
-        }
-
-        body.close()
-    } while (!skipBoundary(boundaryPrefixed, input))
-
-    if (input.availableForRead != 0) {
-        input.skipDelimiter(CrLf)
-    }
-
-    if (totalLength != null) {
-        @Suppress("DEPRECATION")
-        val consumedExceptEpilogue = input.totalBytesRead - readBeforeParse
-        val size = totalLength - consumedExceptEpilogue
-        if (size > Int.MAX_VALUE) throw IOException("Failed to parse multipart: prologue is too long")
-        if (size > 0) {
-            send(MultipartEvent.Epilogue(input.readPacket(size.toInt())))
-        }
-    } else {
-        val epilogueContent = input.readRemaining()
-        if (epilogueContent.isNotEmpty) {
-            send(MultipartEvent.Epilogue(epilogueContent))
-        }
-    }
+    TODO()
+//    @Suppress("DEPRECATION")
+//    val readBeforeParse = input.totalBytesRead
+//    val firstBoundary = boundaryPrefixed.duplicate()!!.apply {
+//        position(2)
+//    }
+//
+//    val preamble = Packet()
+//    parsePreambleImpl(firstBoundary, input, preamble, 8192)
+//
+//    if (preamble.size > 0) {
+//        send(MultipartEvent.Preamble(preamble.build()))
+//    }
+//
+//    if (skipBoundary(firstBoundary, input)) {
+//        return@produce
+//    }
+//
+//    val trailingBuffer = BoundaryTrailingBuffer.duplicate()
+//
+//    do {
+//        input.readUntilDelimiter(CrLf, trailingBuffer)
+//        if (input.readUntilDelimiter(CrLf, trailingBuffer) != 0) {
+//            throw IOException("Failed to parse multipart: boundary line is too long")
+//        }
+//        input.skipDelimiter(CrLf)
+//
+//        val body = ByteChannel()
+//        val headers = CompletableDeferred<HttpHeadersMap>()
+//        val part = MultipartEvent.MultipartPart(headers, body)
+//        send(part)
+//
+//        var hh: HttpHeadersMap? = null
+//        try {
+//            hh = parsePartHeadersImpl(input)
+//            if (!headers.complete(hh)) {
+//                hh.release()
+//                throw kotlin.coroutines.cancellation.CancellationException("Multipart processing has been cancelled")
+//            }
+//            parsePartBodyImpl(boundaryPrefixed, input, body, hh)
+//        } catch (t: Throwable) {
+//            if (headers.completeExceptionally(t)) {
+//                hh?.release()
+//            }
+//            body.close(t)
+//            throw t
+//        }
+//
+//        body.close()
+//    } while (!skipBoundary(boundaryPrefixed, input))
+//
+//    if (input.availableForRead != 0) {
+//        input.skipDelimiter(CrLf)
+//    }
+//
+//    if (totalLength != null) {
+//        @Suppress("DEPRECATION")
+//        val consumedExceptEpilogue = input.totalBytesRead - readBeforeParse
+//        val size = totalLength - consumedExceptEpilogue
+//        if (size > Int.MAX_VALUE) throw IOException("Failed to parse multipart: prologue is too long")
+//        if (size > 0) {
+//            send(MultipartEvent.Epilogue(input.readPacket(size.toInt())))
+//        }
+//    } else {
+//        val epilogueContent = input.readRemaining()
+//        if (epilogueContent.isNotEmpty) {
+//            send(MultipartEvent.Epilogue(epilogueContent))
+//        }
+//    }
 }
 
 /**

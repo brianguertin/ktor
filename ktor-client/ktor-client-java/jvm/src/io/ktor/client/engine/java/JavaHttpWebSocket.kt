@@ -10,6 +10,7 @@ import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.http.HttpHeaders
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.util.date.*
 import io.ktor.utils.io.core.*
@@ -97,9 +98,9 @@ internal class JavaHttpWebSocket(
                         webSocket.sendBinary(frame.buffer, frame.fin).await()
                     }
                     FrameType.CLOSE -> {
-                        val data = buildPacket { writeFully(frame.data) }
+                        val data = buildPacket { writeByteArray(frame.data) }
                         val code = data.readShort().toInt()
-                        val reason = data.readText()
+                        val reason = data.readString()
                         webSocket.sendClose(code, reason).await()
                         socketJob.complete()
                         return@launch

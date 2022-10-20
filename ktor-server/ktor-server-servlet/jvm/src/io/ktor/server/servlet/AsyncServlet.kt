@@ -65,7 +65,7 @@ public class AsyncServletApplicationRequest(
     private val inputStreamChannel by lazy {
         if (!upgraded) {
             val contentLength = servletRequest.contentLength
-            servletReader(servletRequest.inputStream, contentLength).channel
+            servletReader(servletRequest.inputStream, contentLength)
         } else ByteReadChannel.Empty
     }
 
@@ -86,7 +86,7 @@ public open class AsyncServletApplicationResponse(
     override val coroutineContext: CoroutineContext,
     managedByEngineHeaders: Set<String> = emptySet()
 ) : ServletApplicationResponse(call, servletResponse, managedByEngineHeaders), CoroutineScope {
-    override fun createResponseJob(): ReaderJob =
+    override fun createResponseJob(): ByteWriteChannel =
         servletWriter(servletResponse.outputStream)
 
     public final override suspend fun respondUpgrade(upgrade: OutgoingContent.ProtocolUpgrade) {

@@ -172,7 +172,7 @@ private fun BufferedSource.toChannel(context: CoroutineContext, requestData: Htt
                 }
             }
         }
-    }.channel
+    }
 
 private fun mapExceptions(cause: Throwable, request: HttpRequestData): Throwable = when (cause) {
     is java.net.SocketTimeoutException -> SocketTimeoutException(request, cause)
@@ -209,7 +209,7 @@ internal fun OutgoingContent.convertToOkHttpBody(callContext: CoroutineContext):
     }
     is OutgoingContent.ReadChannelContent -> StreamRequestBody(contentLength) { readFrom() }
     is OutgoingContent.WriteChannelContent -> {
-        StreamRequestBody(contentLength) { GlobalScope.writer(callContext) { writeTo(channel) }.channel }
+        StreamRequestBody(contentLength) { GlobalScope.writer(callContext) { writeTo(channel) } }
     }
     is OutgoingContent.NoContent -> ByteArray(0).toRequestBody(null, 0, 0)
     else -> throw UnsupportedContentTypeException(this)

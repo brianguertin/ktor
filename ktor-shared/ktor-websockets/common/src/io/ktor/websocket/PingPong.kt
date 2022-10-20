@@ -4,10 +4,10 @@
 
 package io.ktor.websocket
 
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.util.date.*
 import io.ktor.utils.io.charsets.*
-import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlin.random.*
@@ -72,12 +72,12 @@ internal fun CoroutineScope.pinger(
 
                 val rc = withTimeoutOrNull(timeoutMillis) {
                     LOGGER.trace("WebSocket Pinger: sending ping frame")
-                    outgoing.send(Frame.Ping(pingMessage.toByteArray(Charsets.ISO_8859_1)))
+                    outgoing.send(Frame.Ping(pingMessage.toByteArray(Charsets.UTF_8)))
 
                     // wait for valid pong message
                     while (true) {
                         val msg = channel.receive()
-                        if (String(msg.data, charset = Charsets.ISO_8859_1) == pingMessage) {
+                        if (String(msg.data, charset = Charsets.UTF_8) == pingMessage) {
                             LOGGER.trace("WebSocket Pinger: received valid pong frame $msg")
                             break
                         }

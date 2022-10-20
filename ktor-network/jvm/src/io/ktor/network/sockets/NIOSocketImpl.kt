@@ -4,9 +4,9 @@
 
 package io.ktor.network.sockets
 
+import io.ktor.io.*
 import io.ktor.network.selector.*
 import io.ktor.utils.io.*
-import io.ktor.utils.io.ByteChannel
 import io.ktor.utils.io.pool.*
 import kotlinx.coroutines.*
 import java.nio.*
@@ -20,11 +20,9 @@ internal abstract class NIOSocketImpl<out S>(
     val pool: ObjectPool<ByteBuffer>?,
     private val socketOptions: SocketOptions.TCPClientSocketOptions? = null
 ) : ReadWriteSocket, SelectableBase(channel), CoroutineScope
-    where S : java.nio.channels.ByteChannel, S : SelectableChannel {
+    where S : ByteChannel, S : SelectableChannel {
 
     private val closeFlag = AtomicBoolean()
-    private val readerJob = AtomicReference<ReaderJob?>()
-    private val writerJob = AtomicReference<WriterJob?>()
 
     override val socketContext: CompletableJob = Job()
 
@@ -37,21 +35,11 @@ internal abstract class NIOSocketImpl<out S>(
     //  that will cause broken data
     // however it is not the case for attachForWriting this is why we use direct writing in any case
 
-    final override fun attachForReading(channel: ByteChannel): WriterJob {
-        return attachFor("reading", channel, writerJob) {
-            if (pool != null) {
-                attachForReadingImpl(channel, this.channel, this, selector, pool, socketOptions)
-            } else {
-                attachForReadingDirectImpl(channel, this.channel, this, selector, socketOptions)
-            }
-        }
-    }
+    final override fun attachForReading(): ByteReadChannel =
+        attachForReadingDirectImpl(channel, this, selector, socketOptions)
 
-    final override fun attachForWriting(channel: ByteChannel): ReaderJob {
-        return attachFor("writing", channel, readerJob) {
-            attachForWritingDirectImpl(channel, this.channel, this, selector, socketOptions)
-        }
-    }
+    final override fun attachForWriting(): ByteWriteChannel =
+        attachForWritingDirectImpl(channel, this, selector, socketOptions)
 
     override fun dispose() {
         close()
@@ -59,45 +47,6 @@ internal abstract class NIOSocketImpl<out S>(
 
     override fun close() {
         if (!closeFlag.compareAndSet(false, true)) return
-
-        readerJob.get()?.channel?.close()
-        writerJob.get()?.cancel()
-        checkChannels()
-    }
-
-    private fun <J : Job> attachFor(
-        name: String,
-        channel: ByteChannel,
-        ref: AtomicReference<J?>,
-        producer: () -> J
-    ): J {
-        if (closeFlag.get()) {
-            val e = ClosedChannelException()
-            channel.close(e)
-            throw e
-        }
-
-        val j = producer()
-
-        if (!ref.compareAndSet(null, j)) {
-            val e = IllegalStateException("$name channel has already been set")
-            j.cancel()
-            throw e
-        }
-        if (closeFlag.get()) {
-            val e = ClosedChannelException()
-            j.cancel()
-            channel.close(e)
-            throw e
-        }
-
-        channel.attachJob(j)
-
-        j.invokeOnCompletion {
-            checkChannels()
-        }
-
-        return j
     }
 
     private fun actualClose(): Throwable? {
@@ -109,18 +58,6 @@ internal abstract class NIOSocketImpl<out S>(
             cause
         } finally {
             selector.notifyClosed(this)
-        }
-    }
-
-    private fun checkChannels() {
-        if (closeFlag.get() && readerJob.completedOrNotStarted && writerJob.completedOrNotStarted) {
-            val e1 = readerJob.exception
-            val e2 = writerJob.exception
-            val e3 = actualClose()
-
-            val combined = combine(combine(e1, e2), e3)
-
-            if (combined == null) socketContext.complete() else socketContext.completeExceptionally(combined)
         }
     }
 

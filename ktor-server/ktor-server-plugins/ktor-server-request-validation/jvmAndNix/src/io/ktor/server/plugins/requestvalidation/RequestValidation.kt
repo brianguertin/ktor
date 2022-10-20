@@ -91,7 +91,7 @@ public val RequestValidation: RouteScopedPlugin<RequestValidationConfig> = creat
             if (count != contentLength) {
                 throw IOException("Content length mismatch. Actual $count, expected $contentLength.")
             }
-        }.channel
+        }
     }
 }
 

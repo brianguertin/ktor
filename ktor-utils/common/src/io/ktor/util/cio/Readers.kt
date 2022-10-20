@@ -4,6 +4,7 @@
 
 package io.ktor.util.cio
 
+import io.ktor.io.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import kotlin.contracts.*
@@ -12,7 +13,7 @@ import kotlin.contracts.*
  * Convert [ByteReadChannel] to [ByteArray]
  */
 public suspend fun ByteReadChannel.toByteArray(limit: Int = Int.MAX_VALUE): ByteArray =
-    readRemaining(limit.toLong()).readBytes()
+    readRemaining(limit.toLong()).toByteArray()
 
 /**
  * Executes [block] on [ByteWriteChannel] and close it down correctly whether an exception

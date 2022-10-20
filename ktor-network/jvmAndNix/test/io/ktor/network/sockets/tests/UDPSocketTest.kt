@@ -5,6 +5,7 @@
 package io.ktor.network.sockets.tests
 
 import io.ktor.network.selector.*
+import io.ktor.io.*
 import io.ktor.network.sockets.*
 import io.ktor.test.dispatcher.*
 import io.ktor.util.network.*
@@ -32,7 +33,7 @@ class UDPSocketTest {
 
             socket.use {
                 val datagram = Datagram(
-                    packet = buildPacket { writeText("0123456789") },
+                    packet = buildPacket { writeString("0123456789") },
                     address = InetSocketAddress("255.255.255.255", 56700)
                 )
 
@@ -61,7 +62,7 @@ class UDPSocketTest {
                 .use { socket ->
                     serverSocketCompletable.complete(socket)
                     val received = socket.receive()
-                    assertEquals("0123456789", received.packet.readText())
+                    assertEquals("0123456789", received.packet.readString())
                 }
         }
 
@@ -78,7 +79,7 @@ class UDPSocketTest {
 
             socket.send(
                 Datagram(
-                    packet = buildPacket { writeText("0123456789") },
+                    packet = buildPacket { writeString("0123456789") },
                     address = InetSocketAddress("255.255.255.255", inetSocketAddress.port)
                 )
             )
@@ -203,7 +204,7 @@ class UDPSocketTest {
                 launch {
                     val address = InetSocketAddress("127.0.0.1", 8000)
                     repeat(10) {
-                        val bytePacket = buildPacket { append("hello") }
+                        val bytePacket = buildPacket { writeString("hello") }
                         val data = Datagram(bytePacket, address)
                         socket.send(data)
                     }
@@ -212,7 +213,7 @@ class UDPSocketTest {
                 // Receive messages from localhost
                 repeat(10) {
                     val incoming = socket.receive()
-                    assertEquals("hello", incoming.packet.readText())
+                    assertEquals("hello", incoming.packet.readString())
                 }
             }
     }
@@ -226,8 +227,8 @@ class UDPSocketTest {
         val remoteAddress = InetSocketAddress("127.0.0.1", (server.localAddress as InetSocketAddress).port)
         val socket = aSocket(selector).udp().connect(remoteAddress)
 
-        socket.send(Datagram(buildPacket { writeText("hello") }, remoteAddress))
-        assertEquals("hello", server.receive().packet.readText())
+        socket.send(Datagram(buildPacket { writeString("hello") }, remoteAddress))
+        assertEquals("hello", server.receive().packet.readString())
     }
 }
 

@@ -18,7 +18,7 @@ import java.nio.charset.*
     replaceWith = ReplaceWith("writeFully(string.toByteArray(charset))", "io.ktor.utils.io.writeFully")
 )
 public suspend fun ByteWriteChannel.write(string: String, charset: Charset = Charsets.UTF_8) {
-    writeFully(string.toByteArray(charset))
+    writeByteArray(string.toByteArray(charset))
 }
 
 /**

@@ -47,7 +47,7 @@ internal class EndPointReader(
                         fillInterested()
                     }
 
-                    channel.writeFully(buffer)
+                    channel.writeByteBuffer(buffer)
                 }
             } catch (cause: ClosedChannelException) {
                 channel.close()
@@ -104,21 +104,8 @@ internal class EndPointReader(
 internal fun CoroutineScope.endPointWriter(
     endPoint: EndPoint,
     pool: ObjectPool<ByteBuffer> = JettyWebSocketPool
-): ReaderJob = reader(EndpointWriterCoroutineName + Dispatchers.Unconfined, autoFlush = true) {
-    pool.useInstance { buffer: ByteBuffer ->
-        val source = channel
-
-        while (!source.isClosedForRead) {
-            buffer.clear()
-            if (source.readAvailable(buffer) == -1) break
-
-            buffer.flip()
-            endPoint.write(buffer)
-        }
-        endPoint.flush()
-
-        source.closedCause?.let { throw it }
-    }
+): ByteWriteChannel = reader(EndpointWriterCoroutineName + Dispatchers.Unconfined) {
+    TODO()
 }
 
 private suspend fun EndPoint.write(buffer: ByteBuffer) = suspendCancellableCoroutine<Unit> { continuation ->

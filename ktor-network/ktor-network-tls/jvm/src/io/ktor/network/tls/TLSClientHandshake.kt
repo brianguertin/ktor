@@ -4,6 +4,7 @@
 
 package io.ktor.network.tls
 
+import io.ktor.io.*
 import io.ktor.network.tls.SecretExchangeType.*
 import io.ktor.network.tls.cipher.*
 import io.ktor.network.tls.extensions.*
@@ -85,6 +86,7 @@ internal class TLSClientHandshake(
                     }
                 }
 
+                println("Send tls record, ${packet.availableForRead}")
                 channel.send(TLSRecord(record.type, packet = packet))
             }
         } catch (cause: ClosedReceiveChannelException) {
@@ -128,11 +130,11 @@ internal class TLSClientHandshake(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val handshakes = produce<TLSHandshake>(CoroutineName("cio-tls-handshake")) {
+    private val handshakes = produce(CoroutineName("cio-tls-handshake")) {
         while (true) {
             val record = input.receive()
             if (record.type != TLSRecordType.Handshake) {
-                record.packet.release()
+                record.packet.close()
                 error("TLS handshake expected, got ${record.type}")
             }
 
@@ -148,7 +150,7 @@ internal class TLSClientHandshake(
                 channel.send(handshake)
 
                 if (handshake.type == TLSHandshakeType.Finished) {
-                    packet.release()
+                    packet.close()
                     return@produce
                 }
             }
@@ -261,21 +263,21 @@ internal class TLSClientHandshake(
                                 initVerify(serverCertificate)
                                 update(
                                     buildPacket {
-                                        writeFully(clientSeed)
-                                        writeFully(serverHello.serverSeed)
+                                        writeByteArray(clientSeed)
+                                        writeByteArray(serverHello.serverSeed)
                                         writePacket(params)
-                                    }.readBytes()
+                                    }.toByteArray()
                                 )
                             }
 
                             val signSize = packet.readShort().toInt() and 0xffff
-                            val signedMessage = packet.readBytes(signSize)
+                            val signedMessage = packet.readByteArray(signSize)
                             if (!signature.verify(signedMessage)) throw TLSException("Failed to verify signed message")
 
                             encryptionInfo = generateECKeys(curve, point)
                         }
                         RSA -> {
-                            packet.release()
+                            packet.close()
                             error("Server key exchange handshake doesn't expected in RCA exchange type")
                         }
                     }
@@ -403,11 +405,12 @@ internal class TLSClientHandshake(
             writeByte(hashAndSign.hash.code)
             writeByte(hashAndSign.sign.code)
 
-            digest.state.preview { sign.update(it.readBytes()) }
+            TODO()
+//            digest.state.preview { sign.update(it.readBytes()) }
             val signBytes = sign.sign()!!
 
             writeShort(signBytes.size.toShort())
-            writeFully(signBytes)
+            writeByteArray(signBytes)
         }
     }
 
@@ -416,7 +419,7 @@ internal class TLSClientHandshake(
         try {
             output.send(TLSRecord(TLSRecordType.ChangeCipherSpec, packet = packet))
         } catch (cause: Throwable) {
-            packet.release()
+            packet.close()
             throw cause
         }
     }
@@ -436,7 +439,7 @@ internal class TLSClientHandshake(
             throw TLSException("Finished handshake expected, received: $finished")
         }
 
-        val receivedChecksum = finished.packet.readBytes()
+        val receivedChecksum = finished.packet.toByteArray()
         val expectedChecksum = serverFinished(
             digest.doHash(serverHello.cipherSuite.hash.openSSLName),
             masterSecret,
@@ -453,11 +456,11 @@ internal class TLSClientHandshake(
         }
     }
 
-    private suspend fun sendHandshakeRecord(handshakeType: TLSHandshakeType, block: DROP_BytePacketBuilder.() -> Unit) {
+    private suspend fun sendHandshakeRecord(handshakeType: TLSHandshakeType, block: Packet.() -> Unit) {
         val handshakeBody = buildPacket(block = block)
 
         val recordBody = buildPacket {
-            writeTLSHandshakeType(handshakeType, handshakeBody.remaining.toInt())
+            writeTLSHandshakeType(handshakeType, handshakeBody.availableForRead)
             writePacket(handshakeBody)
         }
 
@@ -466,7 +469,7 @@ internal class TLSClientHandshake(
         try {
             output.send(element)
         } catch (cause: Throwable) {
-            element.packet.release()
+            element.packet.close()
             throw cause
         }
     }
@@ -507,9 +510,9 @@ private fun generateECKeys(curve: NamedCurve, serverPoint: ECPoint): EncryptionI
  *         DistinguishedName certificate_authorities<0..2^16-1>;
  *     } CertificateRequest;
  */
-internal fun readClientCertificateRequest(packet: DROP_ByteReadPacket): CertificateInfo {
+internal fun readClientCertificateRequest(packet: Packet): CertificateInfo {
     val typeCount = packet.readByte().toInt() and 0xFF
-    val types = packet.readBytes(typeCount)
+    val types = packet.readByteArray(typeCount)
 
     val hashAndSignCount = packet.readShort().toInt() and 0xFFFF
     val hashAndSign = mutableListOf<HashAndSign>()
@@ -529,7 +532,7 @@ internal fun readClientCertificateRequest(packet: DROP_ByteReadPacket): Certific
         val bytesForReadingSize = Short.SIZE_BYTES
         position += size + bytesForReadingSize
 
-        val authority = packet.readBytes(size)
+        val authority = packet.readByteArray(size)
         authorities += X500Principal(authority)
     }
 

@@ -15,7 +15,7 @@ class MockUtilsTest {
     fun testWriteChannelContentToByteArray() = testSuspend {
         val content = object : OutgoingContent.WriteChannelContent() {
             override suspend fun writeTo(channel: ByteWriteChannel) {
-                channel.writeFully(ByteArray(8 * 1024))
+                channel.writeByteArray(ByteArray(8 * 1024))
             }
         }.toByteArray()
 

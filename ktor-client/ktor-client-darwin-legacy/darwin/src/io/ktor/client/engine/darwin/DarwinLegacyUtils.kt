@@ -18,9 +18,9 @@ import platform.posix.*
 internal suspend fun OutgoingContent.toNSData(): NSData? = when (this) {
     is OutgoingContent.ByteArrayContent -> bytes().toNSData()
     is OutgoingContent.WriteChannelContent -> GlobalScope.writer(Dispatchers.Unconfined) {
-        writeTo(channel)
-    }.channel.readRemaining().readBytes().toNSData()
-    is OutgoingContent.ReadChannelContent -> readFrom().readRemaining().readBytes().toNSData()
+        writeTo(this)
+    }.readRemaining().toByteArray().toNSData()
+    is OutgoingContent.ReadChannelContent -> readFrom().readRemaining().toByteArray().toNSData()
     is OutgoingContent.NoContent -> null
     else -> throw UnsupportedContentTypeException(this)
 }

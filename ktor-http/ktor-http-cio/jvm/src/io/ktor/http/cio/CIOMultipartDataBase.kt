@@ -6,9 +6,9 @@ package io.ktor.http.cio
 
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.utils.io.*
-import io.ktor.utils.io.streams.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import java.io.*
@@ -74,66 +74,57 @@ public class CIOMultipartDataBase(
             val packet = part.body.readRemaining(formFieldLimit.toLong()) // TODO fail if limit exceeded
 
             try {
-                return PartData.FormItem(packet.readText(), { part.release() }, CIOHeaders(headers))
+                return PartData.FormItem(packet.readString(), { part.release() }, CIOHeaders(headers))
             } finally {
-                packet.release()
+                packet.close()
             }
         }
 
         // file upload
-        val buffer = ByteBuffer.allocate(inMemoryFileUploadLimit)
-        part.body.readAvailable(buffer)
+        TODO()
+//        val buffer = ByteBuffer.allocate(inMemoryFileUploadLimit)
+//        part.body.readAvailable(buffer)
 
-        val completeRead = if (buffer.remaining() > 0) {
-            part.body.readAvailable(buffer) == -1
-        } else false
+//        val completeRead = if (buffer.remaining() > 0) {
+//            part.body.readAvailable(buffer) == -1
+//        } else false
 
-        buffer.flip()
-
-        if (completeRead) {
-            val input = ByteArrayInputStream(buffer.array(), buffer.arrayOffset(), buffer.remaining()).asInput()
-            return PartData.FileItem({ input }, { part.release() }, CIOHeaders(headers))
-        }
-
-        @Suppress("BlockingMethodInNonBlockingContext")
-        val tmp = File.createTempFile("file-upload", ".tmp")
-
-        try {
-            FileOutputStream(tmp).use { stream ->
-                stream.channel.use { out ->
-                    out.truncate(0L)
-
-                    while (true) {
-                        while (buffer.hasRemaining()) {
-                            out.write(buffer)
-                        }
-                        buffer.clear()
-
-                        if (part.body.readAvailable(buffer) == -1) break
-                        buffer.flip()
-                    }
-                }
-            }
-        } catch (cause: Throwable) {
-            tmp.delete()
-            throw cause
-        }
-
-        var closed = false
-        val lazyInput = lazy {
-            if (closed) throw IllegalStateException("Already disposed")
-            FileInputStream(tmp).asInput()
-        }
-
-        return PartData.FileItem(
-            { lazyInput.value },
-            {
-                closed = true
-                if (lazyInput.isInitialized()) lazyInput.value.close()
-                part.release()
-                tmp.delete()
-            },
-            CIOHeaders(headers)
-        )
+//        try {
+//            FileOutputStream(tmp).use { stream ->
+//                stream.channel.use { out ->
+//                    out.truncate(0L)
+//
+//                    while (true) {
+//                        while (buffer.hasRemaining()) {
+//                            out.write(buffer)
+//                        }
+//                        buffer.clear()
+//
+//                        if (part.body.readAvailable(buffer) == -1) break
+//                        buffer.flip()
+//                    }
+//                }
+//            }
+//        } catch (cause: Throwable) {
+//            tmp.delete()
+//            throw cause
+//        }
+//
+//        var closed = false
+//        val lazyInput = lazy {
+//            if (closed) throw IllegalStateException("Already disposed")
+//            FileInputStream(tmp).asInput()
+//        }
+//
+//        return PartData.FileItem(
+//            { lazyInput.value },
+//            {
+//                closed = true
+//                if (lazyInput.isInitialized()) lazyInput.value.close()
+//                part.release()
+//                tmp.delete()
+//            },
+//            CIOHeaders(headers)
+//        )
     }
 }

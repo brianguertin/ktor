@@ -14,6 +14,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.client.tests.utils.*
 import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.serialization.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -125,7 +126,7 @@ abstract class AbstractClientContentNegotiationTest : TestWithKtor() {
             engine {
                 addHandler { request ->
                     respond(
-                        request.body.toByteReadPacket().readText(),
+                        request.body.toByteReadPacket().readString(),
                         headers = headersOf("X-ContentType", request.body.contentType.toString())
                     )
                 }

@@ -6,9 +6,11 @@ package io.ktor.server.testing
 
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.server.engine.*
 import io.ktor.server.request.*
 import io.ktor.server.testing.internal.*
+import io.ktor.util.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
@@ -84,7 +86,7 @@ public class TestApplicationRequest constructor(
     /**
      * Request body channel.
      */
-    var bodyChannel: ByteReadChannel = if (closeRequest) ByteReadChannel.Empty else ByteChannel()
+    var bodyChannel: ByteReadChannel = ByteReadChannel.Empty
 
     override val queryParameters: Parameters by lazy { encodeParameters(rawQueryParameters) }
 
@@ -132,10 +134,12 @@ public fun TestApplicationRequest.setBody(value: ByteArray) {
 }
 
 /**
- * Set HTTP request body from [DROP_ByteReadPacket]
+ * Set HTTP request body from [Packet]
  */
-public fun TestApplicationRequest.setBody(value: DROP_ByteReadPacket) {
-    bodyChannel = ByteReadChannel(value.readBytes())
+public fun TestApplicationRequest.setBody(value: Packet) {
+    bodyChannel = ByteReadChannel {
+        writePacket(value)
+    }
 }
 
 /**
@@ -156,13 +160,15 @@ public fun TestApplicationRequest.setBody(boundary: String, parts: List<PartData
                 append(
                     when (it) {
                         is PartData.FileItem -> {
-                            channel.writeFully(it.provider().readBytes())
+                            channel.writeByteArray(it.provider().toByteArray())
                             ""
                         }
+
                         is PartData.BinaryItem -> {
-                            channel.writeFully(it.provider().readBytes())
+                            channel.writeByteArray(it.provider().toByteArray())
                             ""
                         }
+
                         is PartData.FormItem -> it.value
                         is PartData.BinaryChannelItem -> {
                             it.provider().copyTo(channel)
@@ -177,7 +183,7 @@ public fun TestApplicationRequest.setBody(boundary: String, parts: List<PartData
         } finally {
             parts.forEach { it.dispose() }
         }
-    }.channel
+    }
 }
 
 /**
@@ -224,6 +230,6 @@ internal fun buildMultipart(
     }
 }.channel
 
-private suspend fun WriterScope.append(str: String, charset: Charset = Charsets.UTF_8) {
-    channel.writeFully(str.toByteArray(charset))
+private suspend fun ByteWriteChannel.append(str: String, charset: Charset = Charsets.UTF_8) {
+    channel.writeByteArray(str.toByteArray(charset))
 }

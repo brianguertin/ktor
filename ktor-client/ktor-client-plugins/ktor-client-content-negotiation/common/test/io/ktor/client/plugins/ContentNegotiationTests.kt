@@ -12,6 +12,7 @@ import io.ktor.client.statement.*
 import io.ktor.client.tests.utils.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.serialization.*
 import io.ktor.util.*
 import io.ktor.util.reflect.*
@@ -118,7 +119,7 @@ class ContentNegotiationTests {
             }
             engine {
                 addHandler {
-                    val text = (it.body as OutgoingContent.ReadChannelContent).readFrom().readRemaining().readText()
+                    val text = (it.body as OutgoingContent.ReadChannelContent).readFrom().readRemaining().readString()
                     respond(text)
                 }
             }

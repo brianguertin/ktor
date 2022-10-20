@@ -11,8 +11,11 @@ import io.ktor.client.statement.*
 import io.ktor.client.tests.utils.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
+import io.ktor.utils.io.*
 import java.io.*
 import kotlin.test.*
+import kotlin.text.toByteArray
 
 /*
  * Copyright 2014-2022 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.
@@ -25,7 +28,7 @@ class DefaultTransformJvmTest {
         config {
             engine {
                 addHandler {
-                    val text = (it.body as OutgoingContent.ReadChannelContent).readFrom().readRemaining().readText()
+                    val text = (it.body as OutgoingContent.ReadChannelContent).readFrom().readRemaining().readString()
                     respond(text)
                 }
             }

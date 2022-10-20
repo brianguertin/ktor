@@ -81,7 +81,7 @@ public interface AReadable {
      * Only one channel could be attached
      * @return a job that does supply data
      */
-    public fun attachForReading(channel: ByteChannel): WriterJob
+    public fun attachForReading(): ByteReadChannel
 }
 
 /**
@@ -93,25 +93,13 @@ public interface AWritable {
      * Only one channel could be attached
      * @return a job that does transmit data from the channel
      */
-    public fun attachForWriting(channel: ByteChannel): ReaderJob
+    public fun attachForWriting(): ByteWriteChannel
 }
 
 /**
  * Represents both readable and writable socket
  */
 public interface ReadWriteSocket : ASocket, AReadable, AWritable
-
-/**
- * Open a read channel, could be done only once
- */
-public fun AReadable.openReadChannel(): ByteReadChannel = ByteChannel(false).also { attachForReading(it) }
-
-/**
- * Open a write channel, could be opened only once
- * @param autoFlush whether returned channel do flush for every write operation
- */
-public fun AWritable.openWriteChannel(autoFlush: Boolean = false): ByteWriteChannel =
-    ByteChannel(autoFlush).also { attachForWriting(it) }
 
 /**
  * Represents a connected socket
@@ -138,4 +126,4 @@ public class Connection(
 /**
  * Opens socket input and output channels and returns connection object
  */
-public fun Socket.connection(): Connection = Connection(this, openReadChannel(), openWriteChannel())
+public fun Socket.connection(): Connection = Connection(this, attachForReading(), attachForWriting())

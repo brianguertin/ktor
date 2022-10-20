@@ -6,6 +6,7 @@ package io.ktor.client.plugins.json
 
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.util.reflect.*
 import io.ktor.utils.io.core.*
 
@@ -29,5 +30,5 @@ public interface JsonSerializer {
     /**
      * Read content from response using information specified in [type].
      */
-    public fun read(type: TypeInfo, body: DROP_Input): Any
+    public fun read(type: TypeInfo, body: Packet): Any
 }

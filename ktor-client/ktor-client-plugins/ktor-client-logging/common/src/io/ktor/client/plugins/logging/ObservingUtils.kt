@@ -11,21 +11,23 @@ import kotlinx.coroutines.*
 
 internal suspend fun OutgoingContent.observe(log: ByteWriteChannel): OutgoingContent = when (this) {
     is OutgoingContent.ByteArrayContent -> {
-        log.writeFully(bytes())
+        log.writeByteArray(bytes())
         log.close()
         this
     }
     is OutgoingContent.ReadChannelContent -> {
-        val responseChannel = ByteChannel()
         val content = readFrom()
 
-        content.copyToBoth(log, responseChannel)
+        val responseChannel = GlobalScope.writer(Dispatchers.Unconfined) {
+            content.copyToBoth(log, channel)
+        }
         LoggedContent(this, responseChannel)
     }
     is OutgoingContent.WriteChannelContent -> {
-        val responseChannel = ByteChannel()
         val content = toReadChannel()
-        content.copyToBoth(log, responseChannel)
+        val responseChannel = GlobalScope.writer(Dispatchers.Unconfined) {
+            content.copyToBoth(log, channel)
+        }
         LoggedContent(this, responseChannel)
     }
     else -> {
@@ -38,4 +40,4 @@ internal suspend fun OutgoingContent.observe(log: ByteWriteChannel): OutgoingCon
 private fun OutgoingContent.WriteChannelContent.toReadChannel(): ByteReadChannel =
     GlobalScope.writer(Dispatchers.Default) {
         writeTo(channel)
-    }.channel
+    }

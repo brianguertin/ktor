@@ -6,8 +6,8 @@ package io.ktor.http.content
 
 import io.ktor.http.*
 import io.ktor.http.content.PartData.*
+import io.ktor.io.*
 import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
 
 /**
  * Represents a multipart/form-data entry. Could be a [FormItem] or [FileItem]
@@ -27,7 +27,7 @@ public sealed class PartData(public val dispose: () -> Unit, public val headers:
      * @property provider of content bytes
      */
     public class FileItem(
-        public val provider: () -> DROP_Input,
+        public val provider: () -> ByteReadChannel,
         dispose: () -> Unit,
         partHeaders: Headers
     ) : PartData(dispose, partHeaders) {
@@ -42,7 +42,7 @@ public sealed class PartData(public val dispose: () -> Unit, public val headers:
      * @property provider of content bytes
      */
     public class BinaryItem(
-        public val provider: () -> DROP_Input,
+        public val provider: () -> Packet,
         dispose: () -> Unit,
         partHeaders: Headers
     ) : PartData(dispose, partHeaders)

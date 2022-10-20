@@ -5,6 +5,7 @@
 package io.ktor.http.content
 
 import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
 
@@ -17,7 +18,7 @@ public class TextContent(
     override val contentType: ContentType,
     override val status: HttpStatusCode? = null
 ) : OutgoingContent.ByteArrayContent() {
-    private val bytes = text.toByteArray(contentType.charset() ?: Charsets.UTF_8)
+    private val bytes = text.toByteArray(charset = contentType.charset() ?: Charsets.UTF_8)
 
     override val contentLength: Long
         get() = bytes.size.toLong()

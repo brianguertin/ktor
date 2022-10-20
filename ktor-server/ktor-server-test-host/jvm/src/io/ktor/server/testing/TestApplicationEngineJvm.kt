@@ -34,10 +34,10 @@ internal suspend fun TestApplicationEngine.handleWebSocketConversationNonBlockin
     awaitCallback: Boolean = true,
     callback: suspend TestApplicationCall.(incoming: ReceiveChannel<Frame>, outgoing: SendChannel<Frame>) -> Unit
 ): TestApplicationCall {
-    val websocketChannel = ByteChannel(true)
+//    val websocketChannel = ByteChannel(true)
     val call = createWebSocketCall(uri) {
         setup()
-        bodyChannel = websocketChannel
+        bodyChannel = TODO()
     }
 
     // we need this to wait for response channel appearance
@@ -69,7 +69,7 @@ internal suspend fun TestApplicationEngine.handleWebSocketConversationNonBlockin
         responseSent.join()
         processResponse(call)
 
-        val writer = WebSocketWriter(websocketChannel, webSocketContext, pool = pool)
+        val writer = WebSocketWriter(TODO(), webSocketContext, pool = pool)
         val responseChannel = call.response.websocketChannel()!!
         val reader = WebSocketReader(responseChannel, webSocketContext, Int.MAX_VALUE.toLong(), pool)
 

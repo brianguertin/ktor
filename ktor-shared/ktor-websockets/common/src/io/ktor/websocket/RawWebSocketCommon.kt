@@ -4,11 +4,13 @@
 
 package io.ktor.websocket
 
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.util.cio.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.bits.*
 import io.ktor.utils.io.core.*
+import io.ktor.utils.io.errors.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.*
@@ -61,9 +63,11 @@ internal class RawWebSocketCommon(
                     output.flush()
                     if (message is Frame.Close) break@mainLoop
                 }
+
                 is FlushRequest -> {
                     message.complete()
                 }
+
                 else -> throw IllegalArgumentException("unknown message $message")
             }
             _outgoing.close()
@@ -147,14 +151,7 @@ internal class RawWebSocketCommon(
     }
 }
 
-private fun DROP_ByteReadPacket.mask(maskKey: Int): DROP_ByteReadPacket = withMemory(4) { maskMemory ->
-    maskMemory.storeIntAt(0, maskKey)
-    buildPacket {
-        repeat(remaining.toInt()) { i ->
-            writeByte((readByte().toInt() xor (maskMemory[i % 4].toInt())).toByte())
-        }
-    }
-}
+private fun Packet.mask(maskKey: Int): Packet = TODO()
 
 /**
  * Serializes WebSocket [Frame] and writes the bits into the [ByteWriteChannel].
@@ -187,7 +184,8 @@ public suspend fun ByteWriteChannel.writeFrame(frame: Frame, masking: Boolean) {
         127 -> writeLong(length.toLong())
     }
 
-    val data = ByteReadPacket(frame.data)
+    val data = Packet()
+    data.writeByteArray(frame.data)
 
     val maskedData = when (masking) {
         true -> {
@@ -195,8 +193,10 @@ public suspend fun ByteWriteChannel.writeFrame(frame: Frame, masking: Boolean) {
             writeInt(maskKey)
             data.mask(maskKey)
         }
+
         false -> data
     }
+
     writePacket(maskedData)
 }
 
@@ -254,7 +254,7 @@ public suspend fun ByteReadChannel.readFrame(maxFrameSize: Long, lastOpcode: Int
     return Frame.byType(
         fin = fin,
         frameType = frameType,
-        data = maskedData.readBytes(),
+        data = maskedData.toByteArray(),
         rsv1 = flagsAndOpcode and 0x40 != 0,
         rsv2 = flagsAndOpcode and 0x20 != 0,
         rsv3 = flagsAndOpcode and 0x10 != 0

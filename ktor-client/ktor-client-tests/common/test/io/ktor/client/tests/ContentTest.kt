@@ -14,6 +14,7 @@ import io.ktor.client.tests.utils.*
 import io.ktor.client.utils.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
@@ -85,7 +86,7 @@ class ContentTest : ClientLoader(5 * 60) {
         test { client ->
             testArrays.forEach { content ->
                 val responseData = client.echo<ByteReadChannel>(content)
-                val data = responseData.readRemaining().readBytes()
+                val data = responseData.readRemaining().toByteArray()
                 assertArrayEquals(
                     "Test fail with size: ${content.size}, actual size: ${data.size}",
                     content,
@@ -171,7 +172,7 @@ class ContentTest : ClientLoader(5 * 60) {
             formData {
                 append("name", "hello")
                 append("content") {
-                    writeText("123456789")
+                    writeString("123456789")
                 }
                 append("file", "urlencoded_name.jpg") {
                     for (i in 1..4096) {

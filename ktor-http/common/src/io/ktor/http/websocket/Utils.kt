@@ -4,6 +4,7 @@
 
 package io.ktor.http.websocket
 
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
@@ -14,4 +15,4 @@ private const val WEBSOCKET_SERVER_ACCEPT_TAIL = "258EAFA5-E914-47DA-95CA-C5AB0D
  * Calculates `Sec-WebSocket-Accept` header value
  */
 public fun websocketServerAccept(nonce: String): String =
-    sha1("${nonce.trim()}$WEBSOCKET_SERVER_ACCEPT_TAIL".toByteArray(Charsets.ISO_8859_1)).encodeBase64()
+    sha1("${nonce.trim()}$WEBSOCKET_SERVER_ACCEPT_TAIL".toByteArray(charset = Charsets.ISO_8859_1)).encodeBase64()

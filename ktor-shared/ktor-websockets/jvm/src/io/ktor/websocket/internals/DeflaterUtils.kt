@@ -4,6 +4,7 @@
 
 package io.ktor.websocket.internals
 
+import io.ktor.io.*
 import io.ktor.util.cio.*
 import io.ktor.utils.io.core.*
 import io.ktor.utils.io.pool.*
@@ -26,59 +27,62 @@ internal fun Deflater.deflateFully(data: ByteArray): ByteArray {
         }
     }
 
-    if (deflatedBytes.endsWith(PADDED_EMPTY_CHUNK)) {
-        return deflatedBytes.readBytes(deflatedBytes.remaining.toInt() - EMPTY_CHUNK.size).also {
-            deflatedBytes.release()
-        }
-    }
+//    if (deflatedBytes.endsWith(PADDED_EMPTY_CHUNK)) {
+//        return deflatedBytes.readBytes(deflatedBytes.remaining.toInt() - EMPTY_CHUNK.size).also {
+//            deflatedBytes.release()
+//        }
+//    }
+    TODO()
 
-    return buildPacket {
-        writePacket(deflatedBytes)
-        writeByte(0)
-    }.readBytes()
+//    return buildPacket {
+//        writePacket(deflatedBytes)
+//        writeByte(0)
+//    }.readBytes()
 }
 
 internal fun Inflater.inflateFully(data: ByteArray): ByteArray {
-    val dataToInflate = data + EMPTY_CHUNK
-    setInput(dataToInflate)
-
-    val packet = buildPacket {
-        KtorDefaultPool.useInstance { buffer ->
-            val limit = dataToInflate.size + bytesRead
-            while (bytesRead < limit) {
-                buffer.clear()
-                val inflated = inflate(buffer.array(), buffer.position(), buffer.limit())
-                buffer.position(buffer.position() + inflated)
-                buffer.flip()
-
-                writeFully(buffer)
-            }
-        }
-    }
-
-    return packet.readBytes()
+    TODO()
+//    val dataToInflate = data + EMPTY_CHUNK
+//    setInput(dataToInflate)
+//
+//    val packet = buildPacket {
+//        KtorDefaultPool.useInstance { buffer ->
+//            val limit = dataToInflate.size + bytesRead
+//            while (bytesRead < limit) {
+//                buffer.clear()
+//                val inflated = inflate(buffer.array(), buffer.position(), buffer.limit())
+//                buffer.position(buffer.position() + inflated)
+//                buffer.flip()
+//
+//                writeFully(buffer)
+//            }
+//        }
+//    }
+//
+//    return packet.readBytes()
 }
 
-private fun DROP_BytePacketBuilder.deflateTo(
+private fun Packet.deflateTo(
     deflater: Deflater,
     buffer: ByteBuffer,
     flush: Boolean
 ): Int {
-    buffer.clear()
-
-    val deflated = if (flush) {
-        deflater.deflate(buffer.array(), buffer.position(), buffer.limit(), Deflater.SYNC_FLUSH)
-    } else {
-        deflater.deflate(buffer.array(), buffer.position(), buffer.limit())
-    }
-
-    if (deflated == 0) {
-        return 0
-    }
-
-    buffer.position(buffer.position() + deflated)
-    buffer.flip()
-    writeFully(buffer)
-
-    return deflated
+    TODO()
+//    buffer.clear()
+//
+//    val deflated = if (flush) {
+//        deflater.deflate(buffer.array(), buffer.position(), buffer.limit(), Deflater.SYNC_FLUSH)
+//    } else {
+//        deflater.deflate(buffer.array(), buffer.position(), buffer.limit())
+//    }
+//
+//    if (deflated == 0) {
+//        return 0
+//    }
+//
+//    buffer.position(buffer.position() + deflated)
+//    buffer.flip()
+//    writeFully(buffer)
+//
+//    return deflated
 }

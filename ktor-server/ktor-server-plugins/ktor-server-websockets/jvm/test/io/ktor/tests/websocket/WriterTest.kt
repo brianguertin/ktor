@@ -4,6 +4,7 @@
 
 package io.ktor.tests.websocket
 
+import io.ktor.io.*
 import io.ktor.util.cio.*
 import io.ktor.utils.io.*
 import io.ktor.websocket.*
@@ -15,7 +16,7 @@ import kotlin.test.*
 class WriterTest {
     @Test
     fun testWriteBigThenClose() = runBlocking {
-        val out = ByteChannel()
+        val out = ConflatedByteChannel()
         val writer = WebSocketWriter(out, coroutineContext)
 
         val body = ByteBuffer.allocate(65535)
@@ -37,7 +38,7 @@ class WriterTest {
 
     @Test
     fun testWriteDataAfterClose() = runBlocking {
-        val out = ByteChannel()
+        val out = ConflatedByteChannel()
         val writer = WebSocketWriter(out, coroutineContext)
 
         writer.send(Frame.Close(CloseReason(CloseReason.Codes.NORMAL, "")))

@@ -25,13 +25,14 @@ internal class ApacheResponseConsumer(
     override val coroutineContext: CoroutineContext = parentContext + consumerJob
 
     private val waiting = atomic(false)
-    private val channel = ByteChannel().also {
-        it.attachJob(consumerJob)
-    }
+//    private val channel  = ByteChannel().also {
+//        it.attachJob(consumerJob)
+//    }
 
     private val responseDeferred = CompletableDeferred<HttpResponse>()
 
-    val responseChannel: ByteReadChannel = channel
+    private val channel: ByteWriteChannel = TODO()
+    val responseChannel: ByteReadChannel = TODO()
 
     init {
         coroutineContext[Job]?.invokeOnCompletion(onCancelling = true) { cause ->
@@ -63,7 +64,7 @@ internal class ApacheResponseConsumer(
             launch(Dispatchers.Unconfined) {
                 check(!waiting.getAndSet(true))
                 try {
-                    channel.awaitFreeSpace()
+//                    channel.awaitFreeSpace()
                 } finally {
                     check(waiting.getAndSet(false))
                     interestController.resumeInputIfPossible()

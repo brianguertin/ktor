@@ -1,12 +1,12 @@
 package io.ktor.utils.io.charsets
 
+import io.ktor.io.*
+import io.ktor.utils.io.charsets.Charset
+import io.ktor.utils.io.charsets.Charsets
 import io.ktor.utils.io.core.*
-import io.ktor.utils.io.core.DROP_Buffer
 import io.ktor.utils.io.core.internal.*
 import java.nio.*
 import java.nio.charset.*
-
-private const val DECODE_CHAR_BUFFER_SIZE = 8192
 
 @Suppress("NO_ACTUAL_CLASS_MEMBER_FOR_EXPECTED_CLASS")
 public actual typealias Charset = java.nio.charset.Charset
@@ -40,282 +40,25 @@ private fun CharsetEncoder.encodeToByteArraySlow(input: CharSequence, fromIndex:
     return existingArray ?: ByteArray(result.remaining()).also { result.get(it) }
 }
 
-internal actual fun CharsetEncoder.encodeImpl(input: CharSequence, fromIndex: Int, toIndex: Int, dst: DROP_Buffer): Int {
-    val cb = CharBuffer.wrap(input, fromIndex, toIndex)
-    val before = cb.remaining()
-
-    dst.writeDirect(0) { bb ->
-        val result = encode(cb, bb, false)
-        if (result.isMalformed || result.isUnmappable) result.throwExceptionWrapped()
-    }
-
-    return before - cb.remaining()
-}
-
-public actual fun CharsetEncoder.encodeUTF8(input: DROP_ByteReadPacket, dst: DROP_Output) {
-    if (charset === Charsets.UTF_8) {
+public actual fun CharsetEncoder.encodeUTF8(input: Packet, dst: Packet) {
+    if (charset == Charsets.UTF_8) {
         dst.writePacket(input)
         return
     }
 
-    val tmp = DROP_ChunkBuffer.Pool.borrow()
-    var readSize = 1
-
-    try {
-        tmp.writeDirect(0) { tmpBb ->
-            val cb = tmpBb.asCharBuffer()
-
-            while (input.remaining > 0) {
-                cb.clear()
-
-                val chunk = input.prepareReadHead(readSize)
-                if (chunk == null) {
-                    if (readSize != 1) throw MalformedInputException("...")
-                    break
-                }
-
-                val rc = chunk.decodeUTF8 { ch ->
-                    if (cb.hasRemaining()) {
-                        cb.put(ch)
-                        true
-                    } else false
-                }
-
-                input.headPosition = chunk.readPosition
-
-                cb.flip()
-
-                var writeSize = 1
-                if (cb.hasRemaining()) {
-                    dst.writeWhileSize { view ->
-                        view.writeDirect(writeSize) { to ->
-                            val cr = encode(cb, to, false)
-                            if (cr.isUnmappable || cr.isMalformed) cr.throwExceptionWrapped()
-                            if (cr.isOverflow && to.hasRemaining()) writeSize++
-                            else writeSize = 1
-                        }
-                        if (cb.hasRemaining()) writeSize else 0
-                    }
-                }
-
-                if (rc > 0) {
-                    readSize = rc
-                    break
-                }
-            }
-
-            cb.clear()
-            cb.flip()
-
-            var completeSize = 1
-            dst.writeWhileSize { chunk ->
-                chunk.writeDirect(completeSize) { to ->
-                    val cr = encode(cb, to, true)
-                    if (cr.isMalformed || cr.isUnmappable) cr.throwExceptionWrapped()
-                    if (cr.isOverflow) completeSize++
-                    else completeSize = 0
-                }
-
-                completeSize
-            }
-        }
-    } finally {
-        tmp.release(DROP_ChunkBuffer.Pool)
-    }
+    TODO("Unsupported charset: $charset")
 }
-
-internal actual fun CharsetEncoder.encodeComplete(dst: DROP_Buffer): Boolean {
-    var completed = false
-
-    dst.writeDirect(0) { bb ->
-        val result = encode(EmptyCharBuffer, bb, true)
-        if (result.isMalformed || result.isUnmappable) result.throwExceptionWrapped()
-        if (result.isUnderflow) {
-            completed = true
-        }
-    }
-
-    return completed
-}
-
-internal actual fun CharsetDecoder.decodeBuffer(
-    input: DROP_Buffer,
-    out: Appendable,
-    lastBuffer: Boolean,
-    max: Int
-): Int {
-    var charactersCopied = 0
-    input.readDirect { bb ->
-        val tmpBuffer = DROP_ChunkBuffer.Pool.borrow()
-        val cb = tmpBuffer.memory.buffer.asCharBuffer()
-
-        try {
-            while (bb.hasRemaining() && charactersCopied < max) {
-                val partSize = minOf(cb.capacity(), max - charactersCopied)
-                cb.clear()
-                cb.limit(partSize)
-
-                val result = decode(bb, cb, lastBuffer)
-                if (result.isMalformed || result.isUnmappable) {
-                    result.throwExceptionWrapped()
-                }
-
-                charactersCopied += partSize
-            }
-        } finally {
-            tmpBuffer.release(DROP_ChunkBuffer.Pool)
-        }
-    }
-
-    return charactersCopied
-}
-
-// -----------------------
 
 public actual typealias CharsetDecoder = java.nio.charset.CharsetDecoder
 
 public actual val CharsetDecoder.charset: Charset get() = charset()!!
 
-public actual fun CharsetDecoder.decode(input: DROP_Input, dst: Appendable, max: Int): Int {
-    var copied = 0
-    val cb = CharBuffer.allocate(DECODE_CHAR_BUFFER_SIZE)
-
-    var readSize = 1
-
-    input.takeWhileSize { buffer: DROP_Buffer ->
-        val rem = max - copied
-        if (rem == 0) return@takeWhileSize 0
-
-        buffer.readDirect { bb: ByteBuffer ->
-            cb.clear()
-            if (rem < DECODE_CHAR_BUFFER_SIZE) {
-                cb.limit(rem)
-            }
-            val rc = decode(bb, cb, false)
-            cb.flip()
-            copied += cb.remaining()
-            dst.append(cb)
-
-            if (rc.isMalformed || rc.isUnmappable) rc.throwExceptionWrapped()
-            if (rc.isUnderflow && bb.hasRemaining()) {
-                readSize++
-            } else {
-                readSize = 1
-            }
-        }
-        readSize
-    }
-
-    while (true) {
-        cb.clear()
-        val rem = max - copied
-        if (rem == 0) break
-        if (rem < DECODE_CHAR_BUFFER_SIZE) {
-            cb.limit(rem)
-        }
-        val cr = decode(EmptyByteBuffer, cb, true)
-        cb.flip()
-        copied += cb.remaining()
-        dst.append(cb)
-
-        if (cr.isUnmappable || cr.isMalformed) cr.throwExceptionWrapped()
-        if (cr.isOverflow) continue
-        break
-    }
-
-    return copied
+public actual fun CharsetDecoder.decode(input: Packet, dst: Appendable, max: Int): Int {
+    TODO()
 }
 
-public actual fun CharsetDecoder.decodeExactBytes(input: DROP_Input, inputLength: Int): String {
-    if (inputLength == 0) return ""
-    if (input.headRemaining >= inputLength) {
-        // if we have a packet or a buffered input with the first head containing enough bytes
-        // then we can try fast-path
-        if (input.headMemory.buffer.hasArray()) {
-            // the most performant way is to use String ctor of ByteArray
-            // on JVM9+ with string compression enabled it will do System.arraycopy and lazy decoding that is blazing fast
-            // on older JVMs it is still the fastest way
-            val bb = input.headMemory.buffer
-            val text = String(
-                bb.array(),
-                bb.arrayOffset() + bb.position() + input.head.readPosition,
-                inputLength,
-                charset()
-            )
-
-            input.discardExact(inputLength)
-            return text
-        }
-
-        // the second fast-path is slower however it is still faster than general way
-        return decodeImplByteBuffer(input, inputLength)
-    }
-
-    return decodeImplSlow(input, inputLength)
-}
-
-private fun CharsetDecoder.decodeImplByteBuffer(input: DROP_Input, inputLength: Int): String {
-    val cb = CharBuffer.allocate(inputLength)
-    val bb = input.headMemory.slice(input.head.readPosition, inputLength).buffer
-
-    val rc = decode(bb, cb, true)
-    if (rc.isMalformed || rc.isUnmappable) rc.throwExceptionWrapped()
-    cb.flip()
-    input.discardExact(bb.position())
-    return cb.toString()
-}
-
-private fun CharsetDecoder.decodeImplSlow(input: DROP_Input, inputLength: Int): String {
-    val cb = CharBuffer.allocate(inputLength)
-    var remainingInputBytes = inputLength
-    var lastChunk = false
-
-    var readSize = 1
-
-    input.takeWhileSize { buffer: DROP_Buffer ->
-        if (!cb.hasRemaining() || remainingInputBytes == 0) return@takeWhileSize 0
-
-        buffer.readDirect { bb: ByteBuffer ->
-            val limitBefore = bb.limit()
-            val positionBefore = bb.position()
-
-            lastChunk = limitBefore - positionBefore >= remainingInputBytes
-
-            if (lastChunk) {
-                bb.limit(positionBefore + remainingInputBytes)
-            }
-            val rc = decode(bb, cb, lastChunk)
-
-            if (rc.isMalformed || rc.isUnmappable) rc.throwExceptionWrapped()
-            if (rc.isUnderflow && bb.hasRemaining()) {
-                readSize++
-            } else {
-                readSize = 1
-            }
-
-            bb.limit(limitBefore)
-            remainingInputBytes -= bb.position() - positionBefore
-        }
-        readSize
-    }
-
-    if (cb.hasRemaining() && !lastChunk) {
-        val rc = decode(EmptyByteBuffer, cb, true)
-
-        if (rc.isMalformed || rc.isUnmappable) rc.throwExceptionWrapped()
-    }
-
-    if (remainingInputBytes > 0) {
-        throw EOFException(
-            "Not enough bytes available: had only ${inputLength - remainingInputBytes} instead of $inputLength"
-        )
-    }
-    if (remainingInputBytes < 0) {
-        throw AssertionError("remainingInputBytes < 0")
-    }
-
-    cb.flip()
-    return cb.toString()
+public actual fun CharsetDecoder.decodeExactBytes(input: Packet, inputLength: Int): String {
+    TODO()
 }
 
 private fun CoderResult.throwExceptionWrapped() {
@@ -339,5 +82,30 @@ actual constructor(message: String) : java.nio.charset.MalformedInputException(0
         get() = _message
 }
 
-private val EmptyCharBuffer = CharBuffer.allocate(0)
-private val EmptyByteBuffer = ByteBuffer.allocate(0)!!
+internal actual fun CharsetEncoder.encodeImpl(
+    input: CharSequence,
+    fromIndex: Int,
+    toIndex: Int,
+    dst: Packet
+): Int {
+    if (charset == Charsets.UTF_8) {
+        val size = toIndex - fromIndex
+        dst.writeString(input, fromIndex, toIndex, charset)
+        return size
+    }
+
+    TODO("Unsupported charset: $charset")
+}
+
+internal actual fun CharsetEncoder.encodeComplete(dst: Packet): Boolean {
+    TODO("Not yet implemented")
+}
+
+internal actual fun CharsetDecoder.decodeBuffer(
+    input: Packet,
+    out: Appendable,
+    lastBuffer: Boolean,
+    max: Int
+): Int {
+    TODO()
+}

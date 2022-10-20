@@ -33,13 +33,11 @@ internal fun CoroutineScope.readBodyNode(response: Response): ByteReadChannel = 
 
     try {
         for (chunk in responseData) {
-            channel.writeFully(chunk)
+            channel.writeByteArray(chunk)
             body.resume()
         }
     } catch (cause: Throwable) {
         body.destroy(cause)
         throw cause
     }
-
-    Unit
-}.channel
+}

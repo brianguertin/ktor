@@ -4,8 +4,8 @@
 
 package io.ktor.network.tls.tests
 
+import io.ktor.io.*
 import io.ktor.network.tls.*
-import io.ktor.utils.io.core.*
 import kotlin.test.*
 
 class ClientCertificateRequestTest {
@@ -34,7 +34,7 @@ class ClientCertificateRequestTest {
             6, 10, 9, -110, 38, -119, -109, -14, 44, 100, 1, 25, 22, 5, 86, 87, 80, 75, 73, 49, 22, 48, 20, 6, 3,
             85, 4, 3, 19, 13, 86, 87, 45, 67, 65, 45, 82, 79, 79, 84, 45, 48, 53
         ).toByteArray()
-        val packet = ByteReadPacket(bytes)
+        val packet = Packet(bytes)
         val certInfo = readClientCertificateRequest(packet)
         assertEquals(5, certInfo.authorities.size)
     }

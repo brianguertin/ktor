@@ -68,8 +68,6 @@ public fun CoroutineScope.startServerConnectionPipeline(
                 break // end pipeline loop
             }
 
-            val response = ByteChannel()
-
             val transferEncoding = request.headers["Transfer-Encoding"]
             val upgrade = request.headers["Upgrade"]
             val contentType = request.headers["Content-Type"]
@@ -79,6 +77,9 @@ public fun CoroutineScope.startServerConnectionPipeline(
             val contentLength: Long
             val expectedHttpBody: Boolean
             val expectedHttpUpgrade: Boolean
+
+            val response: ByteReadChannel = TODO()
+            val responseW: ByteWriteChannel = TODO()
 
             try {
                 actorChannel.send(response)
@@ -109,13 +110,17 @@ public fun CoroutineScope.startServerConnectionPipeline(
                 expectedHttpUpgrade = !expectedHttpBody && expectHttpUpgrade(request.method, upgrade, connectionOptions)
             } catch (cause: Throwable) {
                 request.release()
-                response.writePacket(BadRequestPacket.copy())
-                response.close()
+                val response = ByteReadChannel {
+                    writePacket(BadRequestPacket.clone())
+                    close()
+                }
+
+                actorChannel.send(response)
                 break
             }
 
-            val requestBody = if (expectedHttpBody || expectedHttpUpgrade) {
-                ByteChannel(true)
+            val requestBody: ByteReadChannel = if (expectedHttpBody || expectedHttpUpgrade) {
+                TODO()
             } else {
                 ByteReadChannel.Empty
             }
@@ -126,7 +131,7 @@ public fun CoroutineScope.startServerConnectionPipeline(
                 val handlerScope = ServerRequestScope(
                     coroutineContext,
                     requestBody,
-                    response,
+                    responseW,
                     connection.remoteAddress,
                     connection.localAddress,
                     upgraded
@@ -135,23 +140,24 @@ public fun CoroutineScope.startServerConnectionPipeline(
                 try {
                     handler(handlerScope, request)
                 } catch (cause: Throwable) {
-                    response.close(cause)
+                    responseW.close(cause)
                     upgraded?.completeExceptionally(cause)
                 } finally {
-                    response.close()
+                    responseW.close()
                     upgraded?.complete(false)
                 }
             }
 
-            if (upgraded != null) {
-                if (upgraded.await()) { // suspend pipeline until we know if upgrade performed?
-                    actorChannel.close()
-                    connection.input.copyAndClose(requestBody as ByteChannel)
-                    break
-                } else if (!expectedHttpBody && requestBody is ByteChannel) { // not upgraded, for example 404
-                    requestBody.close()
-                }
-            }
+//            if (upgraded != null) {
+//                if (upgraded.await()) { // suspend pipeline until we know if upgrade performed?
+//                    actorChannel.close()
+//                    TODO()
+//                    connection.input.copyAndClose(requestBody as ByteChannel)
+//                    break
+//                } else if (!expectedHttpBody && requestBody is ByteChannel) { // not upgraded, for example 404
+//                    requestBody.close()
+//                }
+//            }
 
             if (expectedHttpBody && requestBody is ByteWriteChannel) {
                 try {
@@ -165,8 +171,8 @@ public fun CoroutineScope.startServerConnectionPipeline(
                     )
                 } catch (cause: Throwable) {
                     requestBody.close(ChannelReadException("Failed to read request body", cause))
-                    response.writePacket(BadRequestPacket.copy())
-                    response.close()
+                    responseW.writePacket(BadRequestPacket.clone())
+                    responseW.close()
                     break
                 } finally {
                     requestBody.close()
@@ -183,11 +189,11 @@ public fun CoroutineScope.startServerConnectionPipeline(
 }
 
 private suspend fun respondBadRequest(actorChannel: Channel<ByteReadChannel>) {
-    val bc = ByteChannel()
-    if (actorChannel.trySend(bc).isSuccess) {
-        bc.writePacket(BadRequestPacket.copy())
-        bc.close()
+    val response = ByteReadChannel {
+        writePacket(BadRequestPacket.clone())
     }
+
+    actorChannel.trySend(response)
     actorChannel.close()
 }
 
@@ -204,7 +210,7 @@ private suspend fun pipelineWriterLoop(
     while (true) {
         val child = timeout.withTimeout(receiveChildOrNull) ?: break
         try {
-            child.joinTo(connection.output, false)
+            child.copyTo(connection.output)
             connection.output.flush()
         } catch (cause: Throwable) {
             if (child is ByteWriteChannel) {

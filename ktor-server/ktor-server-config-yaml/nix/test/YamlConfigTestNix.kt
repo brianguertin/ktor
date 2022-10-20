@@ -80,7 +80,7 @@ class YamlConfigTestNix {
     @OptIn(UnsafeNumber::class)
     private fun writeFile(path: String, content: String) {
         val file = fopen(path, "w")
-        val bytes = content.toByteArray()
+        val bytes = content.encodeToByteArray()
         bytes.usePinned { pinned ->
             fwrite(pinned.addressOf(0), 1, bytes.size.convert(), file)
         }

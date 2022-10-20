@@ -7,6 +7,7 @@
 package io.ktor.tests.html
 
 import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.server.html.HtmlContent
 import io.ktor.utils.io.*
 import kotlinx.coroutines.*
@@ -25,7 +26,7 @@ class HtmlContentTest {
             }
         }
 
-        val channel = ByteChannel()
+        val channel = ConflatedByteChannel()
         var failed = false
         try {
             content.writeTo(channel)
@@ -38,7 +39,7 @@ class HtmlContentTest {
 
         var secondFail = false
         try {
-            channel.readRemaining().readText()
+            channel.readRemaining().readString()
         } catch (cause: Throwable) {
             cause.printStackTrace()
             secondFail = true

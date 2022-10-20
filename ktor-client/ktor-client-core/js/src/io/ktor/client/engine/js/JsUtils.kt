@@ -9,9 +9,9 @@ import io.ktor.client.engine.*
 import io.ktor.client.fetch.RequestInit
 import io.ktor.client.request.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import org.khronos.webgl.Uint8Array
 import org.w3c.fetch.*
@@ -29,11 +29,11 @@ internal suspend fun HttpRequestData.toRaw(
 
     val bodyBytes = when (val content = body) {
         is OutgoingContent.ByteArrayContent -> content.bytes()
-        is OutgoingContent.ReadChannelContent -> content.readFrom().readRemaining().readBytes()
+        is OutgoingContent.ReadChannelContent -> content.readFrom().readRemaining().toByteArray()
         is OutgoingContent.WriteChannelContent -> {
             GlobalScope.writer(callContext) {
                 content.writeTo(channel)
-            }.channel.readRemaining().readBytes()
+            }.readRemaining().toByteArray()
         }
         else -> null
     }

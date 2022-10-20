@@ -84,8 +84,7 @@ class IntegrationTest {
             }
 
             val chunked = encodeChunked(o, Dispatchers.Default)
-            input.copyAndClose(chunked.channel)
-            chunked.join()
+            input.copyAndClose(chunked)
         }
 
         val connection = url.openConnection(Proxy.NO_PROXY) as HttpURLConnection

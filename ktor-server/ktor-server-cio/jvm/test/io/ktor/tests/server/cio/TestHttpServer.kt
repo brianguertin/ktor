@@ -5,6 +5,7 @@
 package io.ktor.tests.server.cio
 
 import io.ktor.http.cio.*
+import io.ktor.io.*
 import io.ktor.network.util.*
 import io.ktor.server.cio.*
 import io.ktor.server.cio.backend.*
@@ -73,21 +74,16 @@ private suspend fun client(
     callDispatcher: CoroutineContext,
     handler: HttpRequestHandler
 ) {
-    val incoming = ByteChannel(true)
-    val outgoing = ByteChannel()
+    val incoming = ConflatedByteChannel()
+    val outgoing = ConflatedByteChannel()
 
     GlobalScope.launch(ioCoroutineContext) {
         val buffer = DefaultByteBufferPool.borrow()
 
         try {
-            while (true) {
-                buffer.clear()
-                val rc = outgoing.readAvailable(buffer)
-                if (rc == -1) break
-
-                buffer.flip()
+            while (!outgoing.isClosedForRead) {
+                val buffer = outgoing.readByteBuffer()
                 while (buffer.hasRemaining()) {
-                    @Suppress("BlockingMethodInNonBlockingContext")
                     socket.write(buffer)
                 }
             }
@@ -107,7 +103,7 @@ private suspend fun client(
                 if (rc == -1) break
 
                 buffer.flip()
-                incoming.writeFully(buffer)
+                incoming.writeByteBuffer(buffer)
             }
         } catch (t: Throwable) {
             incoming.close(t)

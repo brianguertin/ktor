@@ -6,6 +6,7 @@ package io.ktor.tests.server.cio
 
 import io.ktor.http.*
 import io.ktor.http.cio.*
+import io.ktor.io.*
 import io.ktor.server.cio.*
 import io.ktor.server.cio.backend.*
 import io.ktor.util.date.*
@@ -45,7 +46,7 @@ fun main() {
             try {
                 if (request.uri.length == 1 && request.uri[0] == '/' && request.method == HttpMethod.Get) {
                     val response = RequestResponseBuilder()
-                    response.responseLine(request.version, 200, "OK")
+                    response.responseLine(request.version.toString(), 200, "OK")
                     response.headerLine("Date", cachedDateText)
                     response.headerLine("Content-Length", HelloWorldLength)
                     response.headerLine("Content-Type", "text/plain; charset=utf-8")
@@ -54,7 +55,7 @@ fun main() {
                     response.bytes(HelloWorld)
                     output.writePacket(response.build())
                 } else {
-                    output.writePacket(notFound404_11.copy())
+                    output.writePacket(notFound404_11.clone())
                 }
 
                 output.close()

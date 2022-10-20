@@ -7,6 +7,7 @@ package io.ktor.server.testing.suites
 import io.ktor.http.*
 import io.ktor.http.cio.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.plugins.defaultheaders.*
@@ -15,7 +16,7 @@ import io.ktor.server.routing.*
 import io.ktor.server.testing.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
-import io.ktor.utils.io.streams.*
+import io.ktor.utils.io.writePacket
 import kotlinx.coroutines.*
 import java.net.*
 import java.nio.*
@@ -60,11 +61,10 @@ abstract class HttpServerJvmTestSuite<TEngine : ApplicationEngine, TConfiguratio
             }
 
             runBlocking {
-                val bb = ByteBuffer.allocate(1911)
-                s.getInputStream().readPacketAtLeast(1).readFully(bb)
+                val actual = s.getInputStream().reader().readLines().asSequence()
                 assertEquals(
                     pipelinedResponses,
-                    clearSocketResponses(String(bb.array()).lineSequence())
+                    clearSocketResponses(actual)
                 )
             }
         }
@@ -79,14 +79,12 @@ abstract class HttpServerJvmTestSuite<TEngine : ApplicationEngine, TConfiguratio
             post("/") {
                 val id = call.parameters["d"]!!.toInt()
 
-                val byteStream = ByteChannel(autoFlush = true)
-                launch(Dispatchers.Unconfined) {
+                val byteStream = ByteReadChannel {
                     if (id < 16 && processedRequests.incrementAndGet() == 15L) {
                         lastHandler.complete(Unit)
                     }
-                    byteStream.writePacket(call.request.receiveChannel().readRemaining())
-                    byteStream.writeStringUtf8("\n")
-                    byteStream.close(null)
+                    writePacket(call.request.receiveChannel().readRemaining())
+                    writeString("\n")
                 }
 
                 call.respond(object : OutgoingContent.ReadChannelContent() {
@@ -226,7 +224,7 @@ abstract class HttpServerJvmTestSuite<TEngine : ApplicationEngine, TConfiguratio
                                         bb.putLong(i)
                                     }
                                     bb.flip()
-                                    channel.writeFully(bb)
+                                    channel.writeByteBuffer(bb)
                                     channel.flush()
                                 }
 
@@ -241,13 +239,13 @@ abstract class HttpServerJvmTestSuite<TEngine : ApplicationEngine, TConfiguratio
         }
 
         socket {
-            outputStream.writePacket(
+            outputStream.write(
                 RequestResponseBuilder().apply {
                     requestLine(HttpMethod.Get, "/file", "HTTP/1.1")
                     headerLine("Host", "localhost:$port")
                     headerLine("Connection", "keep-alive")
                     emptyLine()
-                }.build()
+                }.build().toByteArray()
             )
 
             outputStream.flush()
@@ -280,7 +278,7 @@ abstract class HttpServerJvmTestSuite<TEngine : ApplicationEngine, TConfiguratio
                                         bb.putLong(i)
                                     }
                                     bb.flip()
-                                    channel.writeFully(bb)
+                                    channel.writeByteBuffer(bb)
                                     channel.flush()
                                 }
 
@@ -298,13 +296,13 @@ abstract class HttpServerJvmTestSuite<TEngine : ApplicationEngine, TConfiguratio
             // to ensure immediate RST at close it is very important to set SO_LINGER = 0
             setSoLinger(true, 0)
 
-            outputStream.writePacket(
+            outputStream.write(
                 RequestResponseBuilder().apply {
                     requestLine(HttpMethod.Get, "/file", "HTTP/1.1")
                     headerLine("Host", "localhost:$port")
                     headerLine("Connection", "keep-alive")
                     emptyLine()
-                }.build()
+                }.build().toByteArray()
             )
 
             outputStream.flush()
@@ -341,14 +339,15 @@ abstract class HttpServerJvmTestSuite<TEngine : ApplicationEngine, TConfiguratio
                         ): Job {
                             return launch(engineContext) {
                                 try {
-                                    val bb = ByteBuffer.allocate(8)
-                                    input.readFully(bb)
-                                    bb.flip()
-                                    output.writeFully(bb)
+                                    val packet = input.readRemaining()
+                                    assertEquals(8, packet.availableForRead)
+                                    output.writePacket(packet)
                                     output.close()
-                                    input.readRemaining().use {
-                                        assertEquals(0, it.remaining)
+
+                                    while (!input.isClosedForRead) {
+                                        assertEquals(0, input.readRemaining().availableForRead)
                                     }
+
                                     completed.complete(Unit)
                                 } catch (t: Throwable) {
                                     completed.completeExceptionally(t)
@@ -369,38 +368,30 @@ abstract class HttpServerJvmTestSuite<TEngine : ApplicationEngine, TConfiguratio
                     headerLine(HttpHeaders.Upgrade, "up")
                     headerLine(HttpHeaders.Connection, "upgrade")
                     emptyLine()
-                }.build()
-                writePacket(p)
+                }.build().toByteArray()
+                write(p)
                 flush()
             }
 
-            val ch = ByteChannel(true)
+            val ch = ByteReadChannel {
+                val s = inputStream
+                val bytes = ByteArray(512)
+                while (true) {
+                    if (s.available() > 0) {
+                        val rc = s.read(bytes)
+                        writeByteArray(bytes, 0, rc)
+                    } else {
+                        yield()
+                        val rc = s.read(bytes)
+                        if (rc == -1) break
+                        writeByteArray(bytes, 0, rc)
+                    }
+
+                    yield()
+                }
+            }
 
             runBlocking {
-                launch(coroutineContext) {
-                    val s = inputStream
-                    val bytes = ByteArray(512)
-                    try {
-                        while (true) {
-                            if (s.available() > 0) {
-                                val rc = s.read(bytes)
-                                ch.writeFully(bytes, 0, rc)
-                            } else {
-                                yield()
-                                val rc = s.read(bytes)
-                                if (rc == -1) break
-                                ch.writeFully(bytes, 0, rc)
-                            }
-
-                            yield()
-                        }
-                    } catch (t: Throwable) {
-                        ch.close(t)
-                    } finally {
-                        ch.close()
-                    }
-                }
-
                 val response = parseResponse(ch)!!
 
                 assertEquals(HttpStatusCode.SwitchingProtocols.value, response.status)
@@ -414,9 +405,9 @@ abstract class HttpServerJvmTestSuite<TEngine : ApplicationEngine, TConfiguratio
                     }
 
                 outputStream.apply {
-                    writePacket {
+                    write(buildPacket {
                         writeLong(0x1122334455667788L)
-                    }
+                    }.toByteArray())
                     flush()
                 }
 

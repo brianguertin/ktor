@@ -7,6 +7,7 @@ package io.ktor.server.testing
 import io.ktor.client.*
 import io.ktor.client.engine.*
 import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.response.*

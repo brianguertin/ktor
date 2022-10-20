@@ -8,7 +8,7 @@ import io.ktor.client.plugins.logging.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
 import io.ktor.client.tests.utils.*
-import io.ktor.utils.io.core.*
+import io.ktor.io.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.*
 import kotlin.test.*

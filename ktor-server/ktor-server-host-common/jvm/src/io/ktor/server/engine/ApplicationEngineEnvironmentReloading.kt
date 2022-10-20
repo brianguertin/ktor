@@ -7,6 +7,7 @@ package io.ktor.server.engine
 import io.ktor.events.*
 import io.ktor.events.EventDefinition
 import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.config.*
 import io.ktor.server.engine.internal.*
@@ -183,7 +184,7 @@ public class ApplicationEngineEnvironmentReloading(
             kotlin.jvm.functions.Function1::class.java, // kotlin-stdlib
             Logger::class.java, // slf4j
             ByteReadChannel::class.java,
-            DROP_Input::class.java, // kotlinx-io
+            Packet::class.java,
             Attributes::class.java
         ).mapNotNullTo(HashSet()) { it.protectionDomain.codeSource.location }
 

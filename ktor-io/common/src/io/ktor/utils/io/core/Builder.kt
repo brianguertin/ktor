@@ -1,32 +1,23 @@
 package io.ktor.utils.io.core
 
+import io.ktor.io.*
 import kotlin.contracts.*
-
-public expect val PACKET_MAX_COPY_SIZE: Int
 
 /**
  * Build a byte packet in [block] lambda. Creates a temporary builder and releases it in case of failure
  */
 @OptIn(ExperimentalContracts::class)
-public inline fun buildPacket(block: DROP_BytePacketBuilder.() -> Unit): DROP_ByteReadPacket {
+public inline fun buildPacket(block: Packet.() -> Unit): Packet {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
 
-    val builder = DROP_BytePacketBuilder()
+    val packet = Packet()
     try {
-        block(builder)
-        return builder.build()
-    } catch (t: Throwable) {
-        builder.release()
-        throw t
+        block(packet)
+        return packet
+    } catch (cause: Throwable) {
+        packet.close()
+        throw cause
     }
-}
-
-/**
- * Discard all written bytes and prepare to build another packet.
- */
-@Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-public fun DROP_BytePacketBuilder.reset() {
-    release()
 }

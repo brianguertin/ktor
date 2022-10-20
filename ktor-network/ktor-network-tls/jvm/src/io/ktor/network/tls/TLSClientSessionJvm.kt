@@ -4,6 +4,7 @@
 
 package io.ktor.network.tls
 
+import io.ktor.io.*
 import io.ktor.network.sockets.*
 import io.ktor.network.util.*
 import io.ktor.utils.io.*
@@ -37,13 +38,13 @@ private class TLSSocket(
     override val coroutineContext: CoroutineContext
 ) : CoroutineScope, Socket by socket {
 
-    override fun attachForReading(channel: ByteChannel): WriterJob =
-        writer(coroutineContext + CoroutineName("cio-tls-input-loop"), channel) {
+    override fun attachForReading(): ByteReadChannel =
+        writer(coroutineContext + CoroutineName("cio-tls-input-loop")) {
             appDataInputLoop(this.channel)
         }
 
-    override fun attachForWriting(channel: ByteChannel): ReaderJob =
-        reader(coroutineContext + CoroutineName("cio-tls-output-loop"), channel) {
+    override fun attachForWriting(): ByteWriteChannel =
+        reader(coroutineContext + CoroutineName("cio-tls-output-loop")) {
             appDataOutputLoop(this.channel)
         }
 
@@ -52,7 +53,7 @@ private class TLSSocket(
         try {
             input.consumeEach { record ->
                 val packet = record.packet
-                val length = packet.remaining
+                val length = packet.availableForRead
                 when (record.type) {
                     TLSRecordType.ApplicationData -> {
                         pipe.writePacket(record.packet)
@@ -69,18 +70,9 @@ private class TLSSocket(
 
     private suspend fun appDataOutputLoop(
         pipe: ByteReadChannel
-    ): Unit = DefaultByteBufferPool.useInstance { buffer: ByteBuffer ->
-        try {
-            while (true) {
-                buffer.clear()
-                val rc = pipe.readAvailable(buffer)
-                if (rc == -1) break
-
-                buffer.flip()
-                output.send(TLSRecord(TLSRecordType.ApplicationData, packet = buildPacket { writeFully(buffer) }))
-            }
-        } finally {
-            output.close()
+    ) {
+        while (pipe.availableForRead > 0 || pipe.awaitBytes()) {
+            output.send(TLSRecord(TLSRecordType.ApplicationData, packet = pipe.readablePacket.steal()))
         }
     }
 

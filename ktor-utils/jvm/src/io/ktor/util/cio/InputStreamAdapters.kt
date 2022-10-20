@@ -20,7 +20,7 @@ public fun InputStream.toByteReadChannel(
     pool: ObjectPool<ByteBuffer> = KtorDefaultPool,
     context: CoroutineContext = Dispatchers.Unconfined,
     parent: Job = Job()
-): ByteReadChannel = CoroutineScope(context).writer(parent, autoFlush = true) {
+): ByteReadChannel = CoroutineScope(context).writer(parent) {
     val buffer = pool.borrow()
     try {
         while (true) {
@@ -31,7 +31,7 @@ public fun InputStream.toByteReadChannel(
 
             buffer.position(buffer.position() + readCount)
             buffer.flip()
-            channel.writeFully(buffer)
+            channel.writeByteBuffer(buffer)
         }
     } catch (cause: Throwable) {
         channel.close(cause)
@@ -39,4 +39,4 @@ public fun InputStream.toByteReadChannel(
         pool.recycle(buffer)
         close()
     }
-}.channel
+}

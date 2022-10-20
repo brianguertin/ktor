@@ -13,6 +13,7 @@ import io.ktor.util.cio.*
 import io.ktor.util.date.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
+import io.ktor.utils.io.errors.*
 import io.ktor.utils.io.pool.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.CancellationException
@@ -101,34 +102,19 @@ internal actual class ConnectionPipeline actual constructor(
                         (status !in listOf(HttpStatusCode.NotModified, HttpStatusCode.NoContent)) &&
                         !status.isInformational()
 
-                    val responseChannel = if (hasBody) ByteChannel() else null
-
-                    var skipTask: Job? = null
-                    val body: ByteReadChannel = if (responseChannel != null) {
-                        val proxyChannel = ByteChannel()
-                        skipTask = skipCancels(responseChannel, proxyChannel)
-                        proxyChannel
-                    } else ByteReadChannel.Empty
-
-                    callJob.invokeOnCompletion {
-                        body.cancel()
-                    }
-
-                    val response = HttpResponseData(status, requestTime, headers, version, body, callContext)
-                    task.response.complete(response)
-
-                    responseChannel?.use {
+                    val body = GlobalScope.writer(Dispatchers.Unconfined) {
                         parseHttpBody(
                             version,
                             contentLength,
                             transferEncoding,
                             connectionType,
                             networkInput,
-                            this
+                            channel
                         )
-                    }
+                    }.skipCancels()
 
-                    skipTask?.join()
+                    val response = HttpResponseData(status, requestTime, headers, version, body, callContext)
+                    task.response.complete(response)
                 } catch (cause: Throwable) {
                     task.response.completeExceptionally(cause)
                 }
@@ -149,31 +135,5 @@ internal actual class ConnectionPipeline actual constructor(
     }
 }
 
-private fun CoroutineScope.skipCancels(
-    input: ByteReadChannel,
-    output: ByteWriteChannel
-): Job = launch {
-    try {
-        HttpClientDefaultPool.useInstance { buffer ->
-            while (true) {
-                buffer.clear()
-
-                val count = input.readAvailable(buffer)
-                if (count < 0) break
-
-                buffer.flip()
-                try {
-                    output.writeFully(buffer)
-                } catch (_: Throwable) {
-                    // Output channel has been canceled, discard remaining
-                    input.discard()
-                }
-            }
-        }
-    } catch (cause: Throwable) {
-        output.close(cause)
-        throw cause
-    } finally {
-        output.close()
-    }
-}
+private fun ByteReadChannel.skipCancels(
+): ByteReadChannel = TODO()

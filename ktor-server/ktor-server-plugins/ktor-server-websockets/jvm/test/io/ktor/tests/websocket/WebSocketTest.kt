@@ -4,6 +4,7 @@
 
 package io.ktor.tests.websocket
 
+import io.ktor.io.*
 import io.ktor.serialization.*
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
@@ -25,6 +26,7 @@ import java.time.*
 import java.util.*
 import java.util.concurrent.CancellationException
 import kotlin.test.*
+import kotlin.text.toByteArray
 
 @Suppress("DEPRECATION")
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -140,10 +142,10 @@ class WebSocketTest {
 
             handleWebSocket("/echo") {
                 bodyChannel = writer {
-                    channel.writeFully(sendBuffer.array())
+                    channel.writeByteArray(sendBuffer.array())
                     channel.flush()
                     conversation.join()
-                }.channel
+                }
             }.let {
                 runBlocking {
                     withTimeout(Duration.ofSeconds(10).toMillis()) {}
@@ -178,10 +180,10 @@ class WebSocketTest {
 
             handleWebSocket("/echo") {
                 bodyChannel = writer {
-                    channel.writeFully(sendBuffer.array())
+                    channel.writeByteArray(sendBuffer.array())
                     channel.flush()
                     conversation.join()
-                }.channel
+                }
             }.let {
                 runBlocking {
                     withTimeout(Duration.ofSeconds(10).toMillis()) {}
@@ -309,7 +311,7 @@ class WebSocketTest {
                     val channel = call.response.websocketChannel()!!
 
                     val parser = FrameParser()
-                    val content = channel.readRemaining().readBytes()
+                    val content = channel.readRemaining().toByteArray()
                     check(content.isNotEmpty()) { "Content it empty." }
 
                     val buffer = ByteBuffer.wrap(content)
@@ -358,10 +360,10 @@ class WebSocketTest {
 
             handleWebSocket("/") {
                 bodyChannel = writer {
-                    channel.writeFully(sendBuffer.moveToByteArray())
+                    channel.writeByteArray(sendBuffer.moveToByteArray())
                     channel.flush()
                     conversation.join()
-                }.channel
+                }
             }.let { call ->
                 runBlocking {
                     withTimeout(Duration.ofSeconds(10).toMillis()) {
@@ -464,8 +466,8 @@ class WebSocketTest {
             handleWebSocket("/") {
                 bodyChannel = writer {
                     started.join()
-                    channel.writeFully(sendBuffer)
-                }.channel
+                    channel.writeByteBuffer(sendBuffer)
+                }
             }.let { call ->
                 validateCloseWithBigFrame(call)
                 runBlocking {

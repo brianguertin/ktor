@@ -10,6 +10,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.application.hooks.*
 import io.ktor.server.engine.*
@@ -552,17 +553,16 @@ abstract class HttpServerCommonTestSuite<TEngine : ApplicationEngine, TConfigura
         createAndStartServer {
             route("/timed") {
                 post {
-                    val byteStream = ByteChannel(autoFlush = true)
                     launch(Dispatchers.Unconfined) {
-                        byteStream.writePacket(call.request.receiveChannel().readRemaining())
-                        byteStream.close(null)
                     }
                     call.respond(object : OutgoingContent.ReadChannelContent() {
                         override val status: HttpStatusCode = HttpStatusCode.OK
                         override val contentType: ContentType = ContentType.Text.Plain
                         override val headers: Headers = Headers.Empty
                         override val contentLength: Long = 5
-                        override fun readFrom() = byteStream
+                        override fun readFrom() = ByteReadChannel {
+                            writePacket(call.request.receiveChannel().readRemaining())
+                        }
                     })
                 }
             }
@@ -570,7 +570,7 @@ abstract class HttpServerCommonTestSuite<TEngine : ApplicationEngine, TConfigura
 
         runBlocking {
             val client = HttpClient()
-            val requestBody = ByteChannel(true)
+            val requestBody = ConflatedByteChannel()
 
             client.preparePost("http://127.0.0.1:$port/timed") {
                 setBody(requestBody)
@@ -582,10 +582,10 @@ abstract class HttpServerCommonTestSuite<TEngine : ApplicationEngine, TConfigura
                 assertEquals(0, channel.availableForRead)
 
                 val content = ByteArray(5) { it.toByte() }
-                requestBody.writeFully(content)
+                requestBody.writeByteArray(content)
                 requestBody.close(null)
 
-                assertContentEquals(channel.readRemaining().readBytes(), content)
+                assertContentEquals(channel.readRemaining().toByteArray(), content)
             }
             client.close()
         }

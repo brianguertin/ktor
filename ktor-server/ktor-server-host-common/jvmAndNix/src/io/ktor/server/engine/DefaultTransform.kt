@@ -6,6 +6,7 @@ package io.ktor.server.engine
 
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.http.content.*
 import io.ktor.server.plugins.*
@@ -113,14 +114,8 @@ internal suspend fun ByteReadChannel.readText(
     }
 
     return try {
-        if (charset == Charsets.UTF_8 || charset == Charsets.ISO_8859_1) {
-            content.readText()
-        } else {
-            content.readTextWithCustomCharset(charset)
-        }
+        content.readString(charset)
     } finally {
-        content.release()
+        content.close()
     }
 }
-
-internal expect fun DROP_ByteReadPacket.readTextWithCustomCharset(charset: Charset): String

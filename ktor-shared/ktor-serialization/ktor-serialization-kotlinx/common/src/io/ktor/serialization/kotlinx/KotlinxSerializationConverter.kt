@@ -6,6 +6,7 @@ package io.ktor.serialization.kotlinx
 
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.serialization.*
 import io.ktor.util.*
 import io.ktor.util.pipeline.*
@@ -79,10 +80,10 @@ public class KotlinxSerializationConverter(
 
         try {
             return when (format) {
-                is StringFormat -> format.decodeFromString(serializer, contentPacket.readText(charset))
-                is BinaryFormat -> format.decodeFromByteArray(serializer, contentPacket.readBytes())
+                is StringFormat -> format.decodeFromString(serializer, contentPacket.readString(charset))
+                is BinaryFormat -> format.decodeFromByteArray(serializer, contentPacket.toByteArray())
                 else -> {
-                    contentPacket.discard()
+                    contentPacket.close()
                     error("Unsupported format $format")
                 }
             }

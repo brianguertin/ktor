@@ -94,6 +94,10 @@ private fun CharSequence.parseDecLongWithCheck(): Long {
     return result
 }
 
+private fun hexNumberFormatException(s: CharSequence, idx: Int): Nothing {
+    throw NumberFormatException("Invalid HEX number: $s, wrong digit: ${s[idx]}")
+}
+
 internal suspend fun ByteWriteChannel.writeIntHex(value: Int) {
     require(value > 0) { "Does only work for positive numbers" } // zero is not included!
     var current = value
@@ -115,10 +119,6 @@ internal suspend fun ByteWriteChannel.writeIntHex(value: Int) {
         current = current shl 4
         writeByte(table[v])
     }
-}
-
-private fun hexNumberFormatException(s: CharSequence, idx: Int): Nothing {
-    throw NumberFormatException("Invalid HEX number: $s, wrong digit: ${s[idx]}")
 }
 
 private fun numberFormatException(cs: CharSequence, idx: Int) {

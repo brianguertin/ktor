@@ -23,6 +23,7 @@ import org.eclipse.jetty.http2.frames.*
 import org.eclipse.jetty.util.*
 import java.net.*
 import java.nio.*
+import java.nio.channels.*
 import kotlin.coroutines.*
 
 internal suspend fun HttpRequestData.executeRequest(
@@ -36,8 +37,8 @@ internal suspend fun HttpRequestData.executeRequest(
     } as HTTP2ClientSession
 
     val headersFrame = prepareHeadersFrame()
-    val responseChannel = ByteChannel()
-    val responseListener = JettyResponseListener(this, session, responseChannel, callContext)
+    val responseListener = JettyResponseListener(this, session, callContext)
+    val responseChannel = responseListener.response
 
     val jettyRequest = JettyHttp2Request(
         withPromise { promise ->
@@ -96,11 +97,13 @@ private fun sendRequestBody(request: JettyHttp2Request, content: OutgoingContent
             request.write(ByteBuffer.wrap(content.bytes()))
             request.endBody()
         }
+
         is OutgoingContent.ReadChannelContent -> writeRequest(content.readFrom(), request, callContext)
         is OutgoingContent.WriteChannelContent -> {
-            val source = GlobalScope.writer(callContext) { content.writeTo(channel) }.channel
+            val source = GlobalScope.writer(callContext) { content.writeTo(channel) }
             writeRequest(source, request, callContext)
         }
+
         is OutgoingContent.ProtocolUpgrade -> throw UnsupportedContentTypeException(content)
     }
 }
@@ -111,8 +114,6 @@ private fun writeRequest(
     request: JettyHttp2Request,
     callContext: CoroutineContext
 ): Job = GlobalScope.launch(callContext) {
-    HttpClientDefaultPool.useInstance { buffer ->
-        from.pass(buffer) { request.write(it) }
-        request.endBody()
-    }
+    from.pass { request.write(it) }
+    request.endBody()
 }

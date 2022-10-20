@@ -10,6 +10,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.http.cio.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.http.content.*
@@ -23,7 +24,6 @@ import io.ktor.util.*
 import io.ktor.util.cio.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.jvm.javaio.*
-import io.ktor.utils.io.streams.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.debug.*
 import org.junit.Assert.*
@@ -38,6 +38,7 @@ import java.util.concurrent.*
 import java.util.concurrent.atomic.*
 import kotlin.concurrent.*
 import kotlin.test.*
+import kotlin.text.toByteArray
 
 abstract class SustainabilityTestSuite<TEngine : ApplicationEngine, TConfiguration : ApplicationEngine.Configuration>(
     hostFactory: ApplicationEngineFactory<TEngine, TConfiguration>
@@ -115,7 +116,7 @@ abstract class SustainabilityTestSuite<TEngine : ApplicationEngine, TConfigurati
                         emptyLine()
                     }.build().use { request ->
                         repeat(repeatCount) {
-                            getOutputStream().writePacket(request.copy())
+                            getOutputStream().write(request.clone().toByteArray())
                             getOutputStream().write(body)
                             getOutputStream().flush()
                         }
@@ -190,7 +191,7 @@ abstract class SustainabilityTestSuite<TEngine : ApplicationEngine, TConfigurati
                                 }
 
                             override suspend fun writeTo(channel: ByteWriteChannel) {
-                                channel.writeFully(data)
+                                channel.writeByteArray(data)
                                 channel.close()
                             }
                         }
@@ -207,7 +208,7 @@ abstract class SustainabilityTestSuite<TEngine : ApplicationEngine, TConfigurati
                                 }
 
                             override suspend fun writeTo(channel: ByteWriteChannel) {
-                                channel.writeFully(data)
+                                channel.writeByteArray(data)
                                 channel.close()
                             }
                         }

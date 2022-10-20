@@ -36,29 +36,7 @@ public object JettyUpgradeImpl : ServletUpgrade {
 
         withContext(engineContext + CoroutineName("upgrade-scope")) {
             try {
-                coroutineScope {
-                    val inputChannel = ByteChannel(autoFlush = true)
-                    val reader = EndPointReader(endPoint, coroutineContext, inputChannel)
-                    val writer = endPointWriter(endPoint)
-                    val outputChannel = writer.channel
-
-                    servletRequest.setAttribute(HttpConnection.UPGRADE_CONNECTION_ATTRIBUTE, reader)
-                    if (endPoint is AbstractEndPoint) {
-                        endPoint.upgrade(reader)
-                    }
-                    val upgradeJob = upgrade.upgrade(
-                        inputChannel,
-                        outputChannel,
-                        coroutineContext,
-                        coroutineContext + userContext
-                    )
-
-                    upgradeJob.invokeOnCompletion {
-                        inputChannel.cancel()
-                        outputChannel.close()
-                        cancel()
-                    }
-                }
+                TODO()
             } finally {
                 connection.close()
             }

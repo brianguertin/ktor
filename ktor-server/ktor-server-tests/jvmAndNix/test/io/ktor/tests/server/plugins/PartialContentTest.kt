@@ -6,6 +6,7 @@ package io.ktor.tests.server.plugins
 
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.autohead.*
 import io.ktor.server.plugins.cachingheaders.*
@@ -25,7 +26,7 @@ class PartialContentTest {
     private val localPath = "plugins/StaticContentTest.kt"
     private val fileEtag = "etag-99"
     private val contentType = "Content-Type: application/octet-stream"
-    private val content = "test_string".repeat(100).toByteArray()
+    private val content = "test_string".repeat(100).encodeToByteArray()
     private val lastModifiedTime = getTimeMillis()
 
     private fun withRangeApplication(maxRangeCount: Int? = null, test: TestApplicationEngine.() -> Unit): Unit =

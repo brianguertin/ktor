@@ -121,7 +121,7 @@ public class TestHttpClientEngine(override val config: TestHttpClientConfig) : H
         is OutgoingContent.ReadChannelContent -> readFrom()
         is OutgoingContent.WriteChannelContent -> writer(coroutineContext) {
             writeTo(channel)
-        }.channel
+        }
         is OutgoingContent.ProtocolUpgrade -> throw UnsupportedContentTypeException(this)
     }
 }

@@ -4,6 +4,7 @@
 
 package io.ktor.client.statement
 
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
@@ -21,7 +22,7 @@ public suspend fun HttpResponse.readBytes(count: Int): ByteArray = ByteArray(cou
  * Otherwise, it just reads one byte.
  */
 @OptIn(InternalAPI::class)
-public suspend fun HttpResponse.readBytes(): ByteArray = content.readRemaining().readBytes()
+public suspend fun HttpResponse.readBytes(): ByteArray = content.readRemaining().toByteArray()
 
 /**
  * Efficiently discards the remaining bytes of [HttpResponse.content].

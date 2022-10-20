@@ -6,6 +6,7 @@ package io.ktor.client.request.forms
 
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
@@ -15,7 +16,7 @@ import kotlin.contracts.*
  * A multipart form item. Use it to build a form in client.
  *
  * @param key multipart name
- * @param value content, could be [String], [Number], [ByteArray], [DROP_ByteReadPacket] or [InputProvider]
+ * @param value content, could be [String], [Number], [ByteArray], [Packet] or [InputProvider]
  * @param headers part headers, note that some servers may fail if an unknown header provided
  */
 public data class FormPart<T : Any>(val key: String, val value: T, val headers: Headers = Headers.Empty)
@@ -40,11 +41,11 @@ public fun formData(vararg values: FormPart<*>): List<PartData> {
             is Boolean -> PartData.FormItem(value.toString(), {}, partHeaders.build())
             is ByteArray -> {
                 partHeaders.append(HttpHeaders.ContentLength, value.size.toString())
-                PartData.BinaryItem({ ByteReadPacket(value) }, {}, partHeaders.build())
+                PartData.BinaryItem({ Packet(value) }, {}, partHeaders.build())
             }
-            is DROP_ByteReadPacket -> {
-                partHeaders.append(HttpHeaders.ContentLength, value.remaining.toString())
-                PartData.BinaryItem({ value.copy() }, { value.close() }, partHeaders.build())
+            is Packet -> {
+                partHeaders.append(HttpHeaders.ContentLength, value.availableForRead.toString())
+                PartData.BinaryItem({ value.clone() }, { value.close() }, partHeaders.build())
             }
             is InputProvider -> {
                 val size = value.size
@@ -60,7 +61,6 @@ public fun formData(vararg values: FormPart<*>): List<PartData> {
                 }
                 PartData.BinaryChannelItem(value.block, partHeaders.build())
             }
-            is DROP_Input -> error("Can't use [Input] as part of form: $value. Consider using [InputProvider] instead.")
             else -> error("Unknown form content type: $value")
         }
 
@@ -128,14 +128,14 @@ public class FormBuilder internal constructor() {
     /**
      * Appends a pair [key]:[InputProvider(block)] with optional [headers].
      */
-    public fun appendInput(key: String, headers: Headers = Headers.Empty, size: Long? = null, block: () -> DROP_Input) {
+    public fun appendInput(key: String, headers: Headers = Headers.Empty, size: Long? = null, block: () -> Packet) {
         parts += FormPart(key, InputProvider(size, block), headers)
     }
 
     /**
      * Appends a pair [key]:[value] with optional [headers].
      */
-    public fun append(key: String, value: DROP_ByteReadPacket, headers: Headers = Headers.Empty) {
+    public fun append(key: String, value: Packet, headers: Headers = Headers.Empty) {
         parts += FormPart(key, value, headers)
     }
 
@@ -183,12 +183,12 @@ public inline fun FormBuilder.append(
     key: String,
     headers: Headers = Headers.Empty,
     size: Long? = null,
-    crossinline bodyBuilder: DROP_BytePacketBuilder.() -> Unit
+    crossinline bodyBuilder: Packet.() -> Unit
 ) {
     contract {
         callsInPlace(bodyBuilder, InvocationKind.EXACTLY_ONCE)
     }
-    append(FormPart(key, InputProvider(size) { buildPacket { bodyBuilder() } }, headers))
+    append(FormPart(key, InputProvider(size) { TODO() } , headers))
 }
 
 /**
@@ -197,7 +197,7 @@ public inline fun FormBuilder.append(
  * @property size estimate for data produced by the block or `null` if no size estimation known
  * @param block: content generator
  */
-public class InputProvider(public val size: Long? = null, public val block: () -> DROP_Input)
+public class InputProvider(public val size: Long? = null, public val block: () -> Packet)
 
 /**
  * Supplies a new [ByteReadChannel].
@@ -215,7 +215,7 @@ public fun FormBuilder.append(
     filename: String,
     contentType: ContentType? = null,
     size: Long? = null,
-    bodyBuilder: DROP_BytePacketBuilder.() -> Unit
+    bodyBuilder: Packet.() -> Unit
 ) {
     contract {
         callsInPlace(bodyBuilder, InvocationKind.EXACTLY_ONCE)

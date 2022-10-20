@@ -7,6 +7,7 @@ package io.ktor.client.engine.mock
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.util.date.*
 import io.ktor.utils.io.*
@@ -14,38 +15,30 @@ import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 
-@OptIn(DelicateCoroutinesApi::class)
 @Suppress("KDocMissingDocumentation")
 public suspend fun OutgoingContent.toByteArray(): ByteArray = when (this) {
     is OutgoingContent.ByteArrayContent -> bytes()
     is OutgoingContent.ReadChannelContent -> readFrom().toByteArray()
     is OutgoingContent.WriteChannelContent -> {
-        val channel = ByteChannel()
-        GlobalScope.launch(Dispatchers.Unconfined) {
-            writeTo(channel)
-            channel.close()
-        }
-        channel.toByteArray()
+        ByteReadChannel {
+            writeTo(this)
+        }.toByteArray()
     }
 
     else -> ByteArray(0)
 }
 
 @Suppress("KDocMissingDocumentation")
-@OptIn(DelicateCoroutinesApi::class)
-public suspend fun OutgoingContent.toByteReadPacket(): DROP_ByteReadPacket = when (this) {
-    is OutgoingContent.ByteArrayContent -> ByteReadPacket(bytes())
+public suspend fun OutgoingContent.toByteReadPacket(): Packet = when (this) {
+    is OutgoingContent.ByteArrayContent -> Packet(bytes())
     is OutgoingContent.ReadChannelContent -> readFrom().readRemaining()
     is OutgoingContent.WriteChannelContent -> {
-        val channel = ByteChannel()
-        GlobalScope.launch(Dispatchers.Unconfined) {
-            writeTo(channel)
-            channel.close()
-        }
-        channel.readRemaining()
+        ByteReadChannel {
+            writeTo(this)
+        }.readRemaining()
     }
 
-    else -> DROP_ByteReadPacket.Empty
+    else -> Packet.Empty
 }
 
 /**

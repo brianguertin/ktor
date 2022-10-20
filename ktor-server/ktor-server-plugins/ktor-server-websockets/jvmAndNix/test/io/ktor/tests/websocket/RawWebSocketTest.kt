@@ -4,6 +4,7 @@
 
 package io.ktor.tests.websocket
 
+import io.ktor.io.*
 import io.ktor.server.testing.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.charsets.*
@@ -19,8 +20,8 @@ import kotlin.test.*
 @OptIn(ExperimentalCoroutinesApi::class)
 class RawWebSocketTest : BaseTest() {
     private lateinit var parent: CompletableJob
-    private lateinit var client2server: ByteChannel
-    private lateinit var server2client: ByteChannel
+    private lateinit var client2server: ConflatedByteChannel
+    private lateinit var server2client: ConflatedByteChannel
 
     private lateinit var server: WebSocketSession
 
@@ -35,8 +36,8 @@ class RawWebSocketTest : BaseTest() {
     @BeforeTest
     fun prepare() {
         parent = Job()
-        client2server = ByteChannel()
-        server2client = ByteChannel()
+        client2server = ConflatedByteChannel()
+        server2client = ConflatedByteChannel()
 
         server = RawWebSocket(client2server, server2client, coroutineContext = parent + exceptionHandler)
         client = RawWebSocket(server2client, client2server, coroutineContext = parent + exceptionHandler)

@@ -15,20 +15,6 @@ internal fun ByteReadChannel.observable(
     context: CoroutineContext,
     contentLength: Long?,
     listener: ProgressListener
-) = GlobalScope.writer(context, autoFlush = true) {
-    ByteArrayPool.useInstance { byteArray ->
-        val total = contentLength ?: -1
-        var bytesSend = 0L
-        while (!this@observable.isClosedForRead) {
-            val read = this@observable.readAvailable(byteArray)
-            channel.writeFully(byteArray, offset = 0, length = read)
-            bytesSend += read
-            listener(bytesSend, total)
-        }
-        val closedCause = this@observable.closedCause
-        channel.close(closedCause)
-        if (closedCause == null && bytesSend == 0L) {
-            listener(bytesSend, total)
-        }
-    }
-}.channel
+): ByteReadChannel = GlobalScope.writer(context) {
+    TODO()
+}

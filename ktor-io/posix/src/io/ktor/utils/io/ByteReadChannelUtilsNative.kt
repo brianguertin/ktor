@@ -4,7 +4,6 @@
 
 package io.ktor.utils.io
 
-import io.ktor.utils.io.core.*
 import kotlinx.cinterop.*
 
 /**
@@ -12,23 +11,7 @@ import kotlinx.cinterop.*
  * Suspends if not enough bytes available.
  */
 public suspend fun ByteReadChannel.readFully(dst: CPointer<ByteVar>, offset: Int, length: Int) {
-    check(this is ByteChannelNative)
-    require(offset >= 0L)
-    require(length >= 0L)
-
-    return when {
-        closedCause != null -> throw closedCause!!
-        readable.remaining >= length -> {
-            val size = tryReadCPointer(dst, offset.toLong(), length.toLong())
-            afterRead(size)
-        }
-
-        closed -> throw EOFException(
-            "Channel is closed and not enough bytes available: required $length but $availableForRead available"
-        )
-
-        else -> readFullySuspend(dst, offset.toLong(), length.toLong())
-    }
+    TODO()
 }
 
 /**
@@ -52,23 +35,5 @@ public suspend fun ByteReadChannel.readAvailable(dst: CPointer<ByteVar>, offset:
  * @return number of bytes were read or `-1` if the channel has been closed
  */
 public suspend fun ByteReadChannel.readAvailable(dst: CPointer<ByteVar>, offset: Long, length: Long): Int {
-    check(this is ByteChannelNative)
-    require(offset >= 0L)
-    require(length >= 0L)
-    closedCause?.let { throw it }
-    if (closed && availableForRead == 0) return -1
-
-    if (length == 0L) return 0
-
-    if (availableForRead == 0) {
-        awaitSuspend(1)
-    }
-
-    if (!readable.canRead()) {
-        prepareFlushedBytes()
-    }
-
-    val size = tryReadCPointer(dst, offset, length)
-    afterRead(size)
-    return size
+    TODO()
 }

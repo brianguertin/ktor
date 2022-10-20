@@ -9,6 +9,7 @@ package io.ktor.client.plugins.kotlinx.serializer
 import io.ktor.client.plugins.json.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.util.reflect.*
 import io.ktor.utils.io.core.*
 import kotlinx.serialization.*
@@ -35,8 +36,8 @@ public class KotlinxSerializer(
         json.encodeToString(buildSerializer(data, json.serializersModule), data)
 
     @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
-    override fun read(type: TypeInfo, body: DROP_Input): Any {
-        val text = body.readText()
+    override fun read(type: TypeInfo, body: Packet): Any {
+        val text = body.readString()
         val deserializationStrategy = json.serializersModule.getContextual(type.type)
         val mapper = deserializationStrategy ?: (type.kotlinType?.let { serializer(it) } ?: type.type.serializer())
         return json.decodeFromString(mapper, text)!!

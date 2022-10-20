@@ -4,6 +4,7 @@
 
 package io.ktor.io
 
+import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
 
 public interface ReadableBuffer : Closeable {
@@ -34,7 +35,6 @@ public interface ReadableBuffer : Closeable {
      * @throws IndexOutOfBoundsException if [index + 1] is greater [capacity].
      */
     public fun getByteAt(index: Int): Byte
-
 
     /**
      * Reads [Byte] from the buffer at [readIndex].
@@ -133,7 +133,6 @@ public interface ReadableBuffer : Closeable {
         return Long(highInt, lowInt)
     }
 
-
     /**
      * Reads [Long] from the buffer at [readIndex].
      *
@@ -147,6 +146,16 @@ public interface ReadableBuffer : Closeable {
         return result
     }
 
+    public fun readString(charset: Charset = Charsets.UTF_8): String
+
+    public fun readBuffer(size: Int = availableForRead): ReadableBuffer
+
+    public fun readByteArray(size: Int): ByteArray
+
+    public fun toByteArray(): ByteArray
+
+    public fun clone(): ReadableBuffer
+
     public companion object {
         /**
          * The empty buffer.
@@ -154,7 +163,6 @@ public interface ReadableBuffer : Closeable {
         public val Empty: ReadableBuffer = EmptyBuffer
     }
 }
-
 
 /**
  * Check if the Buffer has [count] bytes to read.

@@ -71,7 +71,7 @@ class ServerSocketTest : CoroutineScope {
     @Test
     fun testRead() {
         val server = server { client ->
-            assertEquals("123", client.openReadChannel().readUTF8Line())
+            assertEquals("123", client.attachForReading().readString())
         }
 
         client { socket ->
@@ -89,8 +89,8 @@ class ServerSocketTest : CoroutineScope {
     @Test
     fun testWrite() {
         val server = server { client ->
-            val channel = client.openWriteChannel(true)
-            channel.writeStringUtf8("123")
+            val channel = client.attachForWriting()
+            channel.writeString("123")
         }
 
         client { socket ->

@@ -8,14 +8,16 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.util.date.*
+import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import kotlin.collections.*
 
 @OptIn(InternalAPI::class)
 internal suspend fun HttpCacheEntry(isShared: Boolean, response: HttpResponse): HttpCacheEntry {
-    val body = response.content.readRemaining().readBytes()
+    val body = response.content.readRemaining().toByteArray()
     response.complete()
     return HttpCacheEntry(response.cacheExpires(isShared), response.varyKeys(), response, body)
 }

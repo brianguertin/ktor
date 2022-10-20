@@ -6,6 +6,8 @@ package io.ktor.client.engine.cio
 
 import io.ktor.client.*
 import io.ktor.client.plugins.websocket.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import kotlinx.coroutines.*
 import kotlin.test.*
 
@@ -17,6 +19,17 @@ class BuildersTest {
             HttpClient(CIO).ws("http://localhost") {}
         } catch (_: Throwable) {
             // no op
+        }
+    }
+
+    @Test
+    fun testGetGoogle() = runBlocking {
+        HttpClient(CIO) {
+            followRedirects = false
+        }.use {
+            val data = it.get("https://www.baeldung.com/java-filechannel")
+            val message = data.bodyAsText()
+            println(message)
         }
     }
 }

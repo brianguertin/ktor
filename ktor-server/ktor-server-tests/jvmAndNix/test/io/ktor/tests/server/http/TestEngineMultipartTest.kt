@@ -6,6 +6,7 @@ package io.ktor.tests.server.http
 
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.testing.*
@@ -36,8 +37,8 @@ class TestEngineMultipartTest {
         val bytes = ByteArray(256) { it.toByte() }
         testMultiPartsFileItemBase(
             filename = "file.bin",
-            provider = { buildPacket { writeFully(bytes) } },
-            extraFileAssertions = { file -> assertEquals(hex(bytes), hex(file.provider().readBytes())) }
+            provider = { ByteReadChannel(bytes) },
+            extraFileAssertions = { file -> assertEquals(hex(bytes), hex(file.provider().toByteArray())) }
         )
     }
 
@@ -46,8 +47,8 @@ class TestEngineMultipartTest {
         val string = "file content with unicode 🌀 : здороваться : 여보세요 : 你好 : ñç"
         testMultiPartsFileItemBase(
             filename = "file.txt",
-            provider = { buildPacket { writeFully(string.toByteArray()) } },
-            extraFileAssertions = { file -> assertEquals(string, file.provider().readText()) }
+            provider = { ByteReadChannel(string.toByteArray()) },
+            extraFileAssertions = { file -> assertEquals(string, file.provider().readString()) }
         )
     }
 
@@ -65,7 +66,7 @@ class TestEngineMultipartTest {
 
                 assertEquals("fileField", file.name)
                 assertEquals("file.bin", file.originalFileName)
-                assertEquals(hex(bytes), hex(file.provider().readBytes()))
+                assertEquals(hex(bytes), hex(file.provider().toByteArray()))
 
                 file.dispose()
             },
@@ -75,7 +76,7 @@ class TestEngineMultipartTest {
                     boundary,
                     listOf(
                         PartData.FileItem(
-                            provider = { runBlocking { ByteReadChannel(bytes).readRemaining() } },
+                            provider = { ByteReadChannel(bytes) },
                             dispose = {},
                             partHeaders = headersOf(
                                 HttpHeaders.ContentDisposition,
@@ -124,8 +125,8 @@ class TestEngineMultipartTest {
 
     private fun testMultiPartsFileItemBase(
         filename: String,
-        provider: () -> DROP_Input,
-        extraFileAssertions: (file: PartData.FileItem) -> Unit
+        provider: () -> ByteReadChannel,
+        extraFileAssertions: suspend (file: PartData.FileItem) -> Unit
     ) {
         testMultiParts(
             {

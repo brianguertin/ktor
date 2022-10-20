@@ -11,6 +11,7 @@ import com.fasterxml.jackson.module.kotlin.*
 import io.ktor.client.plugins.json.JsonSerializer
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.util.reflect.*
 import io.ktor.utils.io.core.*
 
@@ -26,7 +27,7 @@ public class JacksonSerializer(
     override fun write(data: Any, contentType: ContentType): OutgoingContent =
         TextContent(backend.writeValueAsString(data), contentType)
 
-    override fun read(type: TypeInfo, body: DROP_Input): Any {
-        return backend.readValue(body.readText(), backend.typeFactory.constructType(type.reifiedType))
+    override fun read(type: TypeInfo, body: Packet): Any {
+        return backend.readValue(body.readString(), backend.typeFactory.constructType(type.reifiedType))
     }
 }

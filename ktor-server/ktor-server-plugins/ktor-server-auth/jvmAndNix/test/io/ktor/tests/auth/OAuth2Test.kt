@@ -13,6 +13,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.http.auth.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
@@ -28,6 +29,7 @@ import kotlinx.coroutines.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 import kotlin.test.*
+import kotlin.text.toByteArray
 
 @Suppress("DEPRECATION")
 class OAuth2Test {
@@ -76,6 +78,33 @@ class OAuth2Test {
         clientId = "clientId1",
         clientSecret = "clientSecret1",
         requestMethod = HttpMethod.Post
+    )
+
+    private fun DefaultSettingsWithAccessTokenInterceptor(post: Boolean) = OAuthServerSettings.OAuth2ServerSettings(
+        name = "oauth2",
+        authorizeUrl = "https://login-server-com/authorize",
+        accessTokenUrl = "https://login-server-com/oauth/access_token",
+        clientId = "clientId1",
+        clientSecret = "clientSecret1",
+        requestMethod = when (post) {
+            false -> HttpMethod.Get
+            true -> HttpMethod.Post
+        },
+        accessTokenInterceptor = {
+            url.parameters.remove("state")
+
+            if (method == HttpMethod.Post) {
+                setBody(
+                    runBlocking {
+                        val query = parseQueryString((body as OutgoingContent).toByteReadPacket().readString())
+                        val filtered = ParametersBuilder().apply {
+                            appendFiltered(query) { key, _ -> key != "state" }
+                        }.build()
+                        TextContent(filtered.formUrlEncode(), ContentType.Application.FormUrlEncoded)
+                    }
+                )
+            }
+        }
     )
 
     private val testClient = createOAuth2Server(

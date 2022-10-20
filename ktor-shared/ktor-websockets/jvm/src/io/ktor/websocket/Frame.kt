@@ -4,10 +4,12 @@
 
 package io.ktor.websocket
 
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import java.nio.*
+import kotlin.text.toByteArray
 
 /**
  * A frame received or ready to be sent. It is not reusable and not thread-safe
@@ -47,7 +49,7 @@ public actual sealed class Frame actual constructor(
 
         public actual constructor(fin: Boolean, data: ByteArray) : this(fin, data, false, false, false)
 
-        public actual constructor(fin: Boolean, packet: DROP_ByteReadPacket) : this(fin, packet.readBytes())
+        public actual constructor(fin: Boolean, packet: Packet) : this(fin, packet.toByteArray())
     }
 
     /**
@@ -70,7 +72,7 @@ public actual sealed class Frame actual constructor(
 
         public actual constructor(text: String) : this(true, text.toByteArray())
 
-        public actual constructor(fin: Boolean, packet: DROP_ByteReadPacket) : this(fin, packet.readBytes())
+        public actual constructor(fin: Boolean, packet: Packet) : this(fin, packet.toByteArray())
 
         public constructor(fin: Boolean, buffer: ByteBuffer) : this(fin, buffer.moveToByteArray())
     }
@@ -86,11 +88,11 @@ public actual sealed class Frame actual constructor(
         public actual constructor(reason: CloseReason) : this(
             buildPacket {
                 writeShort(reason.code)
-                writeText(reason.message)
+                writeString(reason.message)
             }
         )
 
-        public actual constructor(packet: DROP_ByteReadPacket) : this(packet.readBytes())
+        public actual constructor(packet: Packet) : this(packet.toByteArray())
         public actual constructor() : this(Empty)
 
         public constructor(buffer: ByteBuffer) : this(buffer.moveToByteArray())
@@ -103,7 +105,7 @@ public actual sealed class Frame actual constructor(
     public actual class Ping actual constructor(
         data: ByteArray
     ) : Frame(true, FrameType.PING, data, NonDisposableHandle, false, false, false) {
-        public actual constructor(packet: DROP_ByteReadPacket) : this(packet.readBytes())
+        public actual constructor(packet: Packet) : this(packet.toByteArray())
         public constructor(buffer: ByteBuffer) : this(buffer.moveToByteArray())
     }
 
@@ -115,7 +117,7 @@ public actual sealed class Frame actual constructor(
         data: ByteArray,
         disposableHandle: DisposableHandle
     ) : Frame(true, FrameType.PONG, data, disposableHandle, false, false, false) {
-        public actual constructor(packet: DROP_ByteReadPacket) : this(packet.readBytes(), NonDisposableHandle)
+        public actual constructor(packet: Packet) : this(packet.toByteArray(), NonDisposableHandle)
         public constructor(
             buffer: ByteBuffer,
             disposableHandle: DisposableHandle = NonDisposableHandle

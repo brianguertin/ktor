@@ -13,6 +13,7 @@ import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.client.tests.utils.*
 import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.*
@@ -291,7 +292,7 @@ class LoggingTest : ClientLoader() {
                 url("$TEST_SERVER/content/echo")
             }.body<ByteReadChannel>()
             assertNotNull(response)
-            assertEquals("test", response.readRemaining().readText())
+            assertEquals("test", response.readRemaining().readString())
         }
 
         after {
@@ -412,10 +413,8 @@ class LoggingTest : ClientLoader() {
         }
 
         test { client ->
-            val body = ByteChannel()
-            GlobalScope.launch {
-                body.writeFully(ByteArray(16 * 1024) { 1 })
-                body.close()
+            val body = ByteReadChannel {
+                writeByteArray(ByteArray(16 * 1024) { 1 })
             }
 
             val response = client.prepareRequest {

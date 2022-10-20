@@ -10,6 +10,7 @@ import io.ktor.server.netty.http1.*
 import io.ktor.util.*
 import io.ktor.util.cio.*
 import io.ktor.utils.io.*
+import io.netty.buffer.Unpooled
 import io.netty.channel.*
 import io.netty.handler.codec.http.*
 import io.netty.handler.codec.http2.*
@@ -269,13 +270,8 @@ internal class NettyHttpResponsePipeline constructor(
         response: NettyApplicationResponse,
         size: Int
     ) {
-        val buffer = context.alloc().buffer(size)
         val channel = response.responseChannel
-        val start = buffer.writerIndex()
-
-        channel.readFully(buffer.nioBuffer(start, buffer.writableBytes()))
-        buffer.writerIndex(start + size)
-
+        val buffer = Unpooled.wrappedBuffer(channel.readByteBuffer())
         val future = context.write(call.prepareMessage(buffer, true))
         isDataNotFlushed.compareAndSet(expect = false, update = true)
 

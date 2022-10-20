@@ -49,9 +49,9 @@ internal class ApacheRequestProducer(
         is OutgoingContent.ProtocolUpgrade -> throw UnsupportedContentTypeException(body)
         is OutgoingContent.NoContent -> ByteReadChannel.Empty
         is OutgoingContent.ReadChannelContent -> body.readFrom()
-        is OutgoingContent.WriteChannelContent -> GlobalScope.writer(callContext, autoFlush = true) {
+        is OutgoingContent.WriteChannelContent -> GlobalScope.writer(callContext) {
             body.writeTo(channel)
-        }.channel
+        }
     }
 
     init {
@@ -99,7 +99,7 @@ internal class ApacheRequestProducer(
             interestController.suspendOutput(ioctrl)
             launch(Dispatchers.Unconfined) {
                 try {
-                    channel.awaitContent()
+                    channel.awaitBytes()
                 } finally {
                     interestController.resumeOutputIfPossible()
                 }

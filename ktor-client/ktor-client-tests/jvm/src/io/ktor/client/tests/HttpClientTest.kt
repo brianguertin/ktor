@@ -121,12 +121,13 @@ abstract class HttpClientTest(private val factory: HttpClientEngineFactory<*>) :
     @Test
     fun testErrorInWritingPropagates() = testSuspend {
         val client = HttpClient(factory)
-        val channel = ByteChannel(true)
-        channel.writeAvailable("text".toByteArray())
-        channel.close(SendException())
+
         assertFailsWith<SendException>("Error on write") {
             client.post("http://localhost:$serverPort/echo") {
-                setBody(channel)
+                setBody(ByteReadChannel {
+                    writeString("text")
+                    close(SendException())
+                })
             }.body<String>()
         }
     }

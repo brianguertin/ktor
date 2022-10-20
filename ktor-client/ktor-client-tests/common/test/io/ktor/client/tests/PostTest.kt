@@ -44,9 +44,9 @@ class PostTest : ClientLoader() {
                 setBody(
                     object : OutgoingContent.WriteChannelContent() {
                         override suspend fun writeTo(channel: ByteWriteChannel) {
-                            channel.writeStringUtf8(content)
+                            channel.writeString(content)
                             delay(1000)
-                            channel.writeStringUtf8(content)
+                            channel.writeString(content)
                             channel.close()
                         }
                     }

@@ -6,6 +6,7 @@ package io.ktor.server.request
 
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.application.internal.*
 import io.ktor.server.plugins.*
@@ -169,7 +170,7 @@ public suspend inline fun ApplicationCall.receiveText(): String {
     } catch (cause: BadContentTypeFormatException) {
         throw BadRequestException("Illegal Content-Type format: ${request.headers[HttpHeaders.ContentType]}", cause)
     }
-    return receiveChannel().readRemaining().readText(charset)
+    return receiveChannel().readRemaining().readString(charset)
 }
 
 /**

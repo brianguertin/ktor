@@ -31,14 +31,14 @@ internal class DarwinTaskHandler(
     private val body: ByteReadChannel = GlobalScope.writer(callContext) {
         try {
             bodyChunks.consumeEach {
-                channel.writeFully(it)
+                channel.writeByteArray(it)
                 channel.flush()
             }
         } catch (cause: CancellationException) {
             bodyChunks.cancel(cause)
             throw cause
         }
-    }.channel
+    }
 
     fun receiveData(dataTask: NSURLSessionDataTask, data: NSData) {
         if (!response.isCompleted) {

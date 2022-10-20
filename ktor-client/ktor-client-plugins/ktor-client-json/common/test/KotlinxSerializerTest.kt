@@ -12,6 +12,7 @@ import io.ktor.client.request.forms.*
 import io.ktor.client.tests.utils.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.utils.io.core.*
 import kotlinx.serialization.*
 import kotlin.test.*
@@ -55,7 +56,7 @@ class KotlinxSerializerTest : ClientLoader() {
             formData {
                 append("name", "hello")
                 append("content") {
-                    writeText("123456789")
+                    writeString("123456789")
                 }
                 append("file", "urlencoded_name.jpg") {
                     for (i in 1..4096) {

@@ -12,7 +12,6 @@ import io.ktor.client.statement.*
 import io.ktor.client.tests.utils.*
 import io.ktor.http.*
 import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import kotlin.test.*
 
@@ -214,7 +213,7 @@ class HttpTimeoutTest : ClientLoader() {
             }.body<ByteReadChannel>()
 
             assertFailsWith<HttpRequestTimeoutException> {
-                response.readUTF8Line()
+                response.readLine()
             }
         }
     }
@@ -233,7 +232,7 @@ class HttpTimeoutTest : ClientLoader() {
                 timeout { requestTimeoutMillis = 1000 }
             }.body<ByteReadChannel>()
             assertFailsWith<HttpRequestTimeoutException> {
-                response.readUTF8Line()
+                response.readLine()
             }
         }
     }
@@ -250,7 +249,7 @@ class HttpTimeoutTest : ClientLoader() {
                 timeout { requestTimeoutMillis = 1000 }
             }.body<ByteReadChannel>()
             assertFailsWith<HttpRequestTimeoutException> {
-                response.readUTF8Line()
+                response.readLine()
             }
             val result = client.get("$TEST_URL/with-delay?delay=1") {
                 timeout { requestTimeoutMillis = 10000 }
@@ -270,7 +269,7 @@ class HttpTimeoutTest : ClientLoader() {
                 parameter("delay", 10)
             }.body<ByteArray>()
 
-            assertEquals("Text", String(response))
+            assertEquals("Text", response.decodeToString())
         }
     }
 
@@ -287,7 +286,7 @@ class HttpTimeoutTest : ClientLoader() {
                 timeout { requestTimeoutMillis = 1000 }
             }.body<ByteArray>()
 
-            assertEquals("Text", String(response))
+            assertEquals("Text", response.decodeToString())
         }
     }
 

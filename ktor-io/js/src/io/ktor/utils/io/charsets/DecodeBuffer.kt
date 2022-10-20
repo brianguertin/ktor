@@ -24,47 +24,5 @@ internal fun Int8Array.decodeBufferImpl(nativeDecoder: Decoder, maxCharacters: I
     } catch (_: dynamic) {
     }
 
-    return decodeBufferImplSlow(nativeDecoder, maxCharacters)
-}
-
-private fun Int8Array.decodeBufferImplSlow(nativeDecoder: Decoder, maxCharacters: Int): DecodeBufferResult {
-    val maxBytes = when {
-        maxCharacters >= MAX_CHARACTERS_COUNT -> Int.MAX_VALUE
-        else -> maxCharacters * MAX_CHARACTERS_SIZE_IN_BYTES
-    }.coerceAtMost(byteLength)
-
-    var sizeInBytes = maxBytes
-    while (sizeInBytes > MAX_CHARACTERS_SIZE_IN_BYTES) {
-        try {
-            val text = nativeDecoder.decode(subarray(0, sizeInBytes))
-            if (text.length <= maxCharacters) {
-                return DecodeBufferResult(text, sizeInBytes)
-            }
-        } catch (_: dynamic) {
-        }
-
-        sizeInBytes /= 2
-    }
-
-    sizeInBytes = MAX_CHARACTERS_SIZE_IN_BYTES
-    while (sizeInBytes > 0) {
-        try {
-            val text = nativeDecoder.decode(subarray(0, sizeInBytes))
-            if (text.length <= maxCharacters) {
-                return DecodeBufferResult(text, sizeInBytes)
-            }
-        } catch (_: dynamic) {
-        }
-
-        sizeInBytes--
-    }
-
-    // all attempts were failed so most likely we have a broken character but we can't find it for some reason
-    // so the following decode most likely will fail
-    decodeWrap {
-        nativeDecoder.decode(this)
-    }
-
-    // if it didn't for some reason we have no idea what to do
-    throw MalformedInputException("Unable to decode buffer")
+    TODO()
 }

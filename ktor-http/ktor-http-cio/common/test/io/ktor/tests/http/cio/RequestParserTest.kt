@@ -6,8 +6,8 @@ package io.ktor.tests.http.cio
 
 import io.ktor.http.*
 import io.ktor.http.cio.*
+import io.ktor.io.*
 import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
 import kotlin.test.*
 
 class RequestParserTest {
@@ -65,7 +65,7 @@ class RequestParserTest {
     @Test
     fun testParseGetRoot() = test {
         val requestText = "GET / HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n"
-        val ch = ByteReadChannel(requestText.toByteArray())
+        val ch = ByteReadChannel(requestText)
 
         val request = parseRequest(ch)
         assertNotNull(request)

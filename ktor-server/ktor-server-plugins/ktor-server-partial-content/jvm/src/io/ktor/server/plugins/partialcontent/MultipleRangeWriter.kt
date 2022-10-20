@@ -20,17 +20,17 @@ internal actual fun CoroutineScope.writeMultipleRangesImpl(
     fullLength: Long?,
     boundary: String,
     contentType: String
-): ByteReadChannel = writer(Dispatchers.Unconfined, autoFlush = true) {
+): ByteReadChannel = writer(Dispatchers.Unconfined) {
     for (range in ranges) {
         val current = channelProducer(range)
         channel.writeHeaders(range, boundary, contentType, fullLength)
         current.copyTo(channel)
-        channel.writeFully(NEWLINE)
+        channel.writeByteArray(NEWLINE)
     }
 
-    channel.writeFully("--$boundary--".toByteArray(Charsets.ISO_8859_1))
-    channel.writeFully(NEWLINE)
-}.channel
+    channel.writeByteArray("--$boundary--".toByteArray(Charsets.ISO_8859_1))
+    channel.writeByteArray(NEWLINE)
+}
 
 private suspend fun ByteWriteChannel.writeHeaders(
     range: LongRange,
@@ -58,7 +58,7 @@ private suspend fun ByteWriteChannel.writeHeaders(
         append("\r\n")
     }.toByteArray(Charsets.ISO_8859_1)
 
-    writeFully(headers)
+    writeByteArray(headers)
 }
 
 internal actual fun calculateMultipleRangesBodyLength(

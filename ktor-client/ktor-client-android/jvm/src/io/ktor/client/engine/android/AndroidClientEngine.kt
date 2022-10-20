@@ -126,7 +126,7 @@ internal suspend fun OutgoingContent.writeTo(
         is OutgoingContent.WriteChannelContent -> {
             val channel = GlobalScope.writer(callContext) {
                 writeTo(channel)
-            }.channel
+            }
 
             channel.copyTo(blockingOutput)
         }

@@ -4,6 +4,7 @@
 
 package io.ktor.utils.io.js
 
+import io.ktor.io.*
 import io.ktor.utils.io.core.*
 import org.khronos.webgl.*
 
@@ -54,7 +55,7 @@ internal class TextDecoderFallback(
 
             if (point < 0) {
                 check(!fatal) { "Invalid character: $point" }
-                writeFully(REPLACEMENT)
+                writeByteArray(REPLACEMENT)
                 continue
             }
 
@@ -64,7 +65,7 @@ internal class TextDecoderFallback(
 
             writeByte((point and 0xFF).toByte())
         }
-    }.readBytes().decodeToString()
+    }.toByteArray().decodeToString()
 
     override fun decode(buffer: ArrayBufferView, options: dynamic): String {
         return decode(buffer)

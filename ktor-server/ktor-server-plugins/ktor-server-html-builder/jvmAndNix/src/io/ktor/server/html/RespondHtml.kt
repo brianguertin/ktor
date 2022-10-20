@@ -6,6 +6,7 @@ package io.ktor.server.html
 
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.utils.io.*
@@ -42,8 +43,9 @@ public class HtmlContent(
     override suspend fun writeTo(channel: ByteWriteChannel) {
         val content = buildPacket {
             try {
-                append("<!DOCTYPE html>\n")
-                appendHTML().html(block = builder)
+                writeString("<!DOCTYPE html>\n")
+                TODO()
+//                appendHTML().html(block = builder)
             } catch (cause: Throwable) {
                 channel.close(cause)
                 throw cause

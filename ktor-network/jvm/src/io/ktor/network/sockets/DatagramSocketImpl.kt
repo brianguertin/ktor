@@ -4,6 +4,7 @@
 
 package io.ktor.network.sockets
 
+import io.ktor.io.*
 import io.ktor.network.selector.*
 import io.ktor.network.util.*
 import io.ktor.utils.io.core.*
@@ -78,7 +79,7 @@ internal class DatagramSocketImpl(
 
         interestOp(SelectInterest.READ, false)
         buffer.flip()
-        val datagram = Datagram(buildPacket { writeFully(buffer) }, address.toSocketAddress())
+        val datagram = Datagram(buildPacket { TODO() }, address.toSocketAddress())
         DefaultDatagramByteBufferPool.recycle(buffer)
         return datagram
     }
@@ -96,7 +97,7 @@ internal class DatagramSocketImpl(
 
         interestOp(SelectInterest.READ, false)
         buffer.flip()
-        val datagram = Datagram(buildPacket { writeFully(buffer) }, address.toSocketAddress())
+        val datagram = Datagram(buildPacket { TODO() }, address.toSocketAddress())
         DefaultDatagramByteBufferPool.recycle(buffer)
         return datagram
     }

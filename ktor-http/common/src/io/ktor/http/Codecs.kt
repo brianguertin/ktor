@@ -3,6 +3,7 @@
 */
 package io.ktor.http
 
+import io.ktor.io.*
 import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
 
@@ -51,11 +52,13 @@ public fun String.encodeURLQueryComponent(
     charset: Charset = Charsets.UTF_8
 ): String = buildString {
     val content = charset.newEncoder().encode(this@encodeURLQueryComponent)
-    content.forEach {
+    val encoded = content.readString()
+    encoded.forEach {
+        val code = it.code.toByte()
         when {
-            it == ' '.code.toByte() -> if (spaceToPlus) append('+') else append("%20")
-            it in URL_ALPHABET || (!encodeFull && it in URL_PROTOCOL_PART) -> append(it.toInt().toChar())
-            else -> append(it.percentEncode())
+            it == ' ' -> if (spaceToPlus) append('+') else append("%20")
+            code in URL_ALPHABET || (!encodeFull && code in URL_PROTOCOL_PART) -> append(it)
+            else -> append(code.percentEncode())
         }
     }
 }
@@ -97,9 +100,9 @@ internal fun String.encodeURLPath(encodeSlash: Boolean): String = buildString {
 
         val symbolSize = if (current.isSurrogate()) 2 else 1
         // we need to call newEncoder() for every symbol, otherwise it won't work
-        charset.newEncoder().encode(this@encodeURLPath, index, index + symbolSize).forEach {
-            append(it.percentEncode())
-        }
+//        charset.newEncoder().encode(this@encodeURLPath, index, index + symbolSize).forEach {
+//            append(it.percentEncode())
+//        }
         index += symbolSize
     }
 }
@@ -117,13 +120,13 @@ public fun String.encodeURLParameter(
     spaceToPlus: Boolean = false
 ): String = buildString {
     val content = Charsets.UTF_8.newEncoder().encode(this@encodeURLParameter)
-    content.forEach {
-        when {
-            it in URL_ALPHABET || it in SPECIAL_SYMBOLS -> append(it.toInt().toChar())
-            spaceToPlus && it == ' '.code.toByte() -> append('+')
-            else -> append(it.percentEncode())
-        }
-    }
+//    content.forEach {
+//        when {
+//            it in URL_ALPHABET || it in SPECIAL_SYMBOLS -> append(it.toInt().toChar())
+//            spaceToPlus && it == ' '.code.toByte() -> append('+')
+//            else -> append(it.percentEncode())
+//        }
+//    }
 }
 
 internal fun String.percentEncode(allowedSet: Set<Char>): String {
@@ -277,13 +280,4 @@ private fun charToHexDigit(c2: Char) = when (c2) {
 private fun hexDigitToChar(digit: Int): Char = when (digit) {
     in 0..9 -> '0' + digit
     else -> 'A' + digit - 10
-}
-
-private fun DROP_ByteReadPacket.forEach(block: (Byte) -> Unit) {
-    takeWhile { buffer ->
-        while (buffer.canRead()) {
-            block(buffer.readByte())
-        }
-        true
-    }
 }

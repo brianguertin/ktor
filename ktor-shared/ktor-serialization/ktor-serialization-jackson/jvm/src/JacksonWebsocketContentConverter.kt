@@ -7,6 +7,7 @@ package io.ktor.serialization.jackson
 import com.fasterxml.jackson.core.*
 import com.fasterxml.jackson.databind.*
 import com.fasterxml.jackson.module.kotlin.*
+import io.ktor.io.*
 import io.ktor.serialization.*
 import io.ktor.util.reflect.*
 import io.ktor.utils.io.charsets.*
@@ -15,6 +16,7 @@ import io.ktor.utils.io.jvm.javaio.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.*
 import java.io.*
+import kotlin.text.toByteArray
 
 /**
  * A jackson converter for the [WebSockets] plugin
@@ -33,7 +35,7 @@ public class JacksonWebsocketContentConverter(
         }
         try {
             return withContext(Dispatchers.IO) {
-                val data = charset.newDecoder().decode(buildPacket { writeFully(content.readBytes()) })
+                val data = charset.newDecoder().decode(buildPacket { writeByteArray(content.readBytes()) })
                 objectmapper.readValue(data, objectmapper.constructType(typeInfo.reifiedType))
             }
         } catch (deserializeFailure: Exception) {
