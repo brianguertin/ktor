@@ -18,11 +18,11 @@ import kotlin.coroutines.*
  */
 public fun File.readChannel(
     start: Long = 0,
-    endInclusive: Long = -1,
-    coroutineContext: CoroutineContext = Dispatchers.IO
+    endInclusive: Long = -1
 ): ByteReadChannel {
     val fileLength = length()
-    require(start < endInclusive)
+    require(start >= 0)
+    require(endInclusive == -1L || start < endInclusive)
     require(endInclusive == -1L || endInclusive < fileLength)
 
     val endIndex = if (endInclusive < 0) fileLength else endInclusive + 1

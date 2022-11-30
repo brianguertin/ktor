@@ -75,7 +75,7 @@ public fun Packet.encodeBase64(): String = toByteArray().encodeBase64()
 /**
  * Decode [String] from base64 format encoded in UTF-8.
  */
-public fun String.decodeBase64String(charset: Charset = Charsets.UTF_8): String = TODO() // String(decodeBase64Bytes())
+public fun String.decodeBase64String(charset: Charset = Charsets.UTF_8): String = String(decodeBase64Bytes())
 
 /**
  * Decode [String] from base64 format
@@ -87,21 +87,36 @@ public fun String.decodeBase64Bytes(): ByteArray = buildPacket {
 /**
  * Decode [Packet] from base64 format
  */
-public fun Packet.decodeBase64Bytes(): Packet = buildPacket {
-    val data = ByteArray(4)
+public fun Packet.decodeBase64Bytes(): Packet {
+    val result = Packet()
+    while (availableForRead >= 4) {
+        val first = readByte().fromBase64().toInt()
+        val second = readByte().fromBase64().toInt()
+        val third = readByte().fromBase64().toInt()
+        val fourth = readByte().fromBase64().toInt()
 
-    while (availableForRead > 0) {
-        val read: Int = TODO() //readAvailable(data)
-
-        val chunk = data.foldIndexed(0) { index, result, current ->
-            result or (current.fromBase64().toInt() shl ((3 - index) * 6))
-        }
-
-        for (index in data.size - 2 downTo (data.size - read)) {
-            val origin = (chunk shr (8 * index)) and 0xff
-            writeByte(origin.toByte())
-        }
+        result.writeByte(((first shl 2) or (second shr 4)).toByte())
+        result.writeByte(((second shl 4) or (third shr 2)).toByte())
+        result.writeByte(((third shl 6) or fourth).toByte())
     }
+    if (this@decodeBase64Bytes.availableForRead == 3) {
+        val first = readByte().fromBase64().toInt()
+        val second = readByte().fromBase64().toInt()
+        val third = readByte().fromBase64().toInt()
+
+        result.writeByte(((first shl 2) or (second shr 4)).toByte())
+        result.writeByte(((second shl 4) or (third shr 2)).toByte())
+    }
+    if (this@decodeBase64Bytes.availableForRead == 2) {
+        val first = readByte().fromBase64().toInt()
+        val second = readByte().fromBase64().toInt()
+
+        result.writeByte(((first shl 2) or (second shr 4)).toByte())
+    }
+    if (this@decodeBase64Bytes.availableForRead == 1) {
+        error("Invalid base64 string")
+    }
+    return result
 }
 
 @Suppress("NOTHING_TO_INLINE")

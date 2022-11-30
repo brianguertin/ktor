@@ -27,7 +27,7 @@ public class Packet : Closeable {
     }
 
     public fun readByte(): Byte {
-        check(availableForRead >= 1) { "Not enough bytes available for readByte: $availableForRead" }
+        checkCanRead(1)
         val result = state.first().readByte()
         availableForRead--
         if (state.first().availableForRead == 0) {
@@ -37,7 +37,7 @@ public class Packet : Closeable {
     }
 
     public fun readLong(): Long {
-        check(availableForRead >= 8) { "Not enough bytes available for readLong: $availableForRead" }
+        checkCanRead(8)
         val result = state.first().readLong()
         availableForRead -= 8
         if (state.first().availableForRead == 0) {
@@ -47,7 +47,7 @@ public class Packet : Closeable {
     }
 
     public fun readInt(): Int {
-        check(availableForRead >= 4) { "Not enough bytes available for readInt: $availableForRead" }
+        checkCanRead(4)
         val result = state.first().readInt()
         availableForRead -= 4
         if (state.first().availableForRead == 0) {
@@ -57,7 +57,7 @@ public class Packet : Closeable {
     }
 
     public fun readShort(): Short {
-        check(availableForRead >= 2) { "Not enough bytes available for readShort: $availableForRead" }
+        checkCanRead(2)
         val result = state.first().readShort()
         availableForRead -= 2
         if (state.first().availableForRead == 0) {
@@ -78,6 +78,7 @@ public class Packet : Closeable {
             val current = state.first()
             if (current.availableForRead > remaining) {
                 current.discard(remaining)
+                remaining = 0
                 break
             }
 
@@ -145,7 +146,9 @@ public class Packet : Closeable {
             offset += array.size
         }
 
-        check(offset == availableForRead) { "offset is < available for read: $offset < $availableForRead" }
+        check(offset == availableForRead) {
+            "Internal error: total read size is != available for read: $offset != $availableForRead"
+        }
 
         state.clear()
         availableForRead = 0
@@ -155,10 +158,12 @@ public class Packet : Closeable {
     }
 
     public fun readByteArray(length: Int): ByteArray {
-        require(availableForRead >= length)
+        checkCanRead(length)
 
         if (state.first().availableForRead >= length) {
-            return state.first().readByteArray(length)
+            val result = state.first().readByteArray(length)
+            availableForRead -= length
+            return result
         }
 
         TODO("Can't read from sliced arrays")
@@ -213,7 +218,7 @@ public class Packet : Closeable {
     }
 
     public fun readPacket(length: Int): Packet {
-        require(availableForRead >= length)
+        checkCanRead(length)
 
         var remaining = length
         val result = Packet()
@@ -248,27 +253,22 @@ public class Packet : Closeable {
     }
 
     public fun writeUByte(value: UByte) {
-        availableForRead += 1
         writeByte(value.toByte())
     }
 
     public fun writeDouble(value: Double) {
-        availableForRead += 8
         writeLong(value.toBits())
     }
 
     public fun writeFloat(value: Float) {
-        availableForRead += 4
         writeInt(value.toBits())
     }
 
     public fun readDouble(): Double {
-        availableForRead -= 4
         return Double.fromBits(readLong())
     }
 
     public fun readFloat(): Float {
-        availableForRead -= 4
         return Float.fromBits(readInt())
     }
 
@@ -277,9 +277,7 @@ public class Packet : Closeable {
     }
 
     public fun discardExact(count: Int): Int {
-        if (count > availableForRead) {
-            throw EOFException("Not enough bytes available for discardExact: $availableForRead")
-        }
+        checkCanRead(count)
         return discard(count)
     }
 
@@ -302,5 +300,11 @@ public class Packet : Closeable {
 
     public companion object {
         public val Empty: Packet = Packet()
+    }
+}
+
+private fun Packet.checkCanRead(count: Int) {
+    if (availableForRead < count) {
+        throw EOFException("Not enough bytes available for read: $availableForRead, required: $count")
     }
 }

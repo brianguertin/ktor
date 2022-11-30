@@ -17,7 +17,6 @@ import org.junit.rules.*
 import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.SocketAddress
-import java.nio.*
 import java.nio.channels.*
 import java.util.concurrent.*
 import kotlin.concurrent.*
@@ -64,7 +63,8 @@ class ClientSocketTest {
 
         client { socket ->
             val channel = socket.attachForReading()
-            val array = channel.readArray(3)
+            channel.awaitBytes { channel.availableForRead >= 3 }
+            val array = channel.readAvailableToArray(3)
             assertEquals("123", String(array))
         }
     }

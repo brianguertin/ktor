@@ -43,43 +43,43 @@ public suspend inline fun ByteReadChannel.readDoubleLittleEndian(): Double {
     return toLittleEndian(readDouble()) { reverseByteOrder() }
 }
 
-public suspend fun ByteWriteChannel.writeShort(value: Short, byteOrder: ByteOrder) {
+public fun ByteWriteChannel.writeShort(value: Short, byteOrder: ByteOrder) {
     writeShort(value.reverseIfNeeded(byteOrder) { reverseByteOrder() })
 }
 
-public suspend fun ByteWriteChannel.writeInt(value: Int, byteOrder: ByteOrder) {
+public fun ByteWriteChannel.writeInt(value: Int, byteOrder: ByteOrder) {
     writeInt(value.reverseIfNeeded(byteOrder) { reverseByteOrder() })
 }
 
-public suspend fun ByteWriteChannel.writeLong(value: Long, byteOrder: ByteOrder) {
+public fun ByteWriteChannel.writeLong(value: Long, byteOrder: ByteOrder) {
     writeLong(value.reverseIfNeeded(byteOrder) { reverseByteOrder() })
 }
 
-public suspend fun ByteWriteChannel.writeFloat(value: Float, byteOrder: ByteOrder) {
+public fun ByteWriteChannel.writeFloat(value: Float, byteOrder: ByteOrder) {
     writeFloat(value.reverseIfNeeded(byteOrder) { reverseByteOrder() })
 }
 
-public suspend fun ByteWriteChannel.writeDouble(value: Double, byteOrder: ByteOrder) {
+public fun ByteWriteChannel.writeDouble(value: Double, byteOrder: ByteOrder) {
     writeDouble(value.reverseIfNeeded(byteOrder) { reverseByteOrder() })
 }
 
-public suspend fun ByteWriteChannel.writeShortLittleEndian(value: Short) {
+public fun ByteWriteChannel.writeShortLittleEndian(value: Short) {
     writeShort(toLittleEndian(value) { reverseByteOrder() })
 }
 
-public suspend fun ByteWriteChannel.writeIntLittleEndian(value: Int) {
+public fun ByteWriteChannel.writeIntLittleEndian(value: Int) {
     writeInt(toLittleEndian(value) { reverseByteOrder() })
 }
 
-public suspend fun ByteWriteChannel.writeLongLittleEndian(value: Long) {
+public fun ByteWriteChannel.writeLongLittleEndian(value: Long) {
     writeLong(toLittleEndian(value) { reverseByteOrder() })
 }
 
-public suspend fun ByteWriteChannel.writeFloatLittleEndian(value: Float) {
+public fun ByteWriteChannel.writeFloatLittleEndian(value: Float) {
     writeFloat(toLittleEndian(value) { reverseByteOrder() })
 }
 
-public suspend fun ByteWriteChannel.writeDoubleLittleEndian(value: Double) {
+public fun ByteWriteChannel.writeDoubleLittleEndian(value: Double) {
     writeDouble(toLittleEndian(value) { reverseByteOrder() })
 }
 

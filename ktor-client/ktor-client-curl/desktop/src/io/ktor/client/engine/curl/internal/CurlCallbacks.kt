@@ -90,7 +90,7 @@ internal fun onBodyChunkRequested(
         return count
     }
 
-    val data: ByteArray = body.readArray()
+    val data: ByteArray = body.readAvailableToArray()
     if (data.isNotEmpty()) {
         memcpy(data.refTo(0), buffer, data.size.convert())
         return data.size

@@ -6,20 +6,25 @@ package io.ktor.io
 
 import io.ktor.utils.io.*
 import kotlinx.atomicfu.*
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
+import kotlin.jvm.*
 
 public class ConflatedByteChannel : ByteReadChannel, ByteWriteChannel {
-    private val closed = atomic<ClosedCause?>(null)
+    @Volatile
+    private var closedToken: ClosedCause? = null
+    private val closing = atomic(false)
+
     private val channel = Channel<Packet>()
 
     override val isClosedForRead: Boolean
-        get() = closed.value != null && readablePacket.isEmpty
+        get() = closedToken != null && readablePacket.isEmpty
 
     override val isClosedForWrite: Boolean
-        get() = closed.value != null
+        get() = closing.value
 
     override val closedCause: Throwable?
-        get() = closed.value?.cause
+        get() = closedToken?.cause
 
     override val readablePacket: Packet = Packet()
 
@@ -35,12 +40,12 @@ public class ConflatedByteChannel : ByteReadChannel, ByteWriteChannel {
             val value = channel.receiveCatching()
             when {
                 value.isClosed -> {
-                    closed.value = ClosedCause(value.exceptionOrNull())
+                    closedToken = ClosedCause(value.exceptionOrNull())
                     return false
                 }
 
                 value.isFailure -> {
-                    closed.value = ClosedCause(value.exceptionOrNull())
+                    closedToken = ClosedCause(value.exceptionOrNull())
                     throw value.exceptionOrNull()!!
                 }
 
@@ -54,22 +59,24 @@ public class ConflatedByteChannel : ByteReadChannel, ByteWriteChannel {
         return true
     }
 
-    override fun cancel(cause: Throwable?): Boolean {
-        if (closed.compareAndSet(null, ClosedCause(cause))) {
-            channel.cancel(kotlinx.coroutines.CancellationException("ConflatedByteChannel is cancelled", cause))
-            writablePacket.close()
-            return true
-        }
+    override fun cancel(cause: Throwable?): Boolean = close(cause)
 
-        return false
-    }
-
+    @OptIn(DelicateCoroutinesApi::class)
     override fun close(cause: Throwable?): Boolean {
-        if (closed.compareAndSet(null, ClosedCause(cause))) {
-            channel.close()
-            return true
+        if (!closing.compareAndSet(false, true)) return false
+
+        // TODO: use IO dispatcher
+        GlobalScope.launch(Dispatchers.Default) {
+            if (cause != null) {
+                channel.close(cause)
+            } else {
+                flush()
+                channel.close()
+            }
+            closedToken = ClosedCause(cause)
         }
-        return false
+
+        return true
     }
 }
 

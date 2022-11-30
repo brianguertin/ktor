@@ -7,6 +7,7 @@ package io.ktor.server.cio.backend
 import io.ktor.http.*
 import io.ktor.http.cio.*
 import io.ktor.http.cio.internals.*
+import io.ktor.io.*
 import io.ktor.server.cio.*
 import io.ktor.server.cio.internal.*
 import io.ktor.util.*
@@ -78,8 +79,8 @@ public fun CoroutineScope.startServerConnectionPipeline(
             val expectedHttpBody: Boolean
             val expectedHttpUpgrade: Boolean
 
-            val response: ByteReadChannel = TODO()
-            val responseW: ByteWriteChannel = TODO()
+            val response: ByteReadChannel = ConflatedByteChannel()
+            val responseW: ByteWriteChannel = ConflatedByteChannel()
 
             try {
                 actorChannel.send(response)
@@ -120,7 +121,7 @@ public fun CoroutineScope.startServerConnectionPipeline(
             }
 
             val requestBody: ByteReadChannel = if (expectedHttpBody || expectedHttpUpgrade) {
-                TODO()
+                ConflatedByteChannel()
             } else {
                 ByteReadChannel.Empty
             }

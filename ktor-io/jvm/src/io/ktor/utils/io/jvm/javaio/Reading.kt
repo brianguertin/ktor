@@ -25,9 +25,12 @@ public fun InputStream.toByteReadChannel(
     pool: ObjectPool<ByteArray> = ByteArrayPool
 ): ByteReadChannel = object : ByteReadChannel {
     private var closed = false
-    override val isClosedForRead: Boolean = false
+
+    override val isClosedForRead: Boolean get() = closed && readablePacket.isEmpty
+
     override var closedCause: Throwable? = null
         private set
+
     override val readablePacket: Packet = Packet()
 
     override suspend fun awaitBytes(predicate: () -> Boolean): Boolean = withContext(Dispatchers.IO) {

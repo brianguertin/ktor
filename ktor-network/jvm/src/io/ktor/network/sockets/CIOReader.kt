@@ -93,15 +93,15 @@ internal fun CoroutineScope.attachForReadingDirectImpl(
                 val rc = readFrom(nioChannel)
 
                 if (rc == -1) {
+                    flush()
                     close()
                     return@withTimeout
                 }
 
                 if (rc > 0) return@withTimeout
 
-                flush()
-
                 while (true) {
+                    flush()
                     selectForRead(selectable, selector)
                     if (readFrom(nioChannel) != 0) break
                 }
@@ -110,6 +110,7 @@ internal fun CoroutineScope.attachForReadingDirectImpl(
 
         timeout?.finish()
         closedCause?.let { throw it }
+        flush()
         close()
     } finally {
         if (nioChannel is SocketChannel) {

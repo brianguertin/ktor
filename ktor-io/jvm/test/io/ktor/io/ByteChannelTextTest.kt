@@ -37,7 +37,7 @@ class ByteChannelTextTest {
     fun testReadLineUtf8Chunks() = runBlocking {
         val line = "x".repeat(32 * 1024)
         val channel = writer {
-            channel.writeString(line)
+            writeString(line)
         }
 
         val result = channel.readLine()

@@ -27,8 +27,11 @@ public fun ByteReadChannel.readAvailable(min: Int = 1, block: (ByteBuffer) -> Un
     TODO()
 }
 
-public fun ByteReadChannel.readAvailable(min: Int = 1): ByteBuffer {
-    TODO()
+public suspend fun ByteReadChannel.readAvailable(): ByteBuffer {
+    if (!isClosedForRead && availableForRead == 0) awaitBytes()
+    if (isClosedForRead) throw EOFException()
+
+    return readByteBuffer()
 }
 
 /**
@@ -67,10 +70,7 @@ public suspend fun <R> ByteReadChannel.lookAheadSuspend(visitor: suspend LookAhe
     TODO()
 }
 
-public fun ByteReadChannel.asStream(): InputStream {
-    TODO("Not yet implemented")
-}
-
 public fun ByteReadChannel.readByteBuffer(): ByteBuffer {
-    TODO()
+    require(readablePacket.isNotEmpty)
+    return readablePacket.readBuffer().readByteBuffer()
 }

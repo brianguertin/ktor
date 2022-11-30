@@ -38,11 +38,13 @@ abstract class CompressionTestSuite<TEngine : ApplicationEngine, TConfiguration 
         createAndStartServer {
             application.install(Compression)
             handle {
+                println("Send response")
                 call.respond(LocalFileContent(file))
             }
         }
 
         withUrl("/", { header(HttpHeaders.AcceptEncoding, "gzip") }) {
+            println("Got response: $it")
             assertEquals(200, status.value)
             assertEquals(file.readText(), GZIPInputStream(content.toInputStream()).reader().use { it.readText() })
             assertEquals("gzip", headers[HttpHeaders.ContentEncoding])

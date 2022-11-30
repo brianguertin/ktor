@@ -52,24 +52,24 @@ public interface ByteWriteChannel {
     public suspend fun flush()
 }
 
-public suspend fun ByteWriteChannel.writeShort(s: Int) {
-    return writeShort((s and 0xffff).toShort())
+public fun ByteWriteChannel.writeShort(s: Int) {
+    writeShort((s and 0xffff).toShort())
 }
 
 public suspend fun ByteWriteChannel.writeShort(s: Int, byteOrder: ByteOrder) {
-    return writeShort((s and 0xffff).toShort(), byteOrder)
+    writeShort((s and 0xffff).toShort(), byteOrder)
 }
 
-public suspend fun ByteWriteChannel.writeByte(b: Int) {
-    return writeByte((b and 0xff).toByte())
+public fun ByteWriteChannel.writeByte(b: Int) {
+    writeByte((b and 0xff).toByte())
 }
 
-public suspend fun ByteWriteChannel.writeInt(i: Long) {
-    return writeInt(i.toInt())
+public fun ByteWriteChannel.writeInt(i: Long) {
+    writeInt(i.toInt())
 }
 
-public suspend fun ByteWriteChannel.writeInt(i: Long, byteOrder: ByteOrder) {
-    return writeInt(i.toInt(), byteOrder)
+public fun ByteWriteChannel.writeInt(i: Long, byteOrder: ByteOrder) {
+    writeInt(i.toInt(), byteOrder)
 }
 
 /**
@@ -77,15 +77,15 @@ public suspend fun ByteWriteChannel.writeInt(i: Long, byteOrder: ByteOrder) {
  */
 public fun ByteWriteChannel.close(): Boolean = close(null)
 
-public suspend fun ByteWriteChannel.writeBoolean(b: Boolean) {
-    return writeByte(if (b) 1 else 0)
+public fun ByteWriteChannel.writeBoolean(b: Boolean) {
+    writeByte(if (b) 1 else 0)
 }
 
 /**
  * Writes UTF16 character
  */
-public suspend fun ByteWriteChannel.writeChar(ch: Char) {
-    return writeShort(ch.code)
+public fun ByteWriteChannel.writeChar(ch: Char) {
+    writeByte(ch.code.and(0xff))
 }
 
 /**

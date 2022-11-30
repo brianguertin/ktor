@@ -4,6 +4,7 @@
 
 package io.ktor.tests.utils
 
+import io.ktor.test.dispatcher.*
 import io.ktor.util.*
 import io.ktor.util.cio.*
 import io.ktor.utils.io.*
@@ -22,8 +23,8 @@ class DeflaterReadChannelTest : CoroutineScope {
     private val testJob = Job()
     override val coroutineContext get() = testJob + Dispatchers.Unconfined
 
-    @get:Rule
-    val timeout = CoroutinesTimeout.seconds(60)
+//    @get:Rule
+//    val timeout = CoroutinesTimeout.seconds(60)
 
     @AfterTest
     fun after() {
@@ -58,13 +59,61 @@ class DeflaterReadChannelTest : CoroutineScope {
     }
 
     @Test
+    fun testDeflateChar() {
+//        testReadChannel("1", ByteReadChannel { writeChar('1') })
+        testWriteChannel("1", ByteReadChannel { writeChar('1') })
+    }
+
+    @Test
+    fun testDeflateShort() {
+        testReadChannel("12", ByteReadChannel { writeString("12")})
+        testWriteChannel("12", ByteReadChannel { writeString("12")})
+    }
+
+    @Test
+    fun testDeflateCharToArray() = runBlocking {
+        val data = ByteReadChannel {
+            writeString("1")
+        }.deflated().toByteArray()
+
+        val expected = ByteArrayInputStream(data).ungzip().reader().readText()
+        assertEquals("1", expected)
+    }
+
+    @Test
+    fun testInputStreamHasSameAsByteArray() = runBlocking {
+        val fromArray = ByteReadChannel {
+            writeString("1")
+        }.deflated().toByteArray()
+
+        val fromStream: ByteArray = ByteReadChannel {
+            writeString("1")
+        }.deflated().toInputStream().readBytes()
+
+        assertEquals(fromArray.toList(), fromStream.toList())
+    }
+
+
+    @Test
+    fun testDeflateCharToInputStream() = runBlocking {
+        val data: ByteArray = ByteReadChannel {
+            writeString("1")
+        }.deflated().toInputStream().readBytes()
+
+        val expected = ByteArrayInputStream(data).ungzip().reader().readText()
+        assertEquals("1", expected)
+    }
+
+    @Test
     fun testSmallPieces() {
         val text = "The quick brown fox jumps over the lazy dog"
         assertEquals(text, asyncOf(text).toInputStream().reader().readText())
 
         for (step in 1..text.length) {
-            testReadChannel(text, asyncOf(text))
-            testWriteChannel(text, asyncOf(text))
+            val chunk = text.substring(0, step)
+            println(chunk)
+            testReadChannel(chunk, asyncOf(chunk))
+            testWriteChannel(chunk, asyncOf(chunk))
         }
     }
 
@@ -78,10 +127,10 @@ class DeflaterReadChannelTest : CoroutineScope {
         val bb = ByteBuffer.wrap(text.toByteArray(Charsets.ISO_8859_1))
 
         for (
-            step in generateSequence(1) { it * 2 }
-                .dropWhile { it < 64 }
-                .takeWhile { it <= 8192 }
-                .flatMap { sequenceOf(it, it - 1, it + 1) }
+        step in generateSequence(1) { it * 2 }
+            .dropWhile { it < 64 }
+            .takeWhile { it <= 8192 }
+            .flatMap { sequenceOf(it, it - 1, it + 1) }
         ) {
             bb.clear()
             testReadChannel(text, asyncOf(bb))
@@ -129,6 +178,7 @@ class DeflaterReadChannelTest : CoroutineScope {
     private fun asyncOf(text: String): ByteReadChannel = asyncOf(ByteBuffer.wrap(text.toByteArray(Charsets.ISO_8859_1)))
     private fun asyncOf(bb: ByteBuffer): ByteReadChannel = ByteReadChannel(bb)
 
+    private fun OutputStream.gzip() = GZIPOutputStream(this)
     private fun InputStream.ungzip() = GZIPInputStream(this)
 
     private fun testReadChannel(expected: String, src: ByteReadChannel) {
@@ -137,7 +187,10 @@ class DeflaterReadChannelTest : CoroutineScope {
 
     private fun testWriteChannel(expected: String, src: ByteReadChannel) {
         val channel = ByteReadChannel {
-            src.copyAndClose(deflated())
+            val dst = deflated()
+            src.copyAndClose(dst)
+            dst.flush()
+            dst.close()
         }
 
         val result = channel.toInputStream().ungzip().reader().readText()

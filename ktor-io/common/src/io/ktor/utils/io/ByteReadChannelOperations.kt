@@ -15,7 +15,8 @@ public val ByteReadChannel.availableForRead: Int get() = readablePacket.availabl
  * Discards exactly [n] bytes or fails if not enough bytes in the channel
  */
 public suspend inline fun ByteReadChannel.discardExact(n: Long) {
-    TODO()
+    awaitBytes { availableForRead >= n }
+    discard(n)
 }
 
 /**
@@ -54,7 +55,9 @@ public suspend fun ByteReadChannel.copyAndClose(dst: ByteWriteChannel, limit: Lo
 }
 
 public suspend fun ByteReadChannel.readBuffer(): ReadableBuffer {
-    if (availableForRead == 0) awaitBytes()
+    if (!isClosedForRead && availableForRead == 0) awaitBytes()
+    if (isClosedForRead) return ReadableBuffer.Empty
+
     return readablePacket.readBuffer()
 }
 
@@ -74,13 +77,14 @@ public fun ByteReadChannel.readAvailable(dst: ByteArray, offset: Int = 0, length
     return position - offset
 }
 
-public fun ByteReadChannel.readArray(limit: Long = Long.MAX_VALUE): ByteArray {
+public fun ByteReadChannel.readAvailableToArray(limit: Long = Long.MAX_VALUE): ByteArray {
     val result = ByteArray(minOf(limit, availableForRead.toLong()).toInt())
     readAvailable(result, 0, result.size)
     return result
 }
 
 public suspend fun ByteReadChannel.readFully(dst: ByteArray) {
+    awaitBytes { availableForRead >= dst.size }
     TODO()
 }
 
@@ -88,26 +92,35 @@ public suspend fun ByteReadChannel.readFully(dst: ByteArray) {
  * Reads a long number (suspending if not enough bytes available) or fails if channel has been closed
  * and not enough bytes.
  */
-public fun ByteReadChannel.readLong(): Long = readablePacket.readLong()
+public suspend fun ByteReadChannel.readLong(): Long {
+    awaitBytes { availableForRead >= 8 }
+    return readablePacket.readLong()
+}
 
 /**
  * Reads an int number (suspending if not enough bytes available) or fails if channel has been closed
  * and not enough bytes.
  */
-public fun ByteReadChannel.readInt(): Int = readablePacket.readInt()
+public suspend fun ByteReadChannel.readInt(): Int {
+    awaitBytes { availableForRead >= 4 }
+    return readablePacket.readInt()
+}
 
 /**
  * Reads a short number (suspending if not enough bytes available) or fails if channel has been closed
  * and not enough bytes.
  */
-public fun ByteReadChannel.readShort(): Short = readablePacket.readShort()
+public suspend fun ByteReadChannel.readShort(): Short {
+    awaitBytes { availableForRead >= 2 }
+    return readablePacket.readShort()
+}
 
 /**
  * Reads a byte (suspending if no bytes available yet) or fails if channel has been closed
  * and not enough bytes.
  */
-public fun ByteReadChannel.readByte(): Byte {
-    check(availableForRead >= 1) { "Not enough bytes available for readByte: $availableForRead" }
+public suspend fun ByteReadChannel.readByte(): Byte {
+    awaitBytes()
     return readablePacket.readByte()
 }
 
@@ -115,14 +128,14 @@ public fun ByteReadChannel.readByte(): Byte {
  * Reads a boolean value (suspending if no bytes available yet) or fails if channel has been closed
  * and not enough bytes.
  */
-public fun ByteReadChannel.readBoolean(): Boolean = readByte().toInt() != 0
+public suspend fun ByteReadChannel.readBoolean(): Boolean = readByte().toInt() != 0
 
 /**
  * Reads double number (suspending if not enough bytes available) or fails if channel has been closed
  * and not enough bytes.
  */
-public fun ByteReadChannel.readDouble(): Double {
-    check(availableForRead >= 8) { "Not enough bytes available for readDouble: $availableForRead" }
+public suspend fun ByteReadChannel.readDouble(): Double {
+    awaitBytes { availableForRead >= 8 }
     return Double.fromBits(readablePacket.readLong())
 }
 
@@ -201,7 +214,7 @@ public suspend fun <A : Appendable> ByteReadChannel.readUTF8LineTo(out: A, limit
     val newLine = string.indexOf('\n')
     if (newLine == -1) {
         if (string.length > limit) {
-            throw IOException("Line limit exceeded: $limit")
+            throw TooLongLineException("Line limit exceeded: $limit")
         }
 
         readablePacket.readBuffer()
@@ -211,10 +224,10 @@ public suspend fun <A : Appendable> ByteReadChannel.readUTF8LineTo(out: A, limit
     val endIndex = if (newLine > 0 && string[newLine - 1] == '\r') newLine - 1 else newLine
 
     if (endIndex > limit) {
-        throw IOException("Line length limit exceeded: $endIndex > $limit")
+        throw TooLongLineException("Line length limit exceeded: $endIndex > $limit")
     }
 
-    val bytesLength = string.lengthInUtf8Bytes(newLine + 2)
+    val bytesLength = string.lengthInUtf8Bytes(newLine + 1)
     buffer.readIndex = oldIndex
     readablePacket.discardExact(bytesLength)
     out.append(string, 0, endIndex)
@@ -245,7 +258,7 @@ private suspend fun <A : Appendable> ByteReadChannel.readUTF8LineRemaining(
             readablePacket.readBuffer()
 
             if (string.length > remaining) {
-                throw IOException("Line limit exceeded: $limit")
+                throw TooLongLineException("Line limit exceeded: $limit")
             }
 
             builder.append(string)
@@ -255,7 +268,7 @@ private suspend fun <A : Appendable> ByteReadChannel.readUTF8LineRemaining(
 
         val endIndex = if (newLine > 0 && string[newLine - 1] == '\r') newLine - 1 else newLine
         if (endIndex > limit) {
-            throw IOException("Line length limit exceeded: $endIndex > $limit")
+            throw TooLongLineException("Line length limit exceeded: $endIndex > $limit")
         }
 
         val bytesLength = string.lengthInUtf8Bytes(newLine + 1)
@@ -266,7 +279,7 @@ private suspend fun <A : Appendable> ByteReadChannel.readUTF8LineRemaining(
         return true
     }
 
-    throw EOFException("Line limit exceeded: $limit")
+    throw TooLongLineException("Line limit exceeded: $limit")
 }
 
 private fun String.lengthInUtf8Bytes(endIndex: Int): Int {
@@ -285,9 +298,11 @@ private fun String.lengthInUtf8Bytes(endIndex: Int): Int {
     return result
 }
 
-public suspend fun ByteReadChannel.readLine(charset: Charset = Charsets.UTF_8, limit: Long = Long.MAX_VALUE): String {
+public suspend fun ByteReadChannel.readLine(charset: Charset = Charsets.UTF_8, limit: Long = Long.MAX_VALUE): String? {
     if (charset == Charsets.UTF_8) {
-        return buildString { readUTF8LineTo(this, limit) }
+        val builder = StringBuilder()
+        if (!readUTF8LineTo(builder, limit)) return null
+        return builder.toString()
     }
 
     TODO("Unsupported charset $charset")
@@ -298,10 +313,10 @@ public suspend fun ByteReadChannel.readLine(charset: Charset = Charsets.UTF_8, l
  *
  * @return number of bytes were discarded
  */
-public suspend fun ByteReadChannel.discard(max: Long = Long.MAX_VALUE): Long {
-    TODO()
+public fun ByteReadChannel.discard(max: Long = Long.MAX_VALUE): Long {
+    return readablePacket.discard(max.toInt()).toLong()
 }
 
 public suspend fun ByteReadChannel.readString(charset: Charset = Charsets.UTF_8): String {
-    TODO("Not yet implemented")
+    return readRemaining().readString(charset)
 }

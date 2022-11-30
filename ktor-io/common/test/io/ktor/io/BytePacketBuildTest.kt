@@ -74,7 +74,6 @@ open class BytePacketBuildTest {
         assertEquals(0x123456789abcdef0, p.readLong())
 
         assertEquals("OK", p.readLine())
-        assertEquals("1|2|3", p.readLine())
         assertTrue { p.isEmpty }
     }
 
@@ -146,16 +145,16 @@ open class BytePacketBuildTest {
 
     @Test
     fun testNextBufferBytesStealing() {
-        val p = buildPacket {
+        val packet = buildPacket {
             repeat(PACKET_BUFFER_SIZE + 3) {
                 writeByte(1)
             }
         }
 
-        assertEquals(PACKET_BUFFER_SIZE + 3, p.availableForRead)
-        p.readByteArray(PACKET_BUFFER_SIZE - 1)
-        assertEquals(0x01010101, p.readInt())
-        assertTrue { p.isEmpty }
+        assertEquals(PACKET_BUFFER_SIZE + 3, packet.availableForRead)
+        packet.readByteArray(PACKET_BUFFER_SIZE - 1)
+        assertEquals(0x01010101, packet.readInt())
+        assertTrue { packet.isEmpty }
     }
 
     @Test

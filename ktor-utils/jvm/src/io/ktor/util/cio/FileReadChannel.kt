@@ -19,14 +19,19 @@ internal class FileReadChannel(
 ) : ByteReadChannel {
     val source: RandomAccessFile = RandomAccessFile(file, "r")
     val channel: FileChannel = source.channel
-    private var remaining = endIndex - startIndex
+    private var remaining: Long
 
     init {
+        remaining = if (endIndex > 0L) {
+            endIndex - startIndex
+        } else {
+            Long.MAX_VALUE
+        }
+
         channel.position(startIndex)
     }
 
-    override var isClosedForRead: Boolean = false
-        private set
+    override val isClosedForRead: Boolean get() = readablePacket.isEmpty && remaining == 0L
     override var closedCause: Throwable? = null
         private set
 
@@ -41,21 +46,17 @@ internal class FileReadChannel(
             val count = channel.read(buffer)
 
             if (count < 0) {
-                isClosedForRead = true
+                remaining = 0
                 return@withContext predicateResult
             }
 
+            buffer.flip()
             if (count > remaining) {
-                val newLimit = buffer.limit() - (count - remaining)
-                buffer.limit(newLimit.toInt())
-            } else {
-                remaining -= count
+                buffer.limit(buffer.position() + remaining.toInt())
             }
 
-            buffer.flip()
-            if (buffer.hasRemaining()) {
-                readablePacket.writeBuffer(ByteBufferBuffer(buffer))
-            }
+            remaining -= buffer.remaining()
+            readablePacket.writeBuffer(ByteBufferBuffer(buffer))
         }
 
         return@withContext true
@@ -64,7 +65,7 @@ internal class FileReadChannel(
     override fun cancel(cause: Throwable?): Boolean {
         if (isClosedForRead) return false
 
-        isClosedForRead = true
+        remaining = 0
         closedCause = cause
 
         channel.close()

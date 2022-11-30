@@ -4,6 +4,8 @@
 
 package io.ktor.io
 
+import io.ktor.utils.io.errors.*
+
 public val ReadableBuffer.availableForRead: Int get() = writeIndex - readIndex
 public val ReadableBuffer.isEmpty: Boolean get() = availableForRead == 0
 public val ReadableBuffer.isNotEmpty: Boolean get() = !isEmpty
@@ -15,13 +17,13 @@ public val ReadableBuffer.isNotEmpty: Boolean get() = !isEmpty
  */
 internal fun ReadableBuffer.ensureCanRead(count: Int) {
     if (availableForRead < count) {
-        throw IndexOutOfBoundsException("Can't read $count bytes. Available: $availableForRead.")
+        throw EOFException("Can't read $count bytes. Available: $availableForRead.")
     }
 }
 
 internal fun ReadableBuffer.ensureCanRead(index: Int, count: Int) {
     if (index + count > capacity) {
-        throw IndexOutOfBoundsException("Can't read $count bytes at index $index. Capacity: $capacity.")
+        throw EOFException("Can't read $count bytes at index $index. Capacity: $capacity.")
     }
 }
 

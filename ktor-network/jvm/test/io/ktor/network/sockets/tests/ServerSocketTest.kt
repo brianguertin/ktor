@@ -91,10 +91,13 @@ class ServerSocketTest : CoroutineScope {
         val server = server { client ->
             val channel = client.attachForWriting()
             channel.writeString("123")
+            channel.flush()
+            channel.close()
         }
 
         client { socket ->
-            assertEquals("123", socket.getInputStream().reader().use { it.readText() })
+            val text = socket.getInputStream().reader().use { it.readText() }
+            assertEquals("123", text)
         }
 
         server.cancel()

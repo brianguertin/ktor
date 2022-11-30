@@ -8,10 +8,12 @@ import io.ktor.io.*
 import io.ktor.utils.io.charsets.*
 
 public fun ByteWriteChannel.writeBuffer(buffer: Buffer) {
+    check(!isClosedForWrite) { "Can't write to closed channel." }
     writablePacket.writeBuffer(buffer)
 }
 
 public fun ByteWriteChannel.writePacket(packet: Packet) {
+    check(!isClosedForWrite) { "Can't write to closed channel." }
     writablePacket.writePacket(packet)
 }
 
@@ -19,7 +21,8 @@ public fun ByteWriteChannel.writePacket(packet: Packet) {
  * Writes long number and suspends until written.
  * Crashes if channel get closed while writing.
  */
-public suspend fun ByteWriteChannel.writeLong(l: Long) {
+public fun ByteWriteChannel.writeLong(l: Long) {
+    check(!isClosedForWrite) { "Can't write to closed channel." }
     writablePacket.writeLong(l)
 }
 
@@ -27,7 +30,8 @@ public suspend fun ByteWriteChannel.writeLong(l: Long) {
  * Writes int number and suspends until written.
  * Crashes if channel get closed while writing.
  */
-public suspend fun ByteWriteChannel.writeInt(i: Int) {
+public fun ByteWriteChannel.writeInt(i: Int) {
+    check(!isClosedForWrite) { "Can't write to closed channel." }
     writablePacket.writeInt(i)
 }
 
@@ -35,7 +39,8 @@ public suspend fun ByteWriteChannel.writeInt(i: Int) {
  * Writes short number and suspends until written.
  * Crashes if channel get closed while writing.
  */
-public suspend fun ByteWriteChannel.writeShort(s: Short) {
+public fun ByteWriteChannel.writeShort(s: Short) {
+    check(!isClosedForWrite) { "Can't write to closed channel." }
     writablePacket.writeShort(s)
 }
 
@@ -43,7 +48,8 @@ public suspend fun ByteWriteChannel.writeShort(s: Short) {
  * Writes byte and suspends until written.
  * Crashes if channel get closed while writing.
  */
-public suspend fun ByteWriteChannel.writeByte(b: Byte) {
+public fun ByteWriteChannel.writeByte(b: Byte) {
+    check(!isClosedForWrite) { "Can't write to closed channel." }
     writablePacket.writeByte(b)
 }
 
@@ -51,7 +57,8 @@ public suspend fun ByteWriteChannel.writeByte(b: Byte) {
  * Writes double number and suspends until written.
  * Crashes if channel get closed while writing.
  */
-public suspend fun ByteWriteChannel.writeDouble(d: Double) {
+public fun ByteWriteChannel.writeDouble(d: Double) {
+    check(!isClosedForWrite) { "Can't write to closed channel." }
     writablePacket.writeDouble(d)
 }
 
@@ -59,7 +66,8 @@ public suspend fun ByteWriteChannel.writeDouble(d: Double) {
  * Writes float number and suspends until written.
  * Crashes if channel get closed while writing.
  */
-public suspend fun ByteWriteChannel.writeFloat(f: Float) {
+public fun ByteWriteChannel.writeFloat(f: Float) {
+    check(!isClosedForWrite) { "Can't write to closed channel." }
     writablePacket.writeFloat(f)
 }
 
@@ -68,9 +76,11 @@ public fun ByteWriteChannel.writeByteArray(
     offset: Int = 0,
     length: Int = value.size - offset
 ) {
+    check(!isClosedForWrite) { "Can't write to closed channel." }
     writablePacket.writeBuffer(ByteArrayBuffer(value, offset, length))
 }
 
-public suspend fun ByteWriteChannel.writeString(value: String, charset: Charset = Charsets.UTF_8) {
+public fun ByteWriteChannel.writeString(value: String, charset: Charset = Charsets.UTF_8) {
+    check(!isClosedForWrite) { "Can't write to closed channel." }
     writablePacket.writeString(value, charset = charset)
 }
