@@ -6,6 +6,7 @@ package io.ktor.http.cio
 
 import io.ktor.http.cio.internals.*
 import io.ktor.io.*
+import io.ktor.io.Buffer
 import io.ktor.utils.io.*
 import io.ktor.utils.io.bits.*
 import io.ktor.utils.io.core.*
@@ -112,7 +113,7 @@ public suspend fun encodeChunked(
     output: ByteWriteChannel,
     coroutineContext: CoroutineContext
 ): ByteWriteChannel = GlobalScope.reader(coroutineContext) {
-    encodeChunked(output, channel)
+    encodeChunked(output, this)
 }
 
 /**
@@ -122,7 +123,9 @@ public suspend fun encodeChunked(output: ByteWriteChannel, input: ByteReadChanne
     try {
         while (!input.isClosedForRead) {
             val buffer = input.readBuffer()
-            TODO()
+            if (buffer.isEmpty) continue
+
+            output.writeChunk(buffer)
         }
 
         input.rethrowCloseCause()
@@ -136,14 +139,14 @@ public suspend fun encodeChunked(output: ByteWriteChannel, input: ByteReadChanne
 }
 
 private fun ByteReadChannel.rethrowCloseCause() {
-    TODO()
+    closedCause?.let { throw it }
 }
 
 private const val CrLfShort: Short = 0x0d0a
 private val CrLf = "\r\n".toByteArray()
 private val LastChunkBytes = "0\r\n\r\n".toByteArray()
 
-private suspend fun ByteWriteChannel.writeChunk(buffer: Buffer): Int {
+private suspend fun ByteWriteChannel.writeChunk(buffer: ReadableBuffer): Int {
     val size = buffer.availableForRead
     writeIntHex(size)
     writeShort(CrLfShort)

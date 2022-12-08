@@ -21,7 +21,7 @@ internal suspend fun ByteReadChannel.readTLSRecord(): TLSRecord {
     val type = TLSRecordType.byCode(readByte().toInt() and 0xff)
     val version = readTLSVersion()
 
-    val length = readShortCompatible() and 0xffff
+    val length = readablePacket.readShort().toInt() and 0xffff
     if (length > MAX_TLS_FRAME_SIZE) throw TLSException("Illegal TLS frame size: $length")
 
     val packet = readPacket(length)
@@ -133,8 +133,8 @@ internal fun Packet.readECPoint(fieldSize: Int): ECPoint {
 }
 
 
-private fun ByteReadChannel.readTLSVersion() =
-    TLSVersion.byCode(readShortCompatible() and 0xffff)
+private fun ByteReadChannel.readTLSVersion(): TLSVersion =
+    TLSVersion.byCode(readablePacket.readShort().toInt() and 0xffff)
 
 private fun Packet.readTLSVersion() =
     TLSVersion.byCode(readShort().toInt() and 0xffff)
@@ -142,9 +142,3 @@ private fun Packet.readTLSVersion() =
 internal fun Packet.readTripleByteLength(): Int = (readByte().toInt() and 0xff shl 16) or
     (readShort().toInt() and 0xffff)
 
-internal fun ByteReadChannel.readShortCompatible(): Int {
-    val first = readByte().toInt() and 0xff
-    val second = readByte().toInt() and 0xff
-
-    return (first shl 8) + second
-}

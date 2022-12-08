@@ -36,8 +36,14 @@ public suspend fun ByteReadChannel.copyTo(dst: ByteWriteChannel, limit: Long = L
             continue
         }
 
-        remaining -= readablePacket.availableForRead
-        dst.writePacket(readablePacket)
+        if (remaining >= readablePacket.availableForRead) {
+            remaining -= readablePacket.availableForRead
+            dst.writePacket(readablePacket)
+        } else {
+            val packet = readablePacket.readPacket(remaining.toInt())
+            dst.writePacket(packet)
+            remaining = 0
+        }
     }
 
     return limit - remaining
@@ -301,7 +307,8 @@ private fun String.lengthInUtf8Bytes(endIndex: Int): Int {
 public suspend fun ByteReadChannel.readLine(charset: Charset = Charsets.UTF_8, limit: Long = Long.MAX_VALUE): String? {
     if (charset == Charsets.UTF_8) {
         val builder = StringBuilder()
-        if (!readUTF8LineTo(builder, limit)) return null
+        val result = readUTF8LineTo(builder, limit)
+        if (!result && builder.isEmpty()) return null
         return builder.toString()
     }
 

@@ -6,9 +6,10 @@ package io.ktor.http
 import io.ktor.io.*
 import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
+import kotlinx.atomicfu.TraceBase.None.append
 
-private val URL_ALPHABET = ((('a'..'z') + ('A'..'Z') + ('0'..'9')).map { it.code.toByte() }).toSet()
-private val URL_ALPHABET_CHARS = ((('a'..'z') + ('A'..'Z') + ('0'..'9'))).toSet()
+private val URL_ALPHABET: Set<Byte> = ((('a'..'z') + ('A'..'Z') + ('0'..'9')).map { it.code.toByte() }).toSet()
+private val URL_ALPHABET_CHARS: Set<Char> = ((('a'..'z') + ('A'..'Z') + ('0'..'9'))).toSet()
 private val HEX_ALPHABET = (('a'..'f') + ('A'..'F') + ('0'..'9')).toSet()
 
 /**
@@ -118,15 +119,19 @@ public fun String.encodeOAuth(): String = encodeURLParameter()
  */
 public fun String.encodeURLParameter(
     spaceToPlus: Boolean = false
-): String = buildString {
-    val content = Charsets.UTF_8.newEncoder().encode(this@encodeURLParameter)
-//    content.forEach {
-//        when {
-//            it in URL_ALPHABET || it in SPECIAL_SYMBOLS -> append(it.toInt().toChar())
-//            spaceToPlus && it == ' '.code.toByte() -> append('+')
-//            else -> append(it.percentEncode())
-//        }
-//    }
+): String {
+    val builder = StringBuilder()
+    val packet = buildPacket { writeString(this@encodeURLParameter) }
+    while (packet.isNotEmpty) {
+        val byte = packet.readByte()
+        when {
+            byte in URL_ALPHABET || byte in SPECIAL_SYMBOLS -> builder.append(byte.toInt().toChar())
+            spaceToPlus && byte == ' '.code.toByte() -> builder.append('+')
+            else -> builder.append(byte.percentEncode())
+        }
+    }
+
+    return builder.toString()
 }
 
 internal fun String.percentEncode(allowedSet: Set<Char>): String {
@@ -215,6 +220,7 @@ private fun CharSequence.decodeImpl(
                 sb.append(' ')
                 index++
             }
+
             c == '%' -> {
                 // if ByteArray was not needed before, create it with an estimate of remaining string be all hex
                 if (bytes == null) {
@@ -246,6 +252,7 @@ private fun CharSequence.decodeImpl(
                 // Note: Tried using ByteBuffer and using enc.decode() – it's slower
                 sb.append(String(bytes, offset = 0, length = count, charset = charset))
             }
+
             else -> {
                 sb.append(c)
                 index++

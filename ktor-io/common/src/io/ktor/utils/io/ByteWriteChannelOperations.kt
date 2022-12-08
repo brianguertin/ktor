@@ -7,7 +7,7 @@ package io.ktor.utils.io
 import io.ktor.io.*
 import io.ktor.utils.io.charsets.*
 
-public fun ByteWriteChannel.writeBuffer(buffer: Buffer) {
+public fun ByteWriteChannel.writeBuffer(buffer: ReadableBuffer) {
     check(!isClosedForWrite) { "Can't write to closed channel." }
     writablePacket.writeBuffer(buffer)
 }

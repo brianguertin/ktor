@@ -79,8 +79,7 @@ public fun CoroutineScope.startServerConnectionPipeline(
             val expectedHttpBody: Boolean
             val expectedHttpUpgrade: Boolean
 
-            val response: ByteReadChannel = ConflatedByteChannel()
-            val responseW: ByteWriteChannel = ConflatedByteChannel()
+            val response = ConflatedByteChannel()
 
             try {
                 actorChannel.send(response)
@@ -132,7 +131,7 @@ public fun CoroutineScope.startServerConnectionPipeline(
                 val handlerScope = ServerRequestScope(
                     coroutineContext,
                     requestBody,
-                    responseW,
+                    response,
                     connection.remoteAddress,
                     connection.localAddress,
                     upgraded
@@ -141,10 +140,10 @@ public fun CoroutineScope.startServerConnectionPipeline(
                 try {
                     handler(handlerScope, request)
                 } catch (cause: Throwable) {
-                    responseW.close(cause)
+                    response.close(cause)
                     upgraded?.completeExceptionally(cause)
                 } finally {
-                    responseW.close()
+                    response.close()
                     upgraded?.complete(false)
                 }
             }
@@ -172,8 +171,8 @@ public fun CoroutineScope.startServerConnectionPipeline(
                     )
                 } catch (cause: Throwable) {
                     requestBody.close(ChannelReadException("Failed to read request body", cause))
-                    responseW.writePacket(BadRequestPacket.clone())
-                    responseW.close()
+                    response.writePacket(BadRequestPacket.clone())
+                    response.close()
                     break
                 } finally {
                     requestBody.close()
@@ -189,7 +188,7 @@ public fun CoroutineScope.startServerConnectionPipeline(
     }
 }
 
-private suspend fun respondBadRequest(actorChannel: Channel<ByteReadChannel>) {
+private fun respondBadRequest(actorChannel: Channel<ByteReadChannel>) {
     val response = ByteReadChannel {
         writePacket(BadRequestPacket.clone())
     }

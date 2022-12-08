@@ -21,22 +21,20 @@ public fun InputStream.toByteReadChannel(
     context: CoroutineContext = Dispatchers.Unconfined,
     parent: Job = Job()
 ): ByteReadChannel = CoroutineScope(context).writer(parent) {
-    val buffer = pool.borrow()
     try {
         while (true) {
-            buffer.clear()
+            val buffer = ByteBuffer.allocate(8192)
             val readCount = read(buffer.array(), buffer.arrayOffset() + buffer.position(), buffer.remaining())
             if (readCount < 0) break
             if (readCount == 0) continue
 
             buffer.position(buffer.position() + readCount)
             buffer.flip()
-            channel.writeByteBuffer(buffer)
+            writeByteBuffer(buffer)
         }
     } catch (cause: Throwable) {
-        channel.close(cause)
+        close(cause)
     } finally {
-        pool.recycle(buffer)
         close()
     }
 }
