@@ -77,8 +77,10 @@ public suspend fun decodeChunked(input: ByteReadChannel, out: ByteWriteChannel, 
                 throw EOFException("Invalid chunk size: empty")
             }
 
-            val chunkSize =
-                if (chunkSizeBuffer.length == 1 && chunkSizeBuffer[0] == '0') 0 else chunkSizeBuffer.parseHexLong()
+            val chunkSize = if (chunkSizeBuffer.length == 1 && chunkSizeBuffer[0] == '0')
+                0
+            else
+                chunkSizeBuffer.parseHexLong()
 
             if (chunkSize > 0) {
                 input.copyTo(out, chunkSize)
@@ -96,9 +98,9 @@ public suspend fun decodeChunked(input: ByteReadChannel, out: ByteWriteChannel, 
 
             if (chunkSize == 0L) break
         }
-    } catch (t: Throwable) {
-        out.close(t)
-        throw t
+    } catch (cause: Throwable) {
+        out.close(cause)
+        throw cause
     } finally {
         ChunkSizeBufferPool.recycle(chunkSizeBuffer)
         out.close()
@@ -128,8 +130,8 @@ public suspend fun encodeChunked(output: ByteWriteChannel, input: ByteReadChanne
             output.writeChunk(buffer)
         }
 
-        input.rethrowCloseCause()
         output.writeByteArray(LastChunkBytes)
+        input.rethrowCloseCause()
     } catch (cause: Throwable) {
         output.close(cause)
         input.cancel(cause)

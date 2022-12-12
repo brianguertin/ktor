@@ -30,6 +30,8 @@ public class ConflatedByteChannel : ByteReadChannel, ByteWriteChannel {
 
     override val writablePacket: Packet = Packet()
 
+    private val closeStackTrace = atomic<String?>(null)
+
     override suspend fun flush() {
         if (writablePacket.isEmpty) return
         channel.send(writablePacket.steal())
@@ -64,6 +66,7 @@ public class ConflatedByteChannel : ByteReadChannel, ByteWriteChannel {
     @OptIn(DelicateCoroutinesApi::class)
     override fun close(cause: Throwable?): Boolean {
         if (!closing.compareAndSet(false, true)) return false
+        closeStackTrace.value = Exception().stackTraceToString()
 
         // TODO: use IO dispatcher
         GlobalScope.launch(Dispatchers.Default) {

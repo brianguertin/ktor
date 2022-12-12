@@ -45,12 +45,10 @@ public open class Route(
      */
     public val children: List<Route> get() = childList
 
-    @OptIn(InternalAPI::class)
     private val childList: MutableList<Route> = mutableListOf()
 
     private var cachedPipeline: ApplicationCallPipeline? = null
 
-    @OptIn(InternalAPI::class)
     internal val handlers = mutableListOf<PipelineInterceptor<Unit, ApplicationCall>>()
 
     /**

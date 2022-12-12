@@ -32,6 +32,7 @@ public suspend fun ByteReadChannel.copyTo(dst: ByteWriteChannel, limit: Long = L
     var remaining = limit
     while (!isClosedForRead && remaining > 0) {
         if (readablePacket.isEmpty) {
+            dst.flush()
             awaitBytes()
             continue
         }
@@ -46,6 +47,7 @@ public suspend fun ByteReadChannel.copyTo(dst: ByteWriteChannel, limit: Long = L
         }
     }
 
+    dst.flush()
     return limit - remaining
 }
 

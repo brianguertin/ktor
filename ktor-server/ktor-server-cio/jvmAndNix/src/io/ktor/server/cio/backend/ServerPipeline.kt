@@ -143,7 +143,6 @@ public fun CoroutineScope.startServerConnectionPipeline(
                     response.close(cause)
                     upgraded?.completeExceptionally(cause)
                 } finally {
-                    response.close()
                     upgraded?.complete(false)
                 }
             }

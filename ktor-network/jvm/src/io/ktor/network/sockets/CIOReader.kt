@@ -7,76 +7,15 @@ package io.ktor.network.sockets
 import io.ktor.network.selector.*
 import io.ktor.network.util.*
 import io.ktor.utils.io.*
-import io.ktor.utils.io.pool.*
 import kotlinx.coroutines.*
-import java.nio.*
 import java.nio.channels.*
-
-internal fun CoroutineScope.attachForReadingImpl(
-    nioChannel: ReadableByteChannel,
-    selectable: Selectable,
-    selector: SelectorManager,
-    pool: ObjectPool<ByteBuffer>,
-    socketOptions: SocketOptions.TCPClientSocketOptions? = null
-): ByteReadChannel {
-    val buffer = pool.borrow()
-    return writer(Dispatchers.Unconfined + CoroutineName("cio-from-nio-reader")) {
-        try {
-            val timeout = if (socketOptions?.socketTimeout != null) {
-                createTimeout("reading", socketOptions.socketTimeout) {
-                    channel.close(SocketTimeoutException())
-                }
-            } else {
-                null
-            }
-
-            while (true) {
-                var rc = 0
-
-                timeout.withTimeout {
-                    do {
-                        rc = nioChannel.read(buffer)
-                        if (rc == 0) {
-                            channel.flush()
-                            selectable.interestOp(SelectInterest.READ, true)
-                            selector.select(selectable, SelectInterest.READ)
-                        }
-                    } while (rc == 0)
-                }
-
-                if (rc == -1) {
-                    channel.close()
-                    break
-                } else {
-                    selectable.interestOp(SelectInterest.READ, false)
-                    buffer.flip()
-                    channel.writeByteBuffer(buffer)
-                    buffer.clear()
-                }
-            }
-            timeout?.finish()
-        } finally {
-            pool.recycle(buffer)
-            if (nioChannel is SocketChannel) {
-                try {
-                    if (java7NetworkApisAvailable) {
-                        nioChannel.shutdownInput()
-                    } else {
-                        nioChannel.socket().shutdownInput()
-                    }
-                } catch (ignore: ClosedChannelException) {
-                }
-            }
-        }
-    }
-}
 
 internal fun CoroutineScope.attachForReadingDirectImpl(
     nioChannel: ReadableByteChannel,
     selectable: Selectable,
     selector: SelectorManager,
     socketOptions: SocketOptions.TCPClientSocketOptions? = null
-): ByteReadChannel = writer(Dispatchers.Unconfined + CoroutineName("cio-from-nio-reader")) {
+): ByteReadChannel = writer(Dispatchers.IO + CoroutineName("cio-from-nio-reader")) {
     try {
         selectable.interestOp(SelectInterest.READ, false)
 

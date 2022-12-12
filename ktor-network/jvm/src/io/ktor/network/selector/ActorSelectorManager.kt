@@ -32,10 +32,10 @@ public class ActorSelectorManager(context: CoroutineContext) : SelectorManagerSu
 
     private val selectionQueue = LockFreeMPSCQueue<Selectable>()
 
-    override val coroutineContext: CoroutineContext = context + CoroutineName("selector")
+    override val coroutineContext: CoroutineContext
 
     init {
-        launch {
+        coroutineContext = context + CoroutineName("selector") + GlobalScope.launch(context) {
             val selector = provider.openSelector() ?: error("openSelector() = null")
             selectorRef = selector
             selector.use { currentSelector ->

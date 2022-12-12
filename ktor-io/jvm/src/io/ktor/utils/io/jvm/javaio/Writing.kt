@@ -18,7 +18,8 @@ public suspend fun ByteReadChannel.copyTo(out: OutputStream, limit: Long = Long.
         var copied = 0L
         val bufferSize = buffer.size.toLong()
 
-        while (copied < limit) {
+        while (!isClosedForRead && copied < limit) {
+            if (availableForRead == 0) awaitBytes()
             val rc = readAvailable(buffer, 0, minOf(limit - copied, bufferSize).toInt())
             if (rc == -1) break
             if (rc > 0) {
