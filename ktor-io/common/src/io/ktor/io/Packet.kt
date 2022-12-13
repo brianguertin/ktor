@@ -13,16 +13,37 @@ public class Packet : Closeable {
     private var writeBuffer: Buffer = Buffer.Empty
 
     public var availableForRead: Int = state.sumOf { it.availableForRead }
-        private set
+        private set(value) {
+            field = value
+            validate()
+        }
 
     public fun peek(): ReadableBuffer {
+        validate()
+
         return state.first()
+    }
+
+    public fun validate() {
+        if (state.sumOf { it.availableForRead } != availableForRead) {
+            println("ERROR")
+            error("ERROR")
+        }
     }
 
     public fun readBuffer(): ReadableBuffer {
         val result = state.first()
         state.removeFirst()
         availableForRead -= result.availableForRead
+        updateWriteBuffer()
+        return result
+    }
+
+    public fun readBuffers(): List<ReadableBuffer> {
+        val result = state.toList()
+        state.clear()
+        availableForRead = 0
+        writeBuffer = Buffer.Empty
         return result
     }
 
@@ -30,9 +51,7 @@ public class Packet : Closeable {
         checkCanRead(1)
         val result = state.first().readByte()
         availableForRead--
-        if (state.first().availableForRead == 0) {
-            state.removeFirst()
-        }
+        dropFirstIfNeeded()
         return result
     }
 
@@ -40,9 +59,7 @@ public class Packet : Closeable {
         checkCanRead(8)
         val result = state.first().readLong()
         availableForRead -= 8
-        if (state.first().availableForRead == 0) {
-            state.removeFirst()
-        }
+        dropFirstIfNeeded()
         return result
     }
 
@@ -50,9 +67,7 @@ public class Packet : Closeable {
         checkCanRead(4)
         val result = state.first().readInt()
         availableForRead -= 4
-        if (state.first().availableForRead == 0) {
-            state.removeFirst()
-        }
+        dropFirstIfNeeded()
         return result
     }
 
@@ -60,14 +75,13 @@ public class Packet : Closeable {
         checkCanRead(2)
         val result = state.first().readShort()
         availableForRead -= 2
-        if (state.first().availableForRead == 0) {
-            state.removeFirst().close()
-        }
+        dropFirstIfNeeded()
         return result
     }
 
     public fun discard(limit: Int): Int {
-        if (limit > availableForRead) {
+        validate()
+        if (limit >= availableForRead) {
             val result = availableForRead
             close()
             return result
@@ -101,6 +115,8 @@ public class Packet : Closeable {
         state.addLast(buffer)
         writeBuffer = Buffer.Empty
         availableForRead += buffer.availableForRead
+
+        validate()
     }
 
     public fun writeByte(value: Byte) {
@@ -163,6 +179,8 @@ public class Packet : Closeable {
         if (state.first().availableForRead >= length) {
             val result = state.first().readByteArray(length)
             availableForRead -= length
+
+            dropFirstIfNeeded()
             return result
         }
 
@@ -180,6 +198,7 @@ public class Packet : Closeable {
         if (state.size == 1) {
             val buffer = state.removeFirst()
             val result = buffer.readString(charset)
+            writeBuffer = Buffer.Empty
             availableForRead = 0
             return result
         }
@@ -190,6 +209,7 @@ public class Packet : Closeable {
             }
 
             availableForRead = 0
+            writeBuffer = Buffer.Empty
         }
     }
 
@@ -219,6 +239,7 @@ public class Packet : Closeable {
 
     public fun readPacket(length: Int): Packet {
         checkCanRead(length)
+        if (length == availableForRead) return steal()
 
         var remaining = length
         val result = Packet()
@@ -233,7 +254,7 @@ public class Packet : Closeable {
         }
 
         availableForRead -= length
-
+        updateWriteBuffer()
         return result
     }
 
@@ -292,10 +313,21 @@ public class Packet : Closeable {
     }
 
     override fun close() {
-        availableForRead = 0
         state.forEach { it.close() }
         state.clear()
+        availableForRead = 0
         writeBuffer = Buffer.Empty
+    }
+
+    private fun dropFirstIfNeeded() {
+        if (state.first().isEmpty) {
+            state.removeFirst()
+            updateWriteBuffer()
+        }
+    }
+
+    private fun updateWriteBuffer() {
+        if (state.isEmpty()) writeBuffer = Buffer.Empty
     }
 
     public companion object {

@@ -22,7 +22,7 @@ import kotlin.coroutines.*
 public class CIOMultipartDataBase(
     override val coroutineContext: CoroutineContext,
     channel: ByteReadChannel,
-    contentType: CharSequence,
+    contentType: String,
     contentLength: Long?,
     private val formFieldLimit: Int = 65536,
     private val inMemoryFileUploadLimit: Int = formFieldLimit

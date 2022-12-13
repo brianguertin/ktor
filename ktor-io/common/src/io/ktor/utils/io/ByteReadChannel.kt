@@ -40,4 +40,3 @@ public interface ByteReadChannel {
         public val Empty: ByteReadChannel = EmptyByteReadChannel
     }
 }
-

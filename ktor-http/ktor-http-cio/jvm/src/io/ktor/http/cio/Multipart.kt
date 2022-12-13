@@ -14,6 +14,7 @@ import kotlinx.coroutines.channels.*
 import java.io.*
 import java.io.EOFException
 import java.nio.*
+import java.nio.channels.*
 
 /**
  * Represents a multipart content starting event. Every part need to be completely consumed or released via [release]
@@ -184,14 +185,6 @@ private suspend fun parsePartBodyImpl(
 
 /**
  * Skip multipart boundary
- */
-@Deprecated("This is going to be removed. Use parseMultipart instead.", level = DeprecationLevel.ERROR)
-public suspend fun boundary(boundaryPrefixed: ByteBuffer, input: ByteReadChannel): Boolean {
-    return skipBoundary(boundaryPrefixed, input)
-}
-
-/**
- * Skip multipart boundary
  * @return `true` if end channel encountered
  */
 private suspend fun skipBoundary(boundaryPrefixed: ByteBuffer, input: ByteReadChannel): Boolean {
@@ -251,7 +244,6 @@ public fun CoroutineScope.parseMultipart(
 /**
  * Starts a multipart parser coroutine producing multipart events
  */
-@Suppress("DEPRECATION_ERROR")
 public fun CoroutineScope.parseMultipart(
     input: ByteReadChannel,
     contentType: CharSequence,
@@ -260,11 +252,11 @@ public fun CoroutineScope.parseMultipart(
     if (!contentType.startsWith("multipart/")) {
         throw IOException("Failed to parse multipart: Content-Type should be multipart/* but it is $contentType")
     }
-    val boundaryBytes = parseBoundaryInternal(contentType)
 
-    // TODO fail if contentLength = 0 and content subtype is wrong
-
-    return parseMultipart(boundaryBytes, input, contentLength)
+    val boundary = "--" + parseBoundaryInternal(contentType)
+    return produce {
+        TODO("$boundary")
+    }
 }
 
 private val CrLf = ByteBuffer.wrap("\r\n".toByteArray())!!
@@ -399,6 +391,7 @@ private fun findBoundary(contentType: CharSequence): Int {
                     paramNameCount = 0
                 }
             }
+
             1 -> {
                 if (ch == '=') {
                     state = 2
@@ -415,6 +408,7 @@ private fun findBoundary(contentType: CharSequence): Int {
                     paramNameCount++
                 }
             }
+
             2 -> {
                 when (ch) {
                     '"' -> state = 3
@@ -425,6 +419,7 @@ private fun findBoundary(contentType: CharSequence): Int {
                     }
                 }
             }
+
             3 -> {
                 if (ch == '"') {
                     state = 1
@@ -433,6 +428,7 @@ private fun findBoundary(contentType: CharSequence): Int {
                     state = 4
                 }
             }
+
             4 -> {
                 state = 3
             }
@@ -444,106 +440,22 @@ private fun findBoundary(contentType: CharSequence): Int {
 
 /**
  * Parse multipart boundary encoded in [contentType] header value
- * @return a buffer containing CRLF, prefix '--' and boundary bytes
  */
-@Deprecated(
-    "This is going to become internal. " +
-        "Use parseMultipart instead or file a ticket explaining why do you need this function.",
-    level = DeprecationLevel.ERROR
-)
-@Suppress("unused")
-public fun parseBoundary(contentType: CharSequence): ByteBuffer {
-    return parseBoundaryInternal(contentType)
-}
+internal fun parseBoundaryInternal(contentType: CharSequence): String {
+    val boundaryStart = findBoundary(contentType)
 
-/**
- * Parse multipart boundary encoded in [contentType] header value
- * @return a buffer containing CRLF, prefix '--' and boundary bytes
- */
-internal fun parseBoundaryInternal(contentType: CharSequence): ByteBuffer {
-    val boundaryParameter = findBoundary(contentType)
-
-    if (boundaryParameter == -1) {
+    if (boundaryStart == -1) {
         throw IOException("Failed to parse multipart: Content-Type's boundary parameter is missing")
     }
-    val boundaryStart = boundaryParameter + 9
 
-    val boundaryBytes: ByteBuffer = ByteBuffer.allocate(74)
-    boundaryBytes.put(0x0d)
-    boundaryBytes.put(0x0a)
-    boundaryBytes.put(PrefixChar)
-    boundaryBytes.put(PrefixChar)
-
-    var state = 0 // 0 - skipping spaces, 1 - unquoted characters, 2 - quoted no escape, 3 - quoted after escape
-
-    loop@ for (i in boundaryStart until contentType.length) {
-        val ch = contentType[i]
-        val v = ch.code and 0xffff
-        if (v and 0xffff > 0x7f) {
-            throw IOException(
-                "Failed to parse multipart: wrong boundary byte 0x${v.toString(16)} - should be 7bit character"
-            )
-        }
-
-        when (state) {
-            0 -> {
-                when (ch) {
-                    ' ' -> {
-                        // skip space
-                    }
-                    '"' -> {
-                        state = 2 // start quoted string parsing
-                    }
-                    ';', ',' -> {
-                        break@loop
-                    }
-                    else -> {
-                        state = 1
-                        boundaryBytes.put(v.toByte())
-                    }
-                }
-            }
-            1 -> { // non-quoted string
-                if (ch == ' ' || ch == ',' || ch == ';') { // space, comma or semicolon (;)
-                    break@loop
-                } else if (boundaryBytes.hasRemaining()) {
-                    boundaryBytes.put(v.toByte())
-                } else {
-                    //  RFC 2046, sec 5.1.1
-                    throw IOException("Failed to parse multipart: boundary shouldn't be longer than 70 characters")
-                }
-            }
-            2 -> {
-                if (ch == '\\') {
-                    state = 3
-                } else if (ch == '"') {
-                    break@loop
-                } else if (boundaryBytes.hasRemaining()) {
-                    boundaryBytes.put(v.toByte())
-                } else {
-                    //  RFC 2046, sec 5.1.1
-                    throw IOException("Failed to parse multipart: boundary shouldn't be longer than 70 characters")
-                }
-            }
-            3 -> {
-                if (boundaryBytes.hasRemaining()) {
-                    boundaryBytes.put(v.toByte())
-                    state = 2
-                } else {
-                    //  RFC 2046, sec 5.1.1
-                    throw IOException("Failed to parse multipart: boundary shouldn't be longer than 70 characters")
-                }
-            }
-        }
+    val boundaryEnd = contentType.indexOf(';', boundaryStart)
+    val boundary = if (boundaryEnd == -1) {
+        contentType.substring(boundaryStart + 9)
+    } else {
+        contentType.substring(boundaryStart + 9, boundaryEnd)
     }
 
-    boundaryBytes.flip()
-
-    if (boundaryBytes.remaining() == 4) {
-        throw IOException("Empty multipart boundary is not allowed")
-    }
-
-    return boundaryBytes
+    return boundary
 }
 
 /**

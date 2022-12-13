@@ -50,8 +50,9 @@ internal class OutputAdapter(parent: Job?, private val channel: ByteWriteChannel
     }
 
     @Synchronized
-    override fun write(b: ByteArray?, off: Int, len: Int) {
-        loop.submitAndAwait(b!!, off, len)
+    override fun write(b: ByteArray, off: Int, len: Int) {
+        val array = b.sliceArray(off until off + len)
+        loop.submitAndAwait(array, 0, len)
     }
 
     @Synchronized

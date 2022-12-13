@@ -82,6 +82,7 @@ public suspend fun decodeChunked(input: ByteReadChannel, out: ByteWriteChannel, 
             else
                 chunkSizeBuffer.parseHexLong()
 
+            input.readablePacket.validate()
             if (chunkSize > 0) {
                 input.copyTo(out, chunkSize)
                 out.flush()
@@ -89,6 +90,7 @@ public suspend fun decodeChunked(input: ByteReadChannel, out: ByteWriteChannel, 
             }
 
             chunkSizeBuffer.clear()
+            input.readablePacket.validate()
             if (!input.readUTF8LineTo(chunkSizeBuffer, 2)) {
                 throw EOFException("Invalid chunk: content block of size $chunkSize ended unexpectedly")
             }
@@ -148,7 +150,7 @@ private const val CrLfShort: Short = 0x0d0a
 private val CrLf = "\r\n".toByteArray()
 private val LastChunkBytes = "0\r\n\r\n".toByteArray()
 
-private suspend fun ByteWriteChannel.writeChunk(buffer: ReadableBuffer): Int {
+private suspend fun ByteWriteChannel.writeChunk(buffer: ReadableBuffer) {
     val size = buffer.availableForRead
     writeIntHex(size)
     writeShort(CrLfShort)
@@ -156,6 +158,4 @@ private suspend fun ByteWriteChannel.writeChunk(buffer: ReadableBuffer): Int {
     writeBuffer(buffer)
     writeByteArray(CrLf)
     flush()
-
-    return size
 }

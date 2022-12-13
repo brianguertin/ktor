@@ -200,6 +200,10 @@ public suspend fun ByteReadChannel.readRemaining(limit: Long = Long.MAX_VALUE): 
         remaining -= packet.availableForRead
         writePacket(packet)
     }
+
+    if (remaining > 0) {
+        closedCause?.let { throw it }
+    }
 }
 
 /**

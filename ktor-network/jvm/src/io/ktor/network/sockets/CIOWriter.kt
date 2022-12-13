@@ -74,14 +74,5 @@ internal fun CoroutineScope.attachForWritingDirectImpl(
 }
 
 private fun Packet.readByteBuffers(): Array<ByteBuffer> {
-    val buffers = ArrayList<ByteBuffer>()
-
-    while (isNotEmpty) {
-        val buffer = readBuffer().readByteBuffer()
-        if (buffer.hasRemaining()) {
-            buffers.add(buffer)
-        }
-    }
-
-    return buffers.toTypedArray()
+    return readBuffers().map { it.readByteBuffer() }.toTypedArray()
 }

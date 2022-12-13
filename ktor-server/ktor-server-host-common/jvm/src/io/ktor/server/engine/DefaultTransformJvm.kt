@@ -32,14 +32,14 @@ internal actual suspend fun PipelineContext<Any, ApplicationCall>.defaultPlatfor
 }
 
 @OptIn(InternalAPI::class)
-internal actual fun PipelineContext<*, ApplicationCall>.multiPartData(rc: ByteReadChannel): MultiPartData {
+internal actual fun PipelineContext<*, ApplicationCall>.multiPartData(channel: ByteReadChannel): MultiPartData {
     val contentType = call.request.header(HttpHeaders.ContentType)
         ?: throw IllegalStateException("Content-Type header is required for multipart processing")
 
     val contentLength = call.request.header(HttpHeaders.ContentLength)?.toLong()
     return CIOMultipartDataBase(
         coroutineContext + Dispatchers.Unconfined,
-        rc,
+        channel,
         contentType,
         contentLength
     )

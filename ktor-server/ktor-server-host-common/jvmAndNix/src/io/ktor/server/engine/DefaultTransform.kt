@@ -94,7 +94,7 @@ internal expect suspend fun PipelineContext<Any, ApplicationCall>.defaultPlatfor
     query: Any
 ): Any?
 
-internal expect fun PipelineContext<*, ApplicationCall>.multiPartData(rc: ByteReadChannel): MultiPartData
+internal expect fun PipelineContext<*, ApplicationCall>.multiPartData(channel: ByteReadChannel): MultiPartData
 
 internal inline fun <R> withContentType(call: ApplicationCall, block: () -> R): R = try {
     block()
