@@ -4,6 +4,7 @@
 
 package io.ktor.util
 
+import io.ktor.io.pool.*
 import io.ktor.utils.io.pool.*
 import java.nio.*
 import java.nio.charset.*

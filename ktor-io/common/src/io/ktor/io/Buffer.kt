@@ -4,6 +4,8 @@
 
 package io.ktor.io
 
+import io.ktor.io.internal.EmptyBuffer
+
 public interface Buffer : ReadableBuffer {
 
     override var writeIndex: Int

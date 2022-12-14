@@ -4,8 +4,7 @@
 
 package io.ktor.io
 
-import io.ktor.utils.io.*
-import io.ktor.utils.io.charsets.*
+import io.ktor.io.charsets.*
 import kotlinx.coroutines.*
 import kotlin.test.*
 

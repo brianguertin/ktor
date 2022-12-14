@@ -5,6 +5,7 @@
 package io.ktor.websocket.internals
 
 import io.ktor.io.*
+import io.ktor.io.pool.*
 import io.ktor.util.cio.*
 import io.ktor.utils.io.core.*
 import io.ktor.utils.io.pool.*

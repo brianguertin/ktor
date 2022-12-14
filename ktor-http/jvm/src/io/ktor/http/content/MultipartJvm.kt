@@ -4,6 +4,7 @@
 
 package io.ktor.http.content
 
+import io.ktor.io.jvm.javaio.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.jvm.javaio.*
 import java.io.*

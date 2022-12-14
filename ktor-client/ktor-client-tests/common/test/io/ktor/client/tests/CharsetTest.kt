@@ -30,7 +30,7 @@ class CharsetTest {
                         "Content",
                         HttpStatusCode.OK,
                         buildHeaders {
-                            append(HttpHeaders.ContentType, ContentType.Text.Plain.withCharset(Charsets.UTF_8))
+                            append(HttpHeaders.ContentType, ContentType.Text.Plain.withCharset(io.ktor.io.charsets.Charsets.UTF_8))
                         }
                     )
                 }
@@ -40,7 +40,7 @@ class CharsetTest {
                     assertEquals("UTF-8", request.headers[HttpHeaders.AcceptCharset])
 
                     val requestContent = request.body as TextContent
-                    assertEquals(ContentType.Text.Plain.withCharset(Charsets.UTF_8), requestContent.contentType)
+                    assertEquals(ContentType.Text.Plain.withCharset(io.ktor.io.charsets.Charsets.UTF_8), requestContent.contentType)
                     assertEquals("Hello, Test!", requestContent.text)
 
                     respondOk()
@@ -67,7 +67,7 @@ class CharsetTest {
                         "Content",
                         HttpStatusCode.OK,
                         buildHeaders {
-                            append(HttpHeaders.ContentType, ContentType.Text.Plain.withCharset(Charsets.UTF_8))
+                            append(HttpHeaders.ContentType, ContentType.Text.Plain.withCharset(io.ktor.io.charsets.Charsets.UTF_8))
                         }
                     )
                 }
@@ -77,7 +77,7 @@ class CharsetTest {
                     assertEquals("ISO-8859-1,UTF-8", request.headers[HttpHeaders.AcceptCharset])
 
                     val requestContent = request.body as TextContent
-                    assertEquals(ContentType.Text.Plain.withCharset(Charsets.ISO_8859_1), requestContent.contentType)
+                    assertEquals(ContentType.Text.Plain.withCharset(io.ktor.io.charsets.Charsets.ISO_8859_1), requestContent.contentType)
                     assertEquals("Hello, Test!", requestContent.text)
 
                     respondOk()
@@ -85,8 +85,8 @@ class CharsetTest {
             }
 
             Charsets {
-                register(Charsets.UTF_8)
-                register(Charsets.ISO_8859_1)
+                register(io.ktor.io.charsets.Charsets.UTF_8)
+                register(io.ktor.io.charsets.Charsets.ISO_8859_1)
             }
         }
 
@@ -109,7 +109,7 @@ class CharsetTest {
                         "Content",
                         HttpStatusCode.OK,
                         buildHeaders {
-                            append(HttpHeaders.ContentType, ContentType.Text.Plain.withCharset(Charsets.ISO_8859_1))
+                            append(HttpHeaders.ContentType, ContentType.Text.Plain.withCharset(io.ktor.io.charsets.Charsets.ISO_8859_1))
                         }
                     )
                 }
@@ -119,7 +119,7 @@ class CharsetTest {
                     assertEquals("ISO-8859-1;q=0.9,UTF-8;q=0.1", request.headers[HttpHeaders.AcceptCharset])
 
                     val requestContent = request.body as TextContent
-                    assertEquals(ContentType.Text.Plain.withCharset(Charsets.ISO_8859_1), requestContent.contentType)
+                    assertEquals(ContentType.Text.Plain.withCharset(io.ktor.io.charsets.Charsets.ISO_8859_1), requestContent.contentType)
                     assertEquals("Hello, Test!", requestContent.text)
 
                     respondOk()
@@ -127,8 +127,8 @@ class CharsetTest {
             }
 
             Charsets {
-                register(Charsets.UTF_8, quality = 0.1f)
-                register(Charsets.ISO_8859_1, quality = 0.9f)
+                register(io.ktor.io.charsets.Charsets.UTF_8, quality = 0.1f)
+                register(io.ktor.io.charsets.Charsets.ISO_8859_1, quality = 0.9f)
             }
         }
 
@@ -151,7 +151,7 @@ class CharsetTest {
                         "Content",
                         HttpStatusCode.OK,
                         buildHeaders {
-                            append(HttpHeaders.ContentType, ContentType.Text.Plain.withCharset(Charsets.ISO_8859_1))
+                            append(HttpHeaders.ContentType, ContentType.Text.Plain.withCharset(io.ktor.io.charsets.Charsets.ISO_8859_1))
                         }
                     )
                 }
@@ -161,7 +161,7 @@ class CharsetTest {
                     assertEquals("ISO-8859-1,UTF-8;q=0.1", request.headers[HttpHeaders.AcceptCharset])
 
                     val requestContent = request.body as TextContent
-                    assertEquals(ContentType.Text.Plain.withCharset(Charsets.ISO_8859_1), requestContent.contentType)
+                    assertEquals(ContentType.Text.Plain.withCharset(io.ktor.io.charsets.Charsets.ISO_8859_1), requestContent.contentType)
                     assertEquals("Hello, Test!", requestContent.text)
 
                     respondOk()
@@ -169,8 +169,8 @@ class CharsetTest {
             }
 
             Charsets {
-                register(Charsets.UTF_8, quality = 0.1f)
-                register(Charsets.ISO_8859_1)
+                register(io.ktor.io.charsets.Charsets.UTF_8, quality = 0.1f)
+                register(io.ktor.io.charsets.Charsets.ISO_8859_1)
             }
         }
 

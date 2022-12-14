@@ -6,6 +6,7 @@ package io.ktor.serialization
 
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.charsets.*
 import io.ktor.util.*
 import io.ktor.util.pipeline.*
 import io.ktor.util.reflect.*

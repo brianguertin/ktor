@@ -5,7 +5,6 @@
 package io.ktor.io
 
 import io.ktor.test.dispatcher.*
-import io.ktor.utils.io.*
 import kotlin.test.*
 
 class ByteReadChannelExtensionsTest {

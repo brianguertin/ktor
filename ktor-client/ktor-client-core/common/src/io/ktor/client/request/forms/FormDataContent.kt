@@ -7,6 +7,7 @@ package io.ktor.client.request.forms
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.io.*
+import io.ktor.io.charsets.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*

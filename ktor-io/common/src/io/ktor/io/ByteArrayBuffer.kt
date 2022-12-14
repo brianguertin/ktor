@@ -4,7 +4,7 @@
 
 package io.ktor.io
 
-import io.ktor.utils.io.charsets.*
+import io.ktor.io.charsets.*
 
 public class ByteArrayBuffer(
     public val array: ByteArray,

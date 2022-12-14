@@ -8,6 +8,7 @@ import io.ktor.http.*
 import io.ktor.http.cio.*
 import io.ktor.http.cio.internals.*
 import io.ktor.io.*
+import io.ktor.io.charsets.*
 import io.ktor.server.cio.*
 import io.ktor.server.cio.internal.*
 import io.ktor.util.*

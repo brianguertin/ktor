@@ -18,7 +18,7 @@ public fun Packet.writeByteBuffer(value: ByteBuffer) {
 
 public fun ReadableBuffer.readByteBuffer(): ByteBuffer {
     if (this is WithByteBuffer) {
-        return state
+        val result = state
     }
 
     return ByteBuffer.wrap(toByteArray())

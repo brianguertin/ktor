@@ -1,8 +1,6 @@
 package io.ktor.io
 
-import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
-import io.ktor.utils.io.jvm.javaio.*
+import io.ktor.io.jvm.javaio.*
 import kotlinx.coroutines.*
 import java.io.*
 import java.util.*
@@ -21,10 +19,9 @@ class ToByteReadChannelTest {
     fun testSeveralBytes() = runBlocking {
         val content = byteArrayOf(1, 2, 3, 4)
         val channel = ByteArrayInputStream(content).toByteReadChannel()
-        channel.readRemaining().use { pkt ->
-            val bytes = pkt.toByteArray()
-            assertTrue { bytes.contentEquals(content) }
-        }
+        val packet = channel.readRemaining()
+        val bytes = packet.toByteArray()
+        assertArrayEquals(content, bytes)
     }
 
     @Test

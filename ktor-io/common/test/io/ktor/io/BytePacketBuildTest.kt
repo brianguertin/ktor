@@ -4,10 +4,9 @@
 
 package io.ktor.io
 
-import io.ktor.utils.io.errors.*
 import kotlin.test.*
 
-open class BytePacketBuildTest {
+class BytePacketBuildTest {
     @Test
     fun smokeSingleBufferTest() {
         val p = buildPacket {
@@ -63,7 +62,7 @@ open class BytePacketBuildTest {
             writeString("OK\n")
         }
 
-        assertEquals(10034, p.availableForRead)
+        assertEquals(10029, p.availableForRead)
 
         val ba = p.readByteArray(9999)
         assertEquals(0x12, p.readByte())

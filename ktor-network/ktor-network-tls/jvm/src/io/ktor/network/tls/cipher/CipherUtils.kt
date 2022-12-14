@@ -5,6 +5,7 @@
 package io.ktor.network.tls.cipher
 
 import io.ktor.io.*
+import io.ktor.io.pool.*
 import io.ktor.network.util.*
 import io.ktor.utils.io.core.*
 import io.ktor.utils.io.pool.*

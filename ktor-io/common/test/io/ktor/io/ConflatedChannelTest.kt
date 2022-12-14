@@ -5,8 +5,6 @@
 package io.ktor.io
 
 import io.ktor.test.dispatcher.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.errors.*
 import kotlin.test.*
 
 class ConflatedChannelTest {

@@ -7,6 +7,7 @@ package io.ktor.tests.auth
 import io.ktor.http.*
 import io.ktor.http.auth.*
 import io.ktor.io.*
+import io.ktor.io.charsets.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.plugins.*

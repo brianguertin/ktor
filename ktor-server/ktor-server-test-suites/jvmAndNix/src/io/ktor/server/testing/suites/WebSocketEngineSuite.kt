@@ -6,6 +6,7 @@ package io.ktor.server.testing.suites
 
 import io.ktor.http.*
 import io.ktor.io.*
+import io.ktor.io.charsets.*
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import io.ktor.server.application.*

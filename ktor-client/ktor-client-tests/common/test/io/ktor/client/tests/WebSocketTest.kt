@@ -9,6 +9,7 @@ import io.ktor.client.plugins.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.client.tests.utils.*
 import io.ktor.http.*
+import io.ktor.io.charsets.*
 import io.ktor.serialization.*
 import io.ktor.test.dispatcher.*
 import io.ktor.util.reflect.*

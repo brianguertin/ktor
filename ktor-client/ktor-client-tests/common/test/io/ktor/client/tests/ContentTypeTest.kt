@@ -10,6 +10,7 @@ import io.ktor.client.request.*
 import io.ktor.client.tests.utils.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.charsets.*
 import io.ktor.test.dispatcher.*
 import io.ktor.utils.io.charsets.*
 import kotlin.test.*

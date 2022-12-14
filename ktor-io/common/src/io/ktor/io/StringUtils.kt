@@ -4,7 +4,7 @@
 
 package io.ktor.io
 
-import io.ktor.utils.io.charsets.*
+import io.ktor.io.charsets.*
 
 public expect fun String(
     bytes: ByteArray,

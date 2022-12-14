@@ -7,6 +7,7 @@ package io.ktor.http.cio
 import io.ktor.http.cio.internals.*
 import io.ktor.io.*
 import io.ktor.io.Buffer
+import io.ktor.io.pool.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.bits.*
 import io.ktor.utils.io.core.*

@@ -4,9 +4,7 @@
 
 package io.ktor.io
 
-import io.ktor.utils.io.charsets.*
-import io.ktor.utils.io.core.*
-import io.ktor.utils.io.errors.*
+import io.ktor.io.charsets.*
 
 public class Packet : Closeable {
     private val state = ArrayDeque<ReadableBuffer>()
@@ -122,19 +120,6 @@ public class Packet : Closeable {
     public fun writeByte(value: Byte) {
         prepareWriteBuffer().writeByte(value)
         availableForRead += 1
-    }
-
-    private fun prepareWriteBuffer(count: Int = 1): Buffer {
-        if (writeBuffer.availableForWrite < count) {
-            writeBuffer = createBuffer()
-            state.addLast(writeBuffer)
-        }
-
-        return writeBuffer
-    }
-
-    private fun createBuffer(): Buffer = ByteArrayBuffer(ByteArray(16 * 1024)).apply {
-        writeIndex = 0
     }
 
     public fun writeShort(value: Short) {
@@ -258,6 +243,23 @@ public class Packet : Closeable {
         return result
     }
 
+    public fun readDouble(): Double {
+        return Double.fromBits(readLong())
+    }
+
+    public fun readFloat(): Float {
+        return Float.fromBits(readInt())
+    }
+
+    public fun readLine(charset: Charset = Charsets.UTF_8): String? {
+        TODO()
+    }
+
+    public fun discardExact(count: Int): Int {
+        checkCanRead(count)
+        return discard(count)
+    }
+
     public fun writePacket(value: Packet) {
         state.addAll(value.state)
         availableForRead += value.availableForRead
@@ -283,23 +285,6 @@ public class Packet : Closeable {
 
     public fun writeFloat(value: Float) {
         writeInt(value.toBits())
-    }
-
-    public fun readDouble(): Double {
-        return Double.fromBits(readLong())
-    }
-
-    public fun readFloat(): Float {
-        return Float.fromBits(readInt())
-    }
-
-    public fun readLine(charset: Charset = Charsets.UTF_8): String? {
-        TODO()
-    }
-
-    public fun discardExact(count: Int): Int {
-        checkCanRead(count)
-        return discard(count)
     }
 
     public fun steal(): Packet {
@@ -328,6 +313,19 @@ public class Packet : Closeable {
 
     private fun updateWriteBuffer() {
         if (state.isEmpty()) writeBuffer = Buffer.Empty
+    }
+
+    private fun prepareWriteBuffer(count: Int = 1): Buffer {
+        if (writeBuffer.availableForWrite < count) {
+            writeBuffer = createBuffer()
+            state.addLast(writeBuffer)
+        }
+
+        return writeBuffer
+    }
+
+    private fun createBuffer(): Buffer = ByteArrayBuffer(ByteArray(16 * 1024)).apply {
+        writeIndex = 0
     }
 
     public companion object {

@@ -4,6 +4,7 @@
 
 package io.ktor.client.engine.winhttp.internal
 
+import io.ktor.io.pool.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.pool.*
 import kotlinx.cinterop.*

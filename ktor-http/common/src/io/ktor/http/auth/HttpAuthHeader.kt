@@ -6,6 +6,7 @@ package io.ktor.http.auth
 
 import io.ktor.http.*
 import io.ktor.http.parsing.*
+import io.ktor.io.charsets.*
 import io.ktor.util.*
 import io.ktor.utils.io.charsets.*
 

@@ -5,6 +5,7 @@
 package io.ktor.websocket
 
 import io.ktor.io.*
+import io.ktor.io.charsets.*
 import io.ktor.util.*
 import io.ktor.util.date.*
 import io.ktor.utils.io.charsets.*

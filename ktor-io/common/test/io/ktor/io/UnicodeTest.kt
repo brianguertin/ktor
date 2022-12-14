@@ -4,7 +4,6 @@
 
 package io.ktor.io
 
-import io.ktor.utils.io.core.*
 import kotlin.test.*
 
 class UnicodeTest {

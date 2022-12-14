@@ -34,6 +34,13 @@ if (CACHE_USER != null) {
             }
         }
     }
+} else {
+    buildCache {
+        local {
+            isEnabled = true
+            isPush = false
+        }
+    }
 }
 
 val fullVersion = System.getProperty("java.version", "8.0.0")

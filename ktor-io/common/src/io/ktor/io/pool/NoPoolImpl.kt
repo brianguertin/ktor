@@ -1,0 +1,19 @@
+/*
+ * Copyright 2014-2022 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.
+ */
+
+package io.ktor.io.pool
+
+/**
+ * A pool implementation of zero capacity that always creates new instances
+ */
+public abstract class NoPoolImpl<T : Any> : ObjectPool<T> {
+    override val capacity: Int
+        get() = 0
+
+    override fun recycle(instance: T) {
+    }
+
+    override fun dispose() {
+    }
+}

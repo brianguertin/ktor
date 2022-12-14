@@ -75,7 +75,7 @@ private suspend fun ByteReadChannel.deflateTo(
             }
             if (isClosedForRead) break
 
-            val input = readAvailable()
+            val input = readByteBuffer()
             crc.updateKeepPosition(input)
             deflater.setInputBuffer(input)
             destination.deflateWhile(deflater) { !deflater.needsInput() }
@@ -114,10 +114,4 @@ public fun ByteReadChannel.deflated(
 public fun ByteWriteChannel.deflated(
     gzip: Boolean = true,
     coroutineContext: CoroutineContext = Dispatchers.Unconfined
-): ByteWriteChannel = transform {
-    onFlush {
-    }
-
-    onClose {
-    }
-}
+): ByteWriteChannel = TODO()

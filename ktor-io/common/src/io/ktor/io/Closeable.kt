@@ -1,0 +1,26 @@
+package io.ktor.io
+
+public expect interface Closeable {
+    public fun close()
+}
+
+public inline fun <C : Closeable, R> C.use(block: (C) -> R): R {
+    var closed = false
+
+    return try {
+        block(this)
+    } catch (first: Throwable) {
+        try {
+            closed = true
+            close()
+        } catch (second: Throwable) {
+            first.addSuppressed(second)
+        }
+
+        throw first
+    } finally {
+        if (!closed) {
+            close()
+        }
+    }
+}

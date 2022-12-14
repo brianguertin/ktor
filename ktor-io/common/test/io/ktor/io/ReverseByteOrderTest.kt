@@ -1,6 +1,5 @@
 package io.ktor.io
 
-import io.ktor.utils.io.bits.*
 import kotlin.test.*
 
 class ReverseByteOrderTest {

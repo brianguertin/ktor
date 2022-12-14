@@ -4,9 +4,11 @@
 
 package io.ktor.util.cio
 
+import io.ktor.io.pool.*
+import io.ktor.io.pool.DefaultPool
 import io.ktor.util.*
 import io.ktor.utils.io.pool.*
-import io.ktor.utils.io.pool.ByteBufferPool
+import io.ktor.io.pool.ByteBufferPool
 import java.nio.*
 
 internal const val DEFAULT_BUFFER_SIZE = 4098

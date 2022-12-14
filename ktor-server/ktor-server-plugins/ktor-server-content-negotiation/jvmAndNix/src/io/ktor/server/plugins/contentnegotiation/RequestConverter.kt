@@ -6,6 +6,7 @@ package io.ktor.server.plugins.contentnegotiation
 
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.charsets.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*

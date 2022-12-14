@@ -5,6 +5,7 @@
 package io.ktor.serialization.gson
 
 import com.google.gson.*
+import io.ktor.io.charsets.*
 import io.ktor.serialization.*
 import io.ktor.util.reflect.*
 import io.ktor.utils.io.charsets.*

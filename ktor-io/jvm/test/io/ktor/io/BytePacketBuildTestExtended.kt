@@ -4,12 +4,10 @@
 
 package io.ktor.io
 
-import io.ktor.io.*
-import io.ktor.utils.io.core.*
 import java.nio.*
 import kotlin.test.*
 
-class BytePacketBuildTestExtended : BytePacketBuildTest() {
+class BytePacketBuildTestExtended {
     @Test
     fun smokeSingleBufferTestExtended() {
         val p = buildPacket {

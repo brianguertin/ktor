@@ -4,7 +4,7 @@
 
 package io.ktor.io
 
-import io.ktor.utils.io.pool.*
+import io.ktor.io.pool.*
 import kotlin.test.*
 
 class DefaultPoolImplementationTest {

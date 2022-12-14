@@ -5,7 +5,6 @@
 package io.ktor.io
 
 import io.ktor.utils.io.js.*
-import io.ktor.utils.io.js.TextDecoderFallback
 import org.khronos.webgl.*
 import kotlin.test.*
 

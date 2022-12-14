@@ -5,6 +5,7 @@ package io.ktor.serialization.kotlinx.test.json
 
 import io.ktor.http.*
 import io.ktor.io.*
+import io.ktor.io.charsets.*
 import io.ktor.serialization.*
 import io.ktor.serialization.kotlinx.*
 import io.ktor.serialization.kotlinx.json.*
