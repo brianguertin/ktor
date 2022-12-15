@@ -9,9 +9,8 @@ import io.ktor.client.call.*
 import io.ktor.client.engine.curl.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
-import io.ktor.utils.io.core.*
+import io.ktor.io.*
 import kotlinx.coroutines.*
-import kotlin.native.concurrent.*
 import kotlin.test.*
 
 class CurlNativeTests {

@@ -4,13 +4,11 @@
 
 package io.ktor.client.engine.winhttp.internal
 
-import io.ktor.client.engine.winhttp.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.http.cio.*
+import io.ktor.io.*
 import io.ktor.util.date.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
 import kotlin.coroutines.*
 
 internal class WinHttpResponseData(

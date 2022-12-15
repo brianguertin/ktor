@@ -4,7 +4,7 @@
 
 package io.ktor.network.util
 
-import io.ktor.utils.io.errors.*
+import io.ktor.io.*
 
 internal inline fun Int.check(
     block: (Int) -> Boolean = { it >= 0 }

@@ -10,6 +10,7 @@ import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import io.ktor.server.application.*
@@ -17,8 +18,6 @@ import io.ktor.server.engine.*
 import io.ktor.server.routing.*
 import io.ktor.util.collections.*
 import io.ktor.util.logging.*
-import io.ktor.utils.io.concurrent.*
-import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.*
 import kotlin.time.*
@@ -29,8 +28,7 @@ private val TEST_SELECTOR_MANAGER = SelectorManager()
 actual abstract class EngineTestBase<
     TEngine : ApplicationEngine,
     TConfiguration : ApplicationEngine.Configuration
-    >
-actual constructor(
+    > actual constructor(
     actual val applicationEngineFactory: ApplicationEngineFactory<TEngine, TConfiguration>,
 ) : BaseTest(), CoroutineScope {
     private val testJob = Job()

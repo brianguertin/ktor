@@ -4,11 +4,10 @@
 
 package io.ktor.io
 
-import io.ktor.utils.io.core.*
 import kotlinx.cinterop.*
 import kotlin.test.*
 
-class BytePacketBuilderExtendedTest : BytePacketBuildTest() {
+class BytePacketBuilderExtendedTest {
     private val buffer = nativeHeap.allocArray<ByteVar>(8888)
 
     @Test
@@ -39,8 +38,7 @@ class BytePacketBuilderExtendedTest : BytePacketBuildTest() {
         assertEquals(1.23f, p.readFloat())
         assertEquals(0x123456789abcdef0, p.readLong())
 
-        assertEquals("OK", p.readLine())
-        assertEquals("1|2|3", p.readLine())
+        assertEquals("OK\n", p.readString())
     }
 
     @Test
@@ -69,7 +67,6 @@ class BytePacketBuilderExtendedTest : BytePacketBuildTest() {
         assertEquals(1.23f, p.readFloat())
         assertEquals(0x123456789abcdef0, p.readLong())
 
-        assertEquals("OK", p.readLine())
-        assertEquals("1|2|3", p.readLine())
+        assertEquals("OK\n", p.readString())
     }
 }

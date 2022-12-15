@@ -4,10 +4,8 @@
 
 package io.ktor.client.engine.winhttp.internal
 
-import io.ktor.client.engine.winhttp.*
+import io.ktor.io.*
 import io.ktor.io.pool.*
-import io.ktor.utils.io.core.*
-import io.ktor.utils.io.pool.*
 import io.ktor.websocket.*
 import kotlinx.atomicfu.*
 import kotlinx.cinterop.*
@@ -171,9 +169,9 @@ internal class WinHttpWebSocket(
                 }
             }
             FrameType.CLOSE -> {
-                val data = buildPacket { writeFully(frame.data) }
+                val data = buildPacket { writeByteArray(frame.data) }
                 val code = data.readShort().toInt()
-                val reason = data.readText()
+                val reason = data.readString()
                 sendClose(code, reason)
                 socketJob.complete()
             }

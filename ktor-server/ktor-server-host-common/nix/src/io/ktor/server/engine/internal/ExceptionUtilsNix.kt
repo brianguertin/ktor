@@ -4,7 +4,7 @@
 
 package io.ktor.server.engine.internal
 
-import io.ktor.utils.io.errors.*
+import io.ktor.io.*
 
 public actual open class ClosedChannelException(message: String) : IOException(message)
 

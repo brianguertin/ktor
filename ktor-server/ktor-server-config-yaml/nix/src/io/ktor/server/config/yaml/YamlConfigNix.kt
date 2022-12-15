@@ -7,9 +7,6 @@ package io.ktor.server.config.yaml
 import io.ktor.io.*
 import io.ktor.io.pool.*
 import io.ktor.server.config.*
-import io.ktor.utils.io.core.*
-import io.ktor.utils.io.errors.*
-import io.ktor.utils.io.pool.*
 import kotlinx.cinterop.*
 import net.mamoe.yamlkt.*
 import platform.posix.*

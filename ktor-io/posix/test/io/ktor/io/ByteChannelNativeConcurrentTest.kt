@@ -4,7 +4,6 @@
 
 package io.ktor.io
 
-import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import kotlin.test.*
 

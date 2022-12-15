@@ -9,11 +9,9 @@ import io.ktor.client.engine.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.io.pool.*
 import io.ktor.util.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
-import io.ktor.utils.io.pool.*
 import kotlinx.atomicfu.*
 import kotlinx.cinterop.*
 import kotlinx.coroutines.*
@@ -45,38 +43,41 @@ internal class WinHttpRequestProducer(
 
         val requestBody = data.body.toByteChannel()
         if (requestBody != null) {
-            val readBuffer = ByteArrayPool.borrow()
             try {
                 if (chunked) {
-                    writeChunkedBody(requestBody, readBuffer)
+                    writeChunkedBody(requestBody)
                 } else {
-                    writeRegularBody(requestBody, readBuffer)
+                    writeRegularBody(requestBody)
                 }
             } finally {
-                ByteArrayPool.recycle(readBuffer)
             }
         }
     }
 
-    private suspend fun writeChunkedBody(requestBody: ByteReadChannel, readBuffer: ByteArray) {
-        while (true) {
-            val readBytes = requestBody.readAvailable(readBuffer).takeIf { it > 0 } ?: break
-            writeBodyChunk(readBuffer, readBytes)
+    private suspend fun writeChunkedBody(requestBody: ByteReadChannel) {
+        while (!requestBody.isClosedForRead) {
+            if (requestBody.availableForRead == 0) {
+                requestBody.awaitBytes()
+                continue
+            }
+
+            val bytes = requestBody.readBuffer().toByteArray()
+            writeBodyChunk(bytes)
         }
         chunkTerminator.usePinned { src ->
             request.writeData(src, chunkTerminator.size)
         }
     }
 
-    private suspend fun writeBodyChunk(readBuffer: ByteArray, length: Int) {
+    private suspend fun writeBodyChunk(readBuffer: ByteArray) {
         // Write chunk length
-        val chunkStart = "${length.toString(16)}\r\n".toByteArray()
+        val chunkStart = "${readBuffer.size.toString(16)}\r\n".toByteArray()
         chunkStart.usePinned { src ->
             request.writeData(src, chunkStart.size)
         }
         // Write chunk data
         readBuffer.usePinned { src ->
-            request.writeData(src, length)
+            request.writeData(src, readBuffer.size)
         }
         // Write chunk ending
         chunkEnd.usePinned { src ->
@@ -84,11 +85,15 @@ internal class WinHttpRequestProducer(
         }
     }
 
-    private suspend fun writeRegularBody(requestBody: ByteReadChannel, readBuffer: ByteArray) {
-        while (true) {
-            val readBytes = requestBody.readAvailable(readBuffer).takeIf { it > 0 } ?: break
-            readBuffer.usePinned { src ->
-                request.writeData(src, readBytes)
+    private suspend fun writeRegularBody(requestBody: ByteReadChannel) {
+        while (!requestBody.isClosedForRead) {
+            if (requestBody.availableForRead == 0) {
+                requestBody.awaitBytes()
+                continue
+            }
+            val buffer = requestBody.readBuffer().toByteArray()
+            buffer.usePinned { src ->
+                request.writeData(src, buffer.size)
             }
         }
     }
@@ -106,8 +111,8 @@ internal class WinHttpRequestProducer(
     private suspend fun OutgoingContent.toByteChannel(): ByteReadChannel? = when (this) {
         is OutgoingContent.ByteArrayContent -> ByteReadChannel(bytes())
         is OutgoingContent.WriteChannelContent -> GlobalScope.writer(coroutineContext) {
-            writeTo(channel)
-        }.channel
+            writeTo(this)
+        }
         is OutgoingContent.ReadChannelContent -> readFrom()
         is OutgoingContent.NoContent -> null
         else -> throw UnsupportedContentTypeException(this)

@@ -8,7 +8,7 @@ import io.ktor.client.engine.*
 import io.ktor.client.engine.winhttp.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
-import io.ktor.utils.io.core.*
+import io.ktor.io.*
 import kotlinx.atomicfu.*
 import kotlinx.cinterop.*
 import ktor.cinterop.winhttp.*

@@ -4,7 +4,7 @@
 
 package io.ktor.network.sockets
 
-import io.ktor.utils.io.errors.*
+import io.ktor.io.*
 
 @Suppress("EXPECT_WITHOUT_ACTUAL")
 public actual class SocketTimeoutException(

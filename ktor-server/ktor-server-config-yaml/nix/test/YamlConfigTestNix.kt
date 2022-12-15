@@ -5,7 +5,6 @@
 package io.ktor.server.config.yaml
 
 import io.ktor.server.config.*
-import io.ktor.utils.io.core.*
 import kotlinx.cinterop.*
 import platform.posix.*
 import kotlin.test.*

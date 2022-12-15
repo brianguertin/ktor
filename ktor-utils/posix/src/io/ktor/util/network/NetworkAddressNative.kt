@@ -5,7 +5,6 @@
 package io.ktor.util.network
 
 import io.ktor.util.*
-import io.ktor.utils.io.*
 import kotlinx.atomicfu.*
 
 /**

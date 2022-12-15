@@ -4,9 +4,7 @@
 
 package io.ktor.client.network.sockets
 
-import io.ktor.client.request.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.errors.*
+import io.ktor.io.*
 
 /**
  * This exception is thrown in case connect timeout exceeded.

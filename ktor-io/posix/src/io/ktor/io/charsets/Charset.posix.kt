@@ -5,12 +5,6 @@
 package io.ktor.io.charsets
 
 import io.ktor.io.*
-import io.ktor.io.charsets.Charset
-import io.ktor.io.charsets.CharsetDecoder
-import io.ktor.io.charsets.CharsetEncoder
-import io.ktor.io.charsets.Charsets
-import io.ktor.io.charsets.MalformedInputException
-import io.ktor.utils.io.core.*
 import kotlinx.cinterop.*
 import platform.iconv.*
 import platform.posix.*
@@ -52,6 +46,8 @@ public actual abstract class Charset(internal val _name: String) {
     override fun toString(): String {
         return _name
     }
+
+    public actual fun name(): String = _name
 }
 
 private class CharsetImpl(name: String) : Charset(name) {
@@ -64,8 +60,6 @@ private class CharsetImpl(name: String) : Charset(name) {
     override fun newEncoder(): CharsetEncoder = CharsetEncoderImpl(this)
     override fun newDecoder(): CharsetDecoder = CharsetDecoderImpl(this)
 }
-
-public actual val Charset.name: String get() = _name
 
 // -----------------------
 

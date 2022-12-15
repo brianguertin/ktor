@@ -8,7 +8,7 @@ import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
 import io.ktor.client.request.*
-import io.ktor.utils.io.core.*
+import io.ktor.io.*
 import kotlinx.coroutines.*
 import kotlin.test.*
 

@@ -4,8 +4,8 @@
 
 package io.ktor.network.tls
 
+import io.ktor.io.*
 import io.ktor.network.sockets.*
-import io.ktor.utils.io.*
 import kotlin.coroutines.*
 
 internal actual suspend fun openTLSSession(

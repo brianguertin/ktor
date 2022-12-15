@@ -4,30 +4,23 @@
 
 package io.ktor.client.engine.winhttp.internal
 
-import io.ktor.io.pool.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.pool.*
+import io.ktor.io.*
 import kotlinx.cinterop.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.*
 
-internal fun WinHttpRequest.readBody(callContext: CoroutineContext): ByteReadChannel {
-    return GlobalScope.writer(callContext) {
-        val readBuffer = ByteArrayPool.borrow()
-        try {
-            while (isActive) {
-                val availableBytes = queryDataAvailable()
-                if (availableBytes <= 0) {
-                    break
-                }
-                val bytesToRead = minOf(availableBytes, readBuffer.size)
-                val readBytes = readBuffer.usePinned { dst ->
-                    readData(dst, bytesToRead)
-                }
-                channel.writeFully(readBuffer, 0, readBytes)
-            }
-        } finally {
-            ByteArrayPool.recycle(readBuffer)
+internal fun WinHttpRequest.readBody(
+    callContext: CoroutineContext
+): ByteReadChannel = GlobalScope.writer(callContext) {
+    while (true) {
+        val availableBytes = queryDataAvailable()
+        if (availableBytes <= 0) break
+
+        val content = ByteArray(availableBytes)
+        val readBytes = content.usePinned { dst ->
+            readData(dst, availableBytes)
         }
-    }.channel
+
+        writeByteArray(content, 0, readBytes)
+    }
 }

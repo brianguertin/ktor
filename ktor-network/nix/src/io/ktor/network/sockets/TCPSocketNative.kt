@@ -4,8 +4,8 @@
 
 package io.ktor.network.sockets
 
+import io.ktor.io.*
 import io.ktor.network.selector.*
-import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import platform.posix.*
 import kotlin.coroutines.*

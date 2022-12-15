@@ -12,8 +12,6 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.io.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
 import kotlinx.cinterop.*
 import kotlinx.coroutines.*
 import libcurl.*
@@ -82,7 +80,7 @@ internal suspend fun OutgoingContent.toByteChannel(): ByteReadChannel = when (th
     }
 
     is OutgoingContent.WriteChannelContent -> GlobalScope.writer(coroutineContext) {
-        writeTo(channel)
+        writeTo(this)
     }
     is OutgoingContent.ReadChannelContent -> readFrom()
     is OutgoingContent.NoContent -> ByteReadChannel.Empty

@@ -4,7 +4,7 @@
 
 package io.ktor.network.util
 
-import io.ktor.utils.io.bits.*
+import io.ktor.io.*
 import kotlinx.cinterop.*
 import platform.posix.*
 

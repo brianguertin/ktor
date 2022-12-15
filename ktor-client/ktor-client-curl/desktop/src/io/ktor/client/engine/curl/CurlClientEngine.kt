@@ -10,9 +10,9 @@ import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.http.cio.*
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.util.date.*
-import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 
 internal class CurlClientEngine(

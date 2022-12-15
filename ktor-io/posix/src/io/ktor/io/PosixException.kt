@@ -1,6 +1,5 @@
 package io.ktor.io
 
-import io.ktor.utils.io.core.*
 import kotlinx.cinterop.*
 import platform.posix.*
 import kotlin.native.concurrent.*

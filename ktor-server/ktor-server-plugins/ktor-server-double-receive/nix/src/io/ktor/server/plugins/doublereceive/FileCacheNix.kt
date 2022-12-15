@@ -5,7 +5,7 @@
 
 package io.ktor.server.plugins.doublereceive
 
-import io.ktor.utils.io.*
+import io.ktor.io.*
 import kotlin.coroutines.*
 
 internal actual class FileCache actual constructor(

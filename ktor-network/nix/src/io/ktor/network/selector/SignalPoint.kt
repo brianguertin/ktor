@@ -4,9 +4,8 @@
 
 package io.ktor.network.selector
 
+import io.ktor.io.*
 import io.ktor.network.util.*
-import io.ktor.utils.io.core.*
-import io.ktor.utils.io.errors.*
 import kotlinx.atomicfu.*
 import kotlinx.atomicfu.locks.*
 import kotlinx.cinterop.*
