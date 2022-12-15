@@ -31,7 +31,7 @@ internal suspend fun HttpRequestData.toRaw(
         is OutgoingContent.ReadChannelContent -> content.readFrom().readRemaining().toByteArray()
         is OutgoingContent.WriteChannelContent -> {
             GlobalScope.writer(callContext) {
-                content.writeTo(channel)
+                content.writeTo(this)
             }.readRemaining().toByteArray()
         }
         else -> null

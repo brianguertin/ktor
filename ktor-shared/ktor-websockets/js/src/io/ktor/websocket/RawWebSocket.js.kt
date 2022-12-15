@@ -4,7 +4,7 @@
 
 package io.ktor.websocket
 
-import io.ktor.utils.io.*
+import io.ktor.io.*
 import kotlin.coroutines.*
 
 /**

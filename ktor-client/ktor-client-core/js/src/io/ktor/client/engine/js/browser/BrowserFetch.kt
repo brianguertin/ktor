@@ -24,7 +24,7 @@ internal fun CoroutineScope.channelFromStream(
     while (true) {
         try {
             val chunk = reader.readChunk() ?: break
-            channel.writeByteArray(chunk.asByteArray())
+            writeByteArray(chunk.asByteArray())
         } catch (cause: Throwable) {
             reader.cancel(cause)
             throw cause

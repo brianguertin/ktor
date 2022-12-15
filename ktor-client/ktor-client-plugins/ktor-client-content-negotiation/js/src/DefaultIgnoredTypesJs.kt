@@ -4,8 +4,6 @@
 
 package io.ktor.client.plugins.contentnegotiation
 
-import io.ktor.http.content.*
-import io.ktor.utils.io.*
 import kotlin.reflect.*
 
 internal actual val DefaultIgnoredTypes: Set<KClass<*>> =

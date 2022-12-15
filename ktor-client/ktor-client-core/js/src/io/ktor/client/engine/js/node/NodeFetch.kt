@@ -24,7 +24,7 @@ internal fun CoroutineScope.readBodyNode(response: Response): ByteReadChannel = 
     body.on("error") { error ->
         val cause = JsError(error)
         responseData.close(cause)
-        channel.close(cause)
+        close(cause)
     }
 
     body.on("end") {
@@ -33,7 +33,7 @@ internal fun CoroutineScope.readBodyNode(response: Response): ByteReadChannel = 
 
     try {
         for (chunk in responseData) {
-            channel.writeByteArray(chunk)
+            writeByteArray(chunk)
             body.resume()
         }
     } catch (cause: Throwable) {
