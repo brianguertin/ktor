@@ -11,7 +11,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.client.tests.utils.*
 import io.ktor.http.*
-import io.ktor.utils.io.*
+import io.ktor.io.*
 import kotlinx.coroutines.*
 import kotlin.test.*
 

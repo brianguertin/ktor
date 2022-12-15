@@ -9,8 +9,6 @@ package io.ktor.client.statement
 import io.ktor.client.*
 import io.ktor.http.*
 import io.ktor.io.charsets.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.charsets.*
 
 /**
  * Executes this statement and run [HttpClient.responsePipeline] with the response and expected type [T].

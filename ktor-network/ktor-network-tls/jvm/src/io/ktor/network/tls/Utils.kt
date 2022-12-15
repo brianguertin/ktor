@@ -5,7 +5,6 @@
 package io.ktor.network.tls
 
 import io.ktor.io.*
-import io.ktor.utils.io.core.*
 
 internal fun Digest(): Digest = Digest(Packet())
 

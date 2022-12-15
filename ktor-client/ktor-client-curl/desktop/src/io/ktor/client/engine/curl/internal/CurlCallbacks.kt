@@ -5,7 +5,6 @@
 package io.ktor.client.engine.curl.internal
 
 import io.ktor.io.*
-import io.ktor.utils.io.*
 import kotlinx.atomicfu.*
 import kotlinx.cinterop.*
 import kotlinx.coroutines.*

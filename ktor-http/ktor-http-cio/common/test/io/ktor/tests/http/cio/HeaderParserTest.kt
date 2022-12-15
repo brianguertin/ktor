@@ -6,7 +6,7 @@ package io.ktor.tests.http.cio
 
 import io.ktor.http.*
 import io.ktor.http.cio.*
-import io.ktor.utils.io.*
+import io.ktor.io.*
 import kotlin.test.*
 
 private const val HTAB: Char = '\u0009'

@@ -7,6 +7,7 @@ package io.ktor.server.plugins.contentnegotiation
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.io.charsets.*
 import io.ktor.serialization.*
 import io.ktor.server.application.*
@@ -15,8 +16,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
 import io.ktor.util.reflect.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.charsets.*
 import kotlin.reflect.*
 import kotlin.test.*
 

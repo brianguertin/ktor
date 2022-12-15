@@ -6,8 +6,8 @@ package io.ktor.client.plugins.logging
 
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.util.*
-import io.ktor.utils.io.*
 
 internal class LoggedContent(
     private val originalContent: OutgoingContent,

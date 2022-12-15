@@ -5,7 +5,7 @@ plugins {
 kotlin.sourceSets {
     commonMain {
         dependencies {
-            api( "org.jetbrains.kotlin:kotlin-test:1.7.10")
+            api(kotlin("test"))
             api(kotlin("test-annotations-common"))
             api(project(":ktor-shared:ktor-serialization:ktor-serialization-kotlinx"))
             api(project(":ktor-client:ktor-client-tests"))

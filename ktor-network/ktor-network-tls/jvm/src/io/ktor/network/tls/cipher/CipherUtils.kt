@@ -7,70 +7,39 @@ package io.ktor.network.tls.cipher
 import io.ktor.io.*
 import io.ktor.io.pool.*
 import io.ktor.network.util.*
-import io.ktor.utils.io.core.*
-import io.ktor.utils.io.pool.*
+import java.lang.Integer.*
 import java.nio.*
 import javax.crypto.*
 
-internal val CryptoBufferPool: ObjectPool<ByteBuffer> = ByteBufferPool(128, 65536)
+internal fun Packet.cipherLoop(cipher: Cipher, header: Packet.() -> Unit = {}): Packet = buildPacket {
+    header()
 
-internal fun Packet.cipherLoop(cipher: Cipher, header: Packet.() -> Unit = {}): Packet {
-    val srcBuffer = DefaultByteBufferPool.borrow()
-    var dstBuffer = CryptoBufferPool.borrow()
-    var dstBufferFromPool = true
+    var destination = ByteBuffer.allocate(4096)
+    while (this@cipherLoop.isNotEmpty) {
+        val srcBuffer = this@cipherLoop.readByteBuffer()
+        val requiredOutputSize = cipher.getOutputSize(srcBuffer.remaining())
+        if (requiredOutputSize > destination.remaining()) {
+            destination.flip()
+            writeByteBuffer(destination)
+            destination = ByteBuffer.allocate(max(4096, requiredOutputSize))
 
-    try {
-        return buildPacket {
-            srcBuffer.clear()
-            header()
-
-            while (true) {
-                val rc = TODO() // if (srcBuffer.hasRemaining()) readAvailable(srcBuffer) else 0
-                srcBuffer.flip()
-
-                if (!srcBuffer.hasRemaining() && (rc == -1 || this@cipherLoop.isEmpty)) break
-
-                dstBuffer.clear()
-
-                if (cipher.getOutputSize(srcBuffer.remaining()) > dstBuffer.remaining()) {
-                    if (dstBufferFromPool) {
-                        CryptoBufferPool.recycle(dstBuffer)
-                    }
-                    dstBuffer = ByteBuffer.allocate(cipher.getOutputSize(srcBuffer.remaining()))
-                    dstBufferFromPool = false
-                }
-
-                cipher.update(srcBuffer, dstBuffer)
-                dstBuffer.flip()
-                writeByteBuffer(dstBuffer)
-                srcBuffer.compact()
-            }
-
-            assert(!srcBuffer.hasRemaining()) { "Cipher loop completed too early: there are unprocessed bytes" }
-            assert(!dstBuffer.hasRemaining()) { "Not all bytes were appended to the packet" }
-
-            val requiredBufferSize = cipher.getOutputSize(0)
-            if (requiredBufferSize == 0) return@buildPacket
-            if (requiredBufferSize > dstBuffer.capacity()) {
-                writeByteArray(cipher.doFinal())
-                return@buildPacket
-            }
-
-            dstBuffer.clear()
-            cipher.doFinal(EmptyByteBuffer, dstBuffer)
-            dstBuffer.flip()
-
-            if (!dstBuffer.hasRemaining()) { // workaround JDK bug
-                writeByteArray(cipher.doFinal())
-                return@buildPacket
-            }
-
-            writeByteBuffer(dstBuffer)
         }
-    } finally {
-        DefaultByteBufferPool.recycle(srcBuffer)
-        if (dstBufferFromPool) {
-            CryptoBufferPool.recycle(dstBuffer)
-        }
+
+        cipher.update(srcBuffer, destination)
+        check(!srcBuffer.hasRemaining())
+    }
+
+    destination.flip()
+
+    val requiredBufferSize = cipher.getOutputSize(0)
+    if (requiredBufferSize == 0 && !destination.hasRemaining()) return@buildPacket
+
+    if (requiredBufferSize <= destination.remaining()) {
+        if (requiredBufferSize != 0) cipher.doFinal(EmptyByteBuffer, destination)
+        writeByteBuffer(destination)
+    } else {
+        destination.flip()
+        writeByteBuffer(destination)
+        writeByteArray(cipher.doFinal())
     }
 }

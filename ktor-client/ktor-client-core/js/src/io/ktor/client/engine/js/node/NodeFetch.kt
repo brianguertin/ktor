@@ -5,7 +5,7 @@
 package io.ktor.client.engine.js.node
 
 import io.ktor.client.engine.js.*
-import io.ktor.utils.io.*
+import io.ktor.io.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import org.khronos.webgl.*

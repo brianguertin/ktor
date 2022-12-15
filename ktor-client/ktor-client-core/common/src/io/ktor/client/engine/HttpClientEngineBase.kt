@@ -4,8 +4,8 @@
 
 package io.ktor.client.engine
 
+import io.ktor.io.*
 import io.ktor.util.*
-import io.ktor.utils.io.core.*
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.*

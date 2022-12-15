@@ -7,7 +7,6 @@
 package io.ktor.http
 
 import io.ktor.io.charsets.*
-import io.ktor.utils.io.charsets.*
 
 /**
  * Set `Content-Type` header.

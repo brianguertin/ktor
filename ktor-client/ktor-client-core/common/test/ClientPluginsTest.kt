@@ -11,10 +11,9 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.test.dispatcher.*
 import io.ktor.util.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import kotlin.test.*
 
@@ -111,7 +110,7 @@ class ClientPluginsTest {
             }
             transformResponseBody { _, content, requestedType ->
                 assertEquals(String::class, requestedType.type)
-                content.readRemaining().readText() + "!"
+                content.readString() + "!"
             }
         }
 

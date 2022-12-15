@@ -9,8 +9,9 @@ import io.ktor.client.call.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.tests.utils.*
+import io.ktor.io.*
 import io.ktor.test.dispatcher.*
-import io.ktor.utils.io.errors.*
+import kotlin.io.use
 import kotlin.test.*
 
 class JettyHttp2EngineTest {

@@ -6,7 +6,6 @@ package io.ktor.http
 
 import io.ktor.io.charsets.*
 import io.ktor.util.*
-import io.ktor.utils.io.charsets.*
 
 /**
  * Default [ContentType] for [extension]

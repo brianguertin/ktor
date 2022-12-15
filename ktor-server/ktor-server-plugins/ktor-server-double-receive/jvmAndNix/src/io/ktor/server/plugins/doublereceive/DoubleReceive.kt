@@ -4,12 +4,12 @@
 
 package io.ktor.server.plugins.doublereceive
 
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.application.hooks.*
 import io.ktor.server.request.*
 import io.ktor.util.*
 import io.ktor.util.logging.*
-import io.ktor.utils.io.*
 import kotlin.coroutines.*
 import kotlin.reflect.*
 

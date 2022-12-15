@@ -10,7 +10,6 @@ import io.ktor.server.application.*
 import io.ktor.server.html.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
-import io.ktor.utils.io.charsets.*
 import kotlinx.html.*
 import kotlin.test.*
 

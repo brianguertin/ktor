@@ -4,13 +4,14 @@
 
 package io.ktor.tests.utils
 
+import io.ktor.io.*
+import io.ktor.io.jvm.javaio.*
 import io.ktor.util.cio.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.*
 import org.junit.*
 import org.junit.Ignore
 import java.io.*
+import kotlin.io.use
 import kotlin.test.*
 import kotlin.test.Test
 

@@ -5,9 +5,10 @@
 package io.ktor.http.content
 
 import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.util.cio.*
-import io.ktor.utils.io.*
 import java.io.*
+import kotlin.io.use
 
 /**
  * Represents a content that is produced by [body] function

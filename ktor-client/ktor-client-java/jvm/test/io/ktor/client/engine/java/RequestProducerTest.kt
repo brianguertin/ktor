@@ -7,14 +7,15 @@ package io.ktor.client.engine.java
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.util.*
-import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import org.junit.Test
 import java.nio.*
 import java.util.concurrent.*
 import kotlin.coroutines.*
 import kotlin.test.*
+import kotlin.text.String
 
 class RequestProducerTest {
 

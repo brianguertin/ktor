@@ -4,20 +4,23 @@
 
 package io.ktor.network.sockets.tests
 
+import io.ktor.io.*
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
-import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.debug.junit4.*
 import org.junit.*
 import org.junit.Test
 import java.io.*
+import java.io.IOException
 import java.nio.channels.*
 import java.util.concurrent.*
 import java.util.concurrent.CancellationException
 import kotlin.concurrent.*
 import kotlin.coroutines.*
+import kotlin.io.use
 import kotlin.test.*
+import kotlin.text.toByteArray
 
 class ServerSocketTest : CoroutineScope {
     private val testJob = Job()

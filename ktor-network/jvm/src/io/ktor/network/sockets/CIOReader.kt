@@ -4,9 +4,9 @@
 
 package io.ktor.network.sockets
 
+import io.ktor.io.*
 import io.ktor.network.selector.*
 import io.ktor.network.util.*
-import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import java.nio.channels.*
 

@@ -12,8 +12,6 @@ import io.ktor.server.testing.*
 import io.ktor.server.websocket.*
 import io.ktor.util.*
 import io.ktor.util.reflect.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
@@ -29,7 +27,6 @@ import kotlin.test.*
 import kotlin.text.toByteArray
 
 @Suppress("DEPRECATION")
-@OptIn(ExperimentalCoroutinesApi::class)
 class WebSocketTest {
     @get:Rule
     val timeout = CoroutinesTimeout.seconds(30)
@@ -142,8 +139,8 @@ class WebSocketTest {
 
             handleWebSocket("/echo") {
                 bodyChannel = writer {
-                    channel.writeByteArray(sendBuffer.array())
-                    channel.flush()
+                    writeByteArray(sendBuffer.array())
+                    flush()
                     conversation.join()
                 }
             }.let {
@@ -180,8 +177,8 @@ class WebSocketTest {
 
             handleWebSocket("/echo") {
                 bodyChannel = writer {
-                    channel.writeByteArray(sendBuffer.array())
-                    channel.flush()
+                    writeByteArray(sendBuffer.array())
+                    flush()
                     conversation.join()
                 }
             }.let {
@@ -360,8 +357,8 @@ class WebSocketTest {
 
             handleWebSocket("/") {
                 bodyChannel = writer {
-                    channel.writeByteArray(sendBuffer.moveToByteArray())
-                    channel.flush()
+                    writeByteArray(sendBuffer.moveToByteArray())
+                    flush()
                     conversation.join()
                 }
             }.let { call ->
@@ -466,7 +463,7 @@ class WebSocketTest {
             handleWebSocket("/") {
                 bodyChannel = writer {
                     started.join()
-                    channel.writeByteBuffer(sendBuffer)
+                    writeByteBuffer(sendBuffer)
                 }
             }.let { call ->
                 validateCloseWithBigFrame(call)

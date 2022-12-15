@@ -8,11 +8,6 @@ import io.ktor.http.cio.internals.*
 import io.ktor.io.*
 import io.ktor.io.Buffer
 import io.ktor.io.pool.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.bits.*
-import io.ktor.utils.io.core.*
-import io.ktor.utils.io.errors.*
-import io.ktor.utils.io.pool.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.*
 import kotlin.native.concurrent.*
@@ -40,10 +35,12 @@ public fun CoroutineScope.decodeChunked(input: ByteReadChannel): ByteReadChannel
  * Start a chunked stream decoder coroutine
  */
 @Suppress("UNUSED_PARAMETER")
-public fun CoroutineScope.decodeChunked(input: ByteReadChannel, contentLength: Long): ByteReadChannel =
-    writer(coroutineContext) {
-        decodeChunked(input, channel)
-    }
+public fun CoroutineScope.decodeChunked(
+    input: ByteReadChannel,
+    contentLength: Long
+): ByteReadChannel = writer(coroutineContext) {
+    decodeChunked(input, this)
+}
 
 /**
  * Decode chunked transfer encoding from the [input] channel and write the result in [out].

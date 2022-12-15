@@ -13,8 +13,8 @@ import io.ktor.client.statement.*
 import io.ktor.client.utils.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.util.*
-import io.ktor.utils.io.*
 import kotlin.reflect.*
 
 internal val DefaultCommonIgnoredTypes: Set<KClass<*>> = setOf(

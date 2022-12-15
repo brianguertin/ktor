@@ -10,8 +10,8 @@ import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.util.*
-import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import org.apache.http.*
 import org.apache.http.HttpHeaders
@@ -50,7 +50,7 @@ internal class ApacheRequestProducer(
         is OutgoingContent.NoContent -> ByteReadChannel.Empty
         is OutgoingContent.ReadChannelContent -> body.readFrom()
         is OutgoingContent.WriteChannelContent -> GlobalScope.writer(callContext) {
-            body.writeTo(channel)
+            body.writeTo(this)
         }
     }
 
@@ -82,12 +82,11 @@ internal class ApacheRequestProducer(
             return
         }
 
+        val buffer = channel.readablePacket.readBuffer().readByteBuffer()
         var result: Int
         do {
-            result = channel.readAvailable { buffer: ByteBuffer ->
-                encoder.write(buffer)
-            }
-        } while (result > 0)
+            result = encoder.write(buffer)
+        } while (buffer.hasRemaining())
 
         if (channel.isClosedForRead) {
             channel.closedCause?.let { throw it }

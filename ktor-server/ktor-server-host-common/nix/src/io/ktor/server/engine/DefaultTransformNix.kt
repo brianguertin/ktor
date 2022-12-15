@@ -5,9 +5,9 @@
 package io.ktor.server.engine
 
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.util.pipeline.*
-import io.ktor.utils.io.*
 
 internal actual suspend fun PipelineContext<Any, ApplicationCall>.defaultPlatformTransformations(
     query: Any

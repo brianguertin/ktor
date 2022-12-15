@@ -4,10 +4,9 @@
 
 package io.ktor.server.jetty.internal
 
+import io.ktor.io.*
 import io.ktor.io.pool.*
 import io.ktor.util.cio.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.pool.*
 import io.ktor.io.pool.ByteBufferPool
 import kotlinx.coroutines.*
 import org.eclipse.jetty.io.*

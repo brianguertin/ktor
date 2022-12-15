@@ -8,13 +8,9 @@ import io.ktor.client.request.*
 import io.ktor.client.utils.*
 import io.ktor.http.*
 import io.ktor.http.cio.*
+import io.ktor.io.*
 import io.ktor.network.sockets.*
-import io.ktor.util.cio.*
 import io.ktor.util.date.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
-import io.ktor.utils.io.errors.*
-import io.ktor.utils.io.pool.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.*
@@ -38,7 +34,7 @@ internal actual class ConnectionPipeline actual constructor(
     private val requestLimit = Semaphore(pipelineMaxSize)
     private val responseChannel = Channel<ConnectionResponseTask>(Channel.UNLIMITED)
 
-    public actual val pipelineContext: Job = launch(start = CoroutineStart.LAZY) {
+    actual val pipelineContext: Job = launch(start = CoroutineStart.LAZY) {
         try {
             while (true) {
                 val task = withTimeoutOrNull(keepAliveTime) {
@@ -109,7 +105,7 @@ internal actual class ConnectionPipeline actual constructor(
                             transferEncoding,
                             connectionType,
                             networkInput,
-                            channel
+                            this
                         )
                     }.skipCancels()
 

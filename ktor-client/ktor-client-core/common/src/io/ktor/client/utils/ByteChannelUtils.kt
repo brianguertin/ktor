@@ -5,8 +5,7 @@
 package io.ktor.client.utils
 
 import io.ktor.client.content.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.pool.*
+import io.ktor.io.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.*
 

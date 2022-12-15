@@ -6,13 +6,12 @@ package io.ktor.tests.http.cio
 
 import io.ktor.http.cio.*
 import io.ktor.io.*
+import io.ktor.io.EOFException
 import io.ktor.util.*
-import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import java.io.*
 import java.nio.*
 import kotlin.test.*
-import kotlin.text.String
 import kotlin.text.toByteArray
 
 class ChunkedTest {
@@ -36,12 +35,12 @@ class ChunkedTest {
 
         val input = writer {
             chunkedContent.forEach {
-                channel.writeString(it)
+                writeString(it)
             }
         }
 
         val output = writer {
-            decodeChunked(input, channel)
+            decodeChunked(input, this)
         }
 
         val content = output.readRemaining().readString()

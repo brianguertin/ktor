@@ -6,8 +6,6 @@ package io.ktor.client.plugins.websocket
 
 import io.ktor.io.*
 import io.ktor.util.*
-import io.ktor.util.Identity.decode
-import io.ktor.utils.io.core.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*

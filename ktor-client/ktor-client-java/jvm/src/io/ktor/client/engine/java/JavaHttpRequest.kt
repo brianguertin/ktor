@@ -11,8 +11,8 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.http.HttpHeaders
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.util.*
-import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import java.net.http.HttpRequest
 import java.time.*
@@ -70,7 +70,7 @@ internal fun OutgoingContent.convertToHttpRequestBody(
     is OutgoingContent.WriteChannelContent -> JavaHttpRequestBodyPublisher(
         coroutineContext = callContext,
         contentLength = contentLength ?: -1
-    ) { GlobalScope.writer(callContext) { writeTo(channel) } }
+    ) { GlobalScope.writer(callContext) { writeTo(this) } }
     is OutgoingContent.NoContent -> HttpRequest.BodyPublishers.noBody()
     else -> throw UnsupportedContentTypeException(this)
 }

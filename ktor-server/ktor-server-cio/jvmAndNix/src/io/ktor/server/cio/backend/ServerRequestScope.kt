@@ -4,8 +4,8 @@
 
 package io.ktor.server.cio.backend
 
+import io.ktor.io.*
 import io.ktor.util.network.*
-import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.*
 

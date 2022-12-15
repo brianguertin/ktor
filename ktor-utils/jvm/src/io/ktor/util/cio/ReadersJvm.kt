@@ -4,8 +4,8 @@
 
 package io.ktor.util.cio
 
+import io.ktor.io.*
 import io.ktor.util.*
-import io.ktor.utils.io.*
 import java.nio.*
 
 /**
@@ -14,7 +14,8 @@ import java.nio.*
 @InternalAPI
 public suspend inline fun ByteReadChannel.pass(block: (ByteBuffer) -> Unit) {
     while (availableForRead > 0 || awaitBytes()) {
-        block(readAvailable())
+        val buffer = readBuffer().readByteBuffer()
+        block(buffer)
     }
 
     closedCause?.let { throw it }

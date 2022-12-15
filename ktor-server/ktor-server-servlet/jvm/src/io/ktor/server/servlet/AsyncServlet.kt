@@ -5,13 +5,14 @@
 package io.ktor.server.servlet
 
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.response.*
 import io.ktor.util.cio.*
-import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import java.io.*
+import java.io.IOException
 import java.lang.reflect.*
 import javax.servlet.http.*
 import kotlin.coroutines.*

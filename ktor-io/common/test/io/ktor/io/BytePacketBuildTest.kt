@@ -23,10 +23,10 @@ class BytePacketBuildTest {
             writeLong(0x123456789abcdef0)
             writeLong(0x123456789abcdef0)
 
-            writeString("OK\n")
+            writeString("OK")
         }
 
-        assertEquals(45, p.availableForRead)
+        assertEquals(39, p.availableForRead)
         val ba = p.readByteArray(2)
 
         assertEquals(0x11, ba[0])
@@ -42,8 +42,7 @@ class BytePacketBuildTest {
         assertEquals("18, 52, 86, 120, 154, 188, 222, 240", ll)
         assertEquals(0x123456789abcdef0, p.readLong())
 
-        assertEquals("OK", p.readLine())
-//        assertEquals("1|2|3", p.readLine())
+        assertEquals("OK", p.readString())
 
         assertTrue { p.isEmpty }
     }
@@ -72,7 +71,7 @@ class BytePacketBuildTest {
         assertEquals(1.25f, p.readFloat())
         assertEquals(0x123456789abcdef0, p.readLong())
 
-        assertEquals("OK", p.readLine())
+        assertEquals("OK\n", p.readString())
         assertTrue { p.isEmpty }
     }
 
@@ -93,7 +92,7 @@ class BytePacketBuildTest {
         }
 
         assertEquals(3, p.discard(3))
-        assertEquals("123", p.readLine())
+        assertEquals("123", p.readString())
         assertTrue { p.isEmpty }
     }
 
@@ -104,7 +103,7 @@ class BytePacketBuildTest {
         }
 
         p.discardExact(3)
-        assertEquals("123", p.readLine())
+        assertEquals("123", p.readString())
         assertTrue { p.isEmpty }
     }
 
@@ -117,7 +116,7 @@ class BytePacketBuildTest {
         assertFailsWith<EOFException> {
             p.discardExact(1000)
         }
-        assertTrue { p.isEmpty }
+        assertEquals(6, p.availableForRead)
     }
 
     @Test
@@ -138,7 +137,7 @@ class BytePacketBuildTest {
         }
 
         assertEquals(99999 + 3, p.discard(99999 + 3))
-        assertEquals("123", p.readLine())
+        assertEquals("123", p.readString())
         assertTrue { p.isEmpty }
     }
 

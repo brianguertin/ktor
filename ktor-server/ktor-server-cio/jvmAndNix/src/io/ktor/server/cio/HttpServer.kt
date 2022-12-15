@@ -5,9 +5,9 @@
 package io.ktor.server.cio
 
 import io.ktor.http.cio.*
+import io.ktor.io.*
 import io.ktor.network.sockets.*
 import io.ktor.server.cio.backend.*
-import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 
 /**

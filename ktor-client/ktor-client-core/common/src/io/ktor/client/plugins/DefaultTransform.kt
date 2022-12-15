@@ -95,7 +95,7 @@ public fun HttpClient.defaultTransformers() {
                 val responseJobHolder = Job(response.coroutineContext[Job])
                 val channel: ByteReadChannel = writer(response.coroutineContext) {
                     try {
-                        body.copyTo(channel, limit = Long.MAX_VALUE)
+                        body.copyTo(this, limit = Long.MAX_VALUE)
                     } catch (cause: CancellationException) {
                         response.cancel(cause)
                         throw cause

@@ -3,8 +3,6 @@ description = ""
 kotlin.sourceSets {
     jvmAndNixMain {
         dependencies {
-            api( "org.jetbrains.kotlin:kotlin-test:1.7.10")
-
             implementation(project(":ktor-server:ktor-server-plugins:ktor-server-forwarded-header"))
             implementation(project(":ktor-server:ktor-server-plugins:ktor-server-auto-head-response"))
             implementation(project(":ktor-server:ktor-server-plugins:ktor-server-status-pages"))

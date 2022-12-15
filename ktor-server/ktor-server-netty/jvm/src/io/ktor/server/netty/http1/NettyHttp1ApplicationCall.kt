@@ -4,9 +4,9 @@
 
 package io.ktor.server.netty.http1
 
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
-import io.ktor.utils.io.*
 import io.netty.buffer.*
 import io.netty.channel.*
 import io.netty.handler.codec.http.*

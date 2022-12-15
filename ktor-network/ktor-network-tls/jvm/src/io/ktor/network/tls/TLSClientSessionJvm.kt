@@ -7,9 +7,6 @@ package io.ktor.network.tls
 import io.ktor.io.*
 import io.ktor.network.sockets.*
 import io.ktor.network.util.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
-import io.ktor.utils.io.pool.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import java.nio.*
@@ -40,12 +37,12 @@ private class TLSSocket(
 
     override fun attachForReading(): ByteReadChannel =
         writer(coroutineContext + CoroutineName("cio-tls-input-loop")) {
-            appDataInputLoop(this.channel)
+            appDataInputLoop(this)
         }
 
     override fun attachForWriting(): ByteWriteChannel =
         reader(coroutineContext + CoroutineName("cio-tls-output-loop")) {
-            appDataOutputLoop(this.channel)
+            appDataOutputLoop(this)
         }
 
     @OptIn(ExperimentalCoroutinesApi::class)

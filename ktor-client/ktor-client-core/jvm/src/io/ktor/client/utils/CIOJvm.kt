@@ -6,7 +6,6 @@ package io.ktor.client.utils
 
 import io.ktor.io.pool.DefaultPool
 import io.ktor.util.*
-import io.ktor.utils.io.pool.*
 import io.ktor.io.pool.ByteBufferPool
 import java.nio.*
 

@@ -9,7 +9,6 @@ package io.ktor.tests.html
 import io.ktor.http.*
 import io.ktor.io.*
 import io.ktor.server.html.HtmlContent
-import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import kotlinx.html.*
 import kotlin.test.*

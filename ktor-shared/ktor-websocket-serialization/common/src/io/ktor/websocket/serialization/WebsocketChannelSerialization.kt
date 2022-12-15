@@ -3,7 +3,6 @@ package io.ktor.websocket.serialization
 import io.ktor.io.charsets.*
 import io.ktor.serialization.*
 import io.ktor.util.reflect.*
-import io.ktor.utils.io.charsets.*
 import io.ktor.websocket.*
 
 /*

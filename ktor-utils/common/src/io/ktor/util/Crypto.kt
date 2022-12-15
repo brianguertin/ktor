@@ -9,8 +9,6 @@ package io.ktor.util
 
 import io.ktor.io.*
 import io.ktor.io.charsets.*
-import io.ktor.utils.io.charsets.*
-import io.ktor.utils.io.core.*
 import kotlin.native.concurrent.*
 
 private val digits = "0123456789abcdef".toCharArray()

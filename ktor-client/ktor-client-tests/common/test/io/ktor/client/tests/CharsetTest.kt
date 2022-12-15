@@ -13,7 +13,6 @@ import io.ktor.client.tests.utils.*
 import io.ktor.client.utils.*
 import io.ktor.http.*
 import io.ktor.http.content.*
-import io.ktor.utils.io.charsets.*
 import kotlin.test.*
 
 class CharsetTest {

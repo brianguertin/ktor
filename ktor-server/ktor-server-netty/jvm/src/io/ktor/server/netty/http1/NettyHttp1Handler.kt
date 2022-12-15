@@ -4,18 +4,19 @@
 
 package io.ktor.server.netty.http1
 
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.netty.cio.*
 import io.ktor.util.cio.*
-import io.ktor.utils.io.*
 import io.netty.channel.*
 import io.netty.handler.codec.http.*
 import io.netty.util.concurrent.*
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 import java.io.*
+import java.io.IOException
 import kotlin.coroutines.*
 
 internal class NettyHttp1Handler(

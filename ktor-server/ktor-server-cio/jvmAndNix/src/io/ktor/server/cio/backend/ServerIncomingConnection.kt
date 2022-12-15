@@ -4,9 +4,9 @@
 
 package io.ktor.server.cio.backend
 
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.util.network.*
-import io.ktor.utils.io.*
 
 /**
  * Represents a server incoming connection. Usually it is a TCP connection but potentially could be other transport.

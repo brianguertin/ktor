@@ -7,11 +7,10 @@ package io.ktor.server.cio
 import io.ktor.http.*
 import io.ktor.http.cio.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.server.engine.*
 import io.ktor.server.response.*
 import io.ktor.util.collections.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.concurrent.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.*
 import kotlin.jvm.*

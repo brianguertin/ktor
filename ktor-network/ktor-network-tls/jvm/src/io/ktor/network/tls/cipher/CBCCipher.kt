@@ -7,7 +7,6 @@ package io.ktor.network.tls.cipher
 import io.ktor.io.*
 import io.ktor.network.tls.*
 import io.ktor.util.*
-import io.ktor.utils.io.core.*
 import java.security.*
 import javax.crypto.*
 import javax.crypto.spec.*

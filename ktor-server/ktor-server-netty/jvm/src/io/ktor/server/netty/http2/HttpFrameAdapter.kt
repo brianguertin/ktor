@@ -4,7 +4,7 @@
 
 package io.ktor.server.netty.http2
 
-import io.ktor.utils.io.*
+import io.ktor.io.*
 import io.netty.buffer.*
 import io.netty.handler.codec.http2.*
 import kotlinx.coroutines.channels.*

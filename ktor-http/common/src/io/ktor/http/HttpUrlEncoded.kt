@@ -5,7 +5,6 @@
 package io.ktor.http
 
 import io.ktor.io.charsets.*
-import io.ktor.utils.io.charsets.*
 
 /**
  * Parse URL query parameters. Shouldn't be used for urlencoded forms because of `+` character.
@@ -14,7 +13,7 @@ public fun String.parseUrlEncodedParameters(defaultEncoding: Charset = Charsets.
     val parameters: List<Pair<String, String>> =
         split("&", limit = limit).map { it.substringBefore("=") to it.substringAfter("=", "") }
     val encoding: String =
-        parameters.firstOrNull { it.first == "_charset_" }?.second ?: defaultEncoding.name
+        parameters.firstOrNull { it.first == "_charset_" }?.second ?: defaultEncoding.name()
 
     val charset = Charset.forName(encoding)
     return Parameters.build {

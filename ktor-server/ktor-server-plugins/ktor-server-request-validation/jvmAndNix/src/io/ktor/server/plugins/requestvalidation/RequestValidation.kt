@@ -4,11 +4,10 @@
 
 package io.ktor.server.plugins.requestvalidation
 
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.application.hooks.*
 import io.ktor.server.request.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.errors.*
 
 /**
  * A result of validation.
@@ -87,7 +86,7 @@ public val RequestValidation: RouteScopedPlugin<RequestValidationConfig> = creat
         val contentLength = call.request.contentLength() ?: return@on body
 
         return@on application.writer {
-            val count = body.copyTo(channel)
+            val count = body.copyTo(this)
             if (count != contentLength) {
                 throw IOException("Content length mismatch. Actual $count, expected $contentLength.")
             }

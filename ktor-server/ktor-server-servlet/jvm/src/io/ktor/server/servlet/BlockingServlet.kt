@@ -5,11 +5,10 @@
 package io.ktor.server.servlet
 
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.util.cio.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.*
 import javax.servlet.*
 import javax.servlet.http.*
@@ -51,23 +50,19 @@ internal class BlockingServletApplicationResponse(
     managedByEngineHeaders: Set<String> = emptySet()
 ) : ServletApplicationResponse(call, servletResponse, managedByEngineHeaders), CoroutineScope {
     override fun createResponseJob(): ByteWriteChannel = reader(UnsafeBlockingTrampoline) {
-        val buffer = ArrayPool.borrow()
-        try {
-            writeLoop(buffer, channel, servletResponse.outputStream)
-        } finally {
-            ArrayPool.recycle(buffer)
-        }
+        writeLoop(this, servletResponse.outputStream)
     }
 
     @Suppress("BlockingMethodInNonBlockingContext")
-    private suspend fun writeLoop(buffer: ByteArray, from: ByteReadChannel, to: ServletOutputStream) {
-        while (true) {
-            val n = from.readAvailable(buffer)
-            if (n < 0) break
-            check(n > 0)
+    private suspend fun writeLoop(from: ByteReadChannel, output: ServletOutputStream) {
+        while (!from.isClosedForRead) {
+            if (from.availableForRead == 0) from.awaitBytes()
+
+            val buffer = from.readablePacket.readBuffer().toByteArray()
+            if (buffer.isEmpty()) break
             try {
-                to.write(buffer, 0, n)
-                to.flush()
+                output.write(buffer)
+                output.flush()
             } catch (cause: Throwable) {
                 throw ChannelWriteException("Failed to write to ServletOutputStream", cause)
             }

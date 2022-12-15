@@ -11,7 +11,6 @@ import io.ktor.client.request.*
 import io.ktor.client.utils.*
 import io.ktor.util.*
 import io.ktor.util.collections.*
-import io.ktor.utils.io.concurrent.*
 import kotlinx.atomicfu.locks.*
 import kotlinx.coroutines.*
 import kotlin.jvm.*

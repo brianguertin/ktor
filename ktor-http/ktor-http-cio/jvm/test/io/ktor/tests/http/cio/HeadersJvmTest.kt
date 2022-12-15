@@ -6,7 +6,7 @@ package io.ktor.tests.http.cio
 
 import io.ktor.http.cio.*
 import io.ktor.http.cio.internals.*
-import io.ktor.utils.io.*
+import io.ktor.io.*
 import kotlinx.coroutines.*
 import kotlin.test.*
 

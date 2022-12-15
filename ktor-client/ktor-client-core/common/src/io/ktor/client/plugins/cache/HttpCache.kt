@@ -16,11 +16,11 @@ import io.ktor.client.statement.*
 import io.ktor.events.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.util.date.*
 import io.ktor.util.logging.*
 import io.ktor.util.pipeline.*
-import io.ktor.utils.io.*
 import kotlin.coroutines.*
 
 internal object CacheControl {

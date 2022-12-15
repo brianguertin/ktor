@@ -8,8 +8,8 @@ import io.ktor.client.call.*
 import io.ktor.client.utils.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.util.*
-import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.*
 
@@ -33,7 +33,7 @@ internal class ObservableContent(
         is NoContent -> ByteReadChannel.Empty
         is ReadChannelContent -> delegate.readFrom()
         is WriteChannelContent -> GlobalScope.writer(callContext) {
-            delegate.writeTo(channel)
+            delegate.writeTo(this)
         }
     }
 

@@ -6,16 +6,12 @@ package io.ktor.client.statement
 
 import io.ktor.io.*
 import io.ktor.util.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
 
 /**
  * Reads exactly [count] bytes of the [HttpResponse.content].
  */
 @OptIn(InternalAPI::class)
-public suspend fun HttpResponse.readBytes(count: Int): ByteArray = ByteArray(count).also {
-    content.readFully(it)
-}
+public suspend fun HttpResponse.readBytes(count: Int): ByteArray = content.readByteArray(count)
 
 /**
  * Reads the whole [HttpResponse.content] if `Content-Length` is specified.

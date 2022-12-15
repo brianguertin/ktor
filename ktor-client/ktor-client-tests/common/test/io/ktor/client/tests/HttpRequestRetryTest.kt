@@ -9,7 +9,7 @@ import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.tests.utils.*
 import io.ktor.http.*
-import io.ktor.utils.io.errors.*
+import io.ktor.io.*
 import kotlinx.coroutines.*
 import kotlin.math.*
 import kotlin.test.*

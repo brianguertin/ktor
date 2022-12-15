@@ -10,11 +10,10 @@ import io.ktor.client.request.*
 import io.ktor.client.utils.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.util.cio.*
 import io.ktor.util.date.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.pool.*
 import kotlinx.coroutines.*
 import org.eclipse.jetty.http.*
 import org.eclipse.jetty.http2.api.*
@@ -100,7 +99,7 @@ private fun sendRequestBody(request: JettyHttp2Request, content: OutgoingContent
 
         is OutgoingContent.ReadChannelContent -> writeRequest(content.readFrom(), request, callContext)
         is OutgoingContent.WriteChannelContent -> {
-            val source = GlobalScope.writer(callContext) { content.writeTo(channel) }
+            val source = GlobalScope.writer(callContext) { content.writeTo(this) }
             writeRequest(source, request, callContext)
         }
 

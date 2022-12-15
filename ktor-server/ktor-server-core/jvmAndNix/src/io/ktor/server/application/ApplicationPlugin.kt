@@ -4,11 +4,11 @@
 
 package io.ktor.server.application
 
+import io.ktor.io.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
 import io.ktor.util.internal.*
 import io.ktor.util.pipeline.*
-import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 
 /**

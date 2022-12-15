@@ -12,9 +12,6 @@ import io.ktor.server.engine.*
 import io.ktor.server.request.*
 import io.ktor.server.testing.internal.*
 import io.ktor.util.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.charsets.*
-import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 
 /**
@@ -161,18 +158,18 @@ public fun TestApplicationRequest.setBody(boundary: String, parts: List<PartData
                 append(
                     when (it) {
                         is PartData.FileItem -> {
-                            channel.writeByteArray(it.provider().toByteArray())
+                            writeByteArray(it.provider().toByteArray())
                             ""
                         }
 
                         is PartData.BinaryItem -> {
-                            channel.writeByteArray(it.provider().toByteArray())
+                            writeByteArray(it.provider().toByteArray())
                             ""
                         }
 
                         is PartData.FormItem -> it.value
                         is PartData.BinaryChannelItem -> {
-                            it.provider().copyTo(channel)
+                            it.provider().copyTo(this)
                             ""
                         }
                     }
@@ -232,5 +229,5 @@ internal fun buildMultipart(
 }.channel
 
 private suspend fun ByteWriteChannel.append(str: String, charset: Charset = Charsets.UTF_8) {
-    channel.writeByteArray(str.toByteArray(charset))
+    writeString(str, charset)
 }

@@ -5,8 +5,8 @@
 package io.ktor.client.plugins.api
 
 import io.ktor.client.*
+import io.ktor.io.*
 import io.ktor.util.*
-import io.ktor.utils.io.core.*
 
 /**
  * An instance of [ClientPlugin] that can be installed into [HttpClient].

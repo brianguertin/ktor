@@ -10,9 +10,6 @@ import io.ktor.io.*
 import io.ktor.io.charsets.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.charsets.*
-import io.ktor.utils.io.core.*
 import kotlinx.html.*
 import kotlinx.html.stream.*
 

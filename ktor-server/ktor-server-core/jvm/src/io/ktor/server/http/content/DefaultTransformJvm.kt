@@ -5,10 +5,9 @@
 package io.ktor.server.http.content
 
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.io.jvm.javaio.*
 import io.ktor.server.application.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.jvm.javaio.*
 import java.io.*
 
 /**

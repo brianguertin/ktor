@@ -38,7 +38,7 @@ if (CACHE_USER != null) {
     buildCache {
         local {
             isEnabled = true
-            isPush = false
+            isPush = true
         }
     }
 }

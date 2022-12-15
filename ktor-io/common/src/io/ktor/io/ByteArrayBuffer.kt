@@ -56,8 +56,10 @@ public class ByteArrayBuffer(
 
     override fun readByteArray(size: Int): ByteArray {
         require(size <= availableForRead)
+        val startIndex = readIndex
+        val endIndex = startIndex + size
         readIndex += size
-        return array.sliceArray(readIndex until readIndex + size)
+        return array.sliceArray(startIndex until endIndex)
     }
 
     override fun toByteArray(): ByteArray {

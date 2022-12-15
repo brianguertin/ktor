@@ -4,8 +4,8 @@
 
 package io.ktor.server.engine
 
+import io.ktor.io.*
 import io.ktor.util.logging.*
-import io.ktor.utils.io.errors.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.*
 

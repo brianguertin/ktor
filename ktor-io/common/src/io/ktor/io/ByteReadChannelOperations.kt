@@ -103,6 +103,20 @@ public suspend fun ByteReadChannel.readByte(): Byte {
 }
 
 /**
+ * Read [ByteArray] of provided [size].
+ *
+ * @throws EOFException if channel is closed and not enough bytes available.
+ */
+public suspend fun ByteReadChannel.readByteArray(size: Int): ByteArray {
+    require(size >= 0)
+    if (size == 0) return ByteArray(0)
+
+    awaitBytes { availableForRead >= size }
+    if (availableForRead < size) throw EOFException("Not enough bytes available: $size, available: $availableForRead")
+    return readablePacket.readByteArray(size)
+}
+
+/**
  * Reads a boolean value (suspending if no bytes available yet) or fails if channel has been closed
  * and not enough bytes.
  */

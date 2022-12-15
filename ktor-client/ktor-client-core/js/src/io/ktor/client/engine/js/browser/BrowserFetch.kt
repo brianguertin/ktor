@@ -6,7 +6,7 @@ package io.ktor.client.engine.js.browser
 
 import io.ktor.client.engine.js.*
 import io.ktor.client.fetch.*
-import io.ktor.utils.io.*
+import io.ktor.io.*
 import kotlinx.coroutines.*
 import org.khronos.webgl.Uint8Array
 import org.w3c.fetch.Response

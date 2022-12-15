@@ -5,7 +5,7 @@
 package io.ktor.client.engine.apache
 
 import io.ktor.client.request.*
-import io.ktor.utils.io.*
+import io.ktor.io.*
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 import org.apache.http.*
@@ -49,9 +49,7 @@ internal class ApacheResponseConsumer(
         var result: Int
         do {
             result = 0
-            channel.writeAvailable {
-                result = decoder.read(it)
-            }
+            TODO()
         } while (result > 0)
 
         if (result < 0 || decoder.isCompleted) {

@@ -8,7 +8,6 @@ import io.ktor.io.pool.*
 import io.ktor.io.pool.DefaultPool
 import io.ktor.network.sockets.*
 import io.ktor.util.*
-import io.ktor.utils.io.pool.*
 import io.ktor.io.pool.DirectByteBufferPool
 import java.nio.*
 

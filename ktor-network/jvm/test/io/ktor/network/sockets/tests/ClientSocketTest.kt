@@ -4,11 +4,11 @@
 
 package io.ktor.network.sockets.tests
 
+import io.ktor.io.*
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import io.ktor.network.sockets.Socket
 import io.ktor.network.sockets.SocketImpl
-import io.ktor.utils.io.*
 import io.mockk.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.debug.junit4.*
@@ -20,8 +20,11 @@ import java.net.SocketAddress
 import java.nio.channels.*
 import java.util.concurrent.*
 import kotlin.concurrent.*
+import kotlin.io.use
 import kotlin.test.*
 import kotlin.test.Test
+import kotlin.text.String
+import kotlin.text.toByteArray
 
 class ClientSocketTest {
     private val exec = Executors.newCachedThreadPool()
@@ -64,7 +67,7 @@ class ClientSocketTest {
         client { socket ->
             val channel = socket.attachForReading()
             channel.awaitBytes { channel.availableForRead >= 3 }
-            val array = channel.readAvailableToArray(3)
+            val array = channel.readByteArray(3)
             assertEquals("123", String(array))
         }
     }

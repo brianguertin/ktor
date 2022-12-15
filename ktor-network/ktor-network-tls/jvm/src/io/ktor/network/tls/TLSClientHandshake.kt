@@ -8,8 +8,6 @@ import io.ktor.io.*
 import io.ktor.network.tls.SecretExchangeType.*
 import io.ktor.network.tls.cipher.*
 import io.ktor.network.tls.extensions.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import java.security.*

@@ -9,11 +9,11 @@ import io.ktor.client.engine.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.server.testing.*
 import io.ktor.server.testing.internal.*
 import io.ktor.util.*
 import io.ktor.util.date.*
-import io.ktor.utils.io.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.*
@@ -120,7 +120,7 @@ public class TestHttpClientEngine(override val config: TestHttpClientConfig) : H
         is OutgoingContent.ByteArrayContent -> ByteReadChannel(bytes())
         is OutgoingContent.ReadChannelContent -> readFrom()
         is OutgoingContent.WriteChannelContent -> writer(coroutineContext) {
-            writeTo(channel)
+            writeTo(this)
         }
         is OutgoingContent.ProtocolUpgrade -> throw UnsupportedContentTypeException(this)
     }

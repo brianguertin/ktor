@@ -4,10 +4,11 @@
 
 package io.ktor.util.cio
 
-import io.ktor.utils.io.*
-import io.ktor.utils.io.jvm.javaio.*
+import io.ktor.io.*
+import io.ktor.io.jvm.javaio.*
 import java.io.*
 import java.nio.charset.*
+import kotlin.text.toByteArray
 
 /**
  * Write a [string] in the specified [charset]

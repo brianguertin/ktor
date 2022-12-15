@@ -7,10 +7,6 @@ package io.ktor.tests.websocket
 import io.ktor.io.*
 import io.ktor.io.charsets.*
 import io.ktor.server.testing.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.charsets.*
-import io.ktor.utils.io.core.*
-import io.ktor.utils.io.errors.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.CancellationException

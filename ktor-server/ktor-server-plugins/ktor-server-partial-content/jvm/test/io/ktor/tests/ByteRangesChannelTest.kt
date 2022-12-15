@@ -4,12 +4,13 @@
 
 package io.ktor.tests
 
+import io.ktor.io.*
+import io.ktor.io.jvm.javaio.*
 import io.ktor.server.plugins.partialcontent.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.*
 import kotlin.test.*
+import kotlin.text.toByteArray
 
 class ByteRangesChannelTest : CoroutineScope {
     override val coroutineContext: CoroutineContext

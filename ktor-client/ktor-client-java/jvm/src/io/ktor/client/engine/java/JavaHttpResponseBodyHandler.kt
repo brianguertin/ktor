@@ -6,12 +6,13 @@ package io.ktor.client.engine.java
 
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.util.date.*
-import io.ktor.utils.io.*
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import java.io.*
+import java.io.IOException
 import java.net.http.*
 import java.nio.*
 import java.util.concurrent.*

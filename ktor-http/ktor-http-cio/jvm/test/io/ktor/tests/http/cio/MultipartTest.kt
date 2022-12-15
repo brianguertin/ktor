@@ -6,7 +6,6 @@ package io.ktor.tests.http.cio
 
 import io.ktor.http.cio.*
 import io.ktor.io.*
-import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlin.test.*
@@ -423,12 +422,6 @@ class MultipartTest {
 
     private fun testBoundary(expectedBoundary: String, headerValue: String) {
         val boundary = parseBoundaryInternal(headerValue)
-        val actualBoundary = String(
-            boundary.array(),
-            boundary.arrayOffset() + boundary.position(),
-            boundary.remaining()
-        )
-
-        assertEquals(expectedBoundary, actualBoundary)
+        assertEquals(expectedBoundary, boundary)
     }
 }

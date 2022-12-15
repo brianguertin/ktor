@@ -6,8 +6,12 @@ package io.ktor.io
 
 import java.nio.*
 
+internal val EmptyByteBuffer: ByteBuffer = ByteBuffer.allocate(0)
+
 public interface WithByteBuffer {
     public val state: ByteBuffer
+
+    public fun readByteBuffer(): ByteBuffer
 }
 
 public fun Packet.writeByteBuffer(value: ByteBuffer) {
@@ -18,8 +22,19 @@ public fun Packet.writeByteBuffer(value: ByteBuffer) {
 
 public fun ReadableBuffer.readByteBuffer(): ByteBuffer {
     if (this is WithByteBuffer) {
-        val result = state
+        return readByteBuffer()
     }
 
     return ByteBuffer.wrap(toByteArray())
+}
+
+public fun Packet.readByteBuffer(): ByteBuffer {
+    return readBuffer().readByteBuffer()
+}
+
+public suspend fun ByteReadChannel.readByteBuffer(): ByteBuffer {
+    if (!isClosedForRead && availableForRead == 0) awaitBytes()
+    if (isClosedForRead) return EmptyByteBuffer
+
+    return readablePacket.readByteBuffer()
 }

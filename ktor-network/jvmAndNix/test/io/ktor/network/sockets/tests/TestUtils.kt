@@ -4,10 +4,10 @@
 
 package io.ktor.network.sockets.tests
 
+import io.ktor.io.*
 import io.ktor.network.selector.*
 import io.ktor.test.dispatcher.*
 import io.ktor.util.*
-import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 
 internal fun testSockets(block: suspend CoroutineScope.(SelectorManager) -> Unit) {

@@ -12,7 +12,6 @@ import io.ktor.client.tests.utils.*
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.io.*
-import io.ktor.utils.io.*
 import java.io.*
 import kotlin.test.*
 import kotlin.text.toByteArray

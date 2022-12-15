@@ -40,7 +40,7 @@ public interface ByteWriteChannel {
      * coroutine then the corresponding coroutine will be cancelled with [cause]. If no [cause] provided then no
      * cancellation will be propagated.
      */
-    public fun close(cause: Throwable?): Boolean
+    public fun close(cause: Throwable? = null): Boolean
 
     /**
      * Flushes all pending write bytes making them available for read.
@@ -70,11 +70,6 @@ public fun ByteWriteChannel.writeInt(i: Long) {
 public fun ByteWriteChannel.writeInt(i: Long, byteOrder: ByteOrder) {
     writeInt(i.toInt(), byteOrder)
 }
-
-/**
- * Closes this channel with no failure (successfully)
- */
-public fun ByteWriteChannel.close(): Boolean = close(null)
 
 public fun ByteWriteChannel.writeBoolean(b: Boolean) {
     writeByte(if (b) 1 else 0)

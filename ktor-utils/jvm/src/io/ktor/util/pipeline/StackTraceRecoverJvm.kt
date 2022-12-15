@@ -4,7 +4,7 @@
 
 package io.ktor.util.pipeline
 
-import io.ktor.utils.io.*
+import io.ktor.io.*
 
 internal actual fun Throwable.withCause(cause: Throwable?): Throwable {
     if (cause == null || this.cause == cause) {

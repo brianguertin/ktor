@@ -5,8 +5,7 @@
 package io.ktor.util.pipeline
 
 import io.ktor.util.*
-import io.ktor.util.collections.*
-import io.ktor.utils.io.concurrent.*
+
 
 @Suppress("DEPRECATION")
 internal class PhaseContent<TSubject : Any, Call : Any>(

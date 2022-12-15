@@ -12,14 +12,15 @@ import io.ktor.client.request.*
 import io.ktor.client.utils.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.util.date.*
-import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import okhttp3.*
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.internal.http.HttpMethod
 import okio.*
+import okio.use
 import java.io.*
 import java.io.Closeable
 import java.util.concurrent.*
@@ -163,7 +164,7 @@ private fun BufferedSource.toChannel(context: CoroutineContext, requestData: Htt
         use { source ->
             var lastRead = 0
             while (source.isOpen && context.isActive && lastRead >= 0) {
-                channel.write { buffer ->
+                write { buffer ->
                     lastRead = try {
                         source.read(buffer)
                     } catch (cause: Throwable) {
@@ -209,7 +210,7 @@ internal fun OutgoingContent.convertToOkHttpBody(callContext: CoroutineContext):
     }
     is OutgoingContent.ReadChannelContent -> StreamRequestBody(contentLength) { readFrom() }
     is OutgoingContent.WriteChannelContent -> {
-        StreamRequestBody(contentLength) { GlobalScope.writer(callContext) { writeTo(channel) } }
+        StreamRequestBody(contentLength) { GlobalScope.writer(callContext) { writeTo(this) } }
     }
     is OutgoingContent.NoContent -> ByteArray(0).toRequestBody(null, 0, 0)
     else -> throw UnsupportedContentTypeException(this)

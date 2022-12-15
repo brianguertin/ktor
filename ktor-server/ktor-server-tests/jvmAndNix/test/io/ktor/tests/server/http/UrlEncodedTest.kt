@@ -8,7 +8,6 @@ import io.ktor.http.*
 import io.ktor.io.charsets.*
 import io.ktor.server.request.*
 import io.ktor.server.testing.*
-import io.ktor.utils.io.charsets.*
 import kotlinx.coroutines.*
 import kotlin.test.*
 

@@ -6,11 +6,11 @@ package io.ktor.server.cio
 
 import io.ktor.http.*
 import io.ktor.http.cio.*
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.request.*
 import io.ktor.util.network.*
-import io.ktor.utils.io.*
 
 internal class CIOApplicationRequest(
     call: ApplicationCall,

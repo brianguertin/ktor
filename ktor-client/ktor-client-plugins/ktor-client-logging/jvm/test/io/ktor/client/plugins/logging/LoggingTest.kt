@@ -4,8 +4,7 @@
 
 package io.ktor.client.plugins.logging
 
-import io.ktor.utils.io.*
-import io.ktor.utils.io.charsets.*
+import io.ktor.io.*
 import kotlinx.coroutines.*
 import kotlin.test.*
 

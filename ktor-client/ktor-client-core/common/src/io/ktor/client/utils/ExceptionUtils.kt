@@ -4,8 +4,6 @@
 
 package io.ktor.client.utils
 
-import io.ktor.utils.io.*
-
 /**
  * If the exception contains cause that differs from [CancellationException] returns it otherwise returns itself.
  */

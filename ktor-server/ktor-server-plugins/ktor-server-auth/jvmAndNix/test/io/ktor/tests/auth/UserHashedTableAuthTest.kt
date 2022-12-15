@@ -12,7 +12,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
 import io.ktor.util.*
-import io.ktor.utils.io.core.*
 import kotlin.random.*
 import kotlin.test.*
 
@@ -40,7 +39,7 @@ class UserHashedTableAuthTest {
     }
 
     private fun testSingle(hashedUserTable: UserHashedTableAuth) {
-        withTestApplication {
+        withTestApplication<Unit> {
             application.install(Authentication) {
                 form {
                     challenge("/unauthorized")
@@ -84,6 +83,8 @@ class UserHashedTableAuthTest {
                 assertEquals(HttpStatusCode.OK, result.response.status())
                 assertEquals("ok", result.response.content)
             }
+
+            Unit
         }
     }
 

@@ -9,7 +9,6 @@ package io.ktor.server.request
 import io.ktor.http.*
 import io.ktor.io.charsets.*
 import io.ktor.server.plugins.*
-import io.ktor.utils.io.charsets.*
 
 /**
  * Gets the first value of a [name] header or returns `null` if missing.

@@ -126,6 +126,13 @@ allprojects {
     kotlin {
         if (!disabledExplicitApiModeProjects.contains(project.name)) explicitApi()
 
+        sourceSets {
+            val commonTest by getting {
+                dependencies {
+                    implementation(kotlin("test"))
+                }
+            }
+        }
         setCompilationOptions()
         configureSourceSets()
         setupJvmToolchain()

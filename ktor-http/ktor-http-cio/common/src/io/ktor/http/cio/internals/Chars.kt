@@ -5,7 +5,7 @@
 package io.ktor.http.cio.internals
 
 import io.ktor.http.*
-import io.ktor.utils.io.*
+import io.ktor.io.*
 
 internal const val HTAB: Char = '\u0009'
 

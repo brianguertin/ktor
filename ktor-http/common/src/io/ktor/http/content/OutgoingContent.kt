@@ -5,8 +5,8 @@
 package io.ktor.http.content
 
 import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.util.*
-import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.*
 
@@ -92,7 +92,7 @@ public sealed class OutgoingContent {
                 val source = readFrom()
                 source.discard(range.start)
                 val limit = range.endInclusive - range.start + 1
-                source.copyTo(channel, limit)
+                source.copyTo(this, limit)
             }
         }
     }

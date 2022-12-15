@@ -7,12 +7,12 @@ package io.ktor.client.engine.android
 import io.ktor.client.network.sockets.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.util.cio.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.*
 import java.io.*
+import java.io.IOException
 import java.net.*
 import kotlin.coroutines.*
 

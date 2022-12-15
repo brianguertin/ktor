@@ -8,8 +8,8 @@ package io.ktor.client.tests.utils
 
 import io.ktor.client.*
 import io.ktor.client.engine.*
+import io.ktor.io.*
 import io.ktor.test.dispatcher.*
-import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 
 /**

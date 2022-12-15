@@ -6,11 +6,12 @@ package io.ktor.server.auth
 
 import io.ktor.client.*
 import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.util.logging.*
 import io.ktor.util.pipeline.*
-import io.ktor.utils.io.errors.*
 import kotlinx.coroutines.*
 
 private val Logger: Logger = KtorSimpleLogger("io.ktor.auth.oauth")

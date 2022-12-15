@@ -7,7 +7,6 @@ package io.ktor.util.cio
 import io.ktor.io.pool.*
 import io.ktor.io.pool.DefaultPool
 import io.ktor.util.*
-import io.ktor.utils.io.pool.*
 import io.ktor.io.pool.ByteBufferPool
 import java.nio.*
 

@@ -13,9 +13,6 @@ import io.ktor.http.content.*
 import io.ktor.io.*
 import io.ktor.io.charsets.*
 import io.ktor.util.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.charsets.*
-import io.ktor.utils.io.core.*
 import kotlin.math.*
 
 /**
@@ -35,12 +32,12 @@ public class HttpPlainText internal constructor(
 
     init {
         val withQuality = charsetQuality.toList().sortedByDescending { it.second }
-        val withoutQuality = charsets.filter { !charsetQuality.containsKey(it) }.sortedBy { it.name }
+        val withoutQuality = charsets.filter { !charsetQuality.containsKey(it) }.sortedBy { it.name() }
 
         acceptCharsetHeader = buildString {
             withoutQuality.forEach {
                 if (isNotEmpty()) append(",")
-                append(it.name)
+                append(it.name())
             }
 
             withQuality.forEach { (charset, quality) ->
@@ -49,11 +46,11 @@ public class HttpPlainText internal constructor(
                 check(quality in 0.0..1.0)
 
                 val truncatedQuality = (100 * quality).roundToInt() / 100.0
-                append("${charset.name};q=$truncatedQuality")
+                append("${charset.name()};q=$truncatedQuality")
             }
 
             if (isEmpty()) {
-                append(responseCharsetFallback.name)
+                append(responseCharsetFallback.name())
             }
         }
 

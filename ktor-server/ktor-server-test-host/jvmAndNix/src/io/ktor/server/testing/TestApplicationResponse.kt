@@ -12,10 +12,6 @@ import io.ktor.server.engine.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.util.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.charsets.*
-import io.ktor.utils.io.concurrent.*
-import io.ktor.utils.io.core.*
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.*
@@ -87,10 +83,10 @@ public class TestApplicationResponse(
         }
 
         return GlobalScope.reader(Dispatchers.Unconfined + job) {
-            responseChannel = channel
+            responseChannel = this
             responseChannelDeferred.complete()
             if (readResponse) {
-                launchResponseJob(channel)
+                launchResponseJob(this)
             }
         }
     }

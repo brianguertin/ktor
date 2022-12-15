@@ -4,8 +4,8 @@
 
 package io.ktor.network.tls
 
+import io.ktor.io.*
 import io.ktor.network.tls.extensions.*
-import io.ktor.utils.io.errors.*
 
 /**
  * TLS secret key exchange type.

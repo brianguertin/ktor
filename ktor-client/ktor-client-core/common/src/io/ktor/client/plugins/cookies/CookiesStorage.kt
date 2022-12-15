@@ -5,8 +5,8 @@
 package io.ktor.client.plugins.cookies
 
 import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.util.*
-import io.ktor.utils.io.core.*
 
 /**
  * A storage for [Cookie].

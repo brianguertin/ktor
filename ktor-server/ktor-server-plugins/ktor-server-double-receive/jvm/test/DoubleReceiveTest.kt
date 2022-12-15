@@ -1,7 +1,5 @@
 import io.ktor.io.*
 import io.ktor.server.plugins.doublereceive.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import org.junit.*
 import org.junit.Assert.*

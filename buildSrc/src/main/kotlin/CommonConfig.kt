@@ -17,7 +17,6 @@ fun Project.configureCommon() {
 
             val commonTest by getting {
                 dependencies {
-                    implementation( "org.jetbrains.kotlin:kotlin-test:1.7.10")
                 }
             }
         }

@@ -1,8 +1,8 @@
 package io.ktor.client.engine.mock
 
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.test.dispatcher.*
-import io.ktor.utils.io.*
 import kotlin.test.*
 
 /*

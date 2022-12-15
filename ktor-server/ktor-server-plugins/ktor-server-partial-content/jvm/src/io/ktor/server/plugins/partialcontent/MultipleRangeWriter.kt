@@ -5,8 +5,9 @@
 package io.ktor.server.plugins.partialcontent
 
 import io.ktor.http.*
-import io.ktor.utils.io.*
+import io.ktor.io.*
 import kotlinx.coroutines.*
+import kotlin.text.toByteArray
 
 private val NEWLINE = "\r\n".toByteArray(Charsets.ISO_8859_1)
 private val FIXED_HEADERS_PART_LENGTH = 14 + HttpHeaders.ContentType.length + HttpHeaders.ContentRange.length
@@ -23,13 +24,13 @@ internal actual fun CoroutineScope.writeMultipleRangesImpl(
 ): ByteReadChannel = writer(Dispatchers.Unconfined) {
     for (range in ranges) {
         val current = channelProducer(range)
-        channel.writeHeaders(range, boundary, contentType, fullLength)
-        current.copyTo(channel)
-        channel.writeByteArray(NEWLINE)
+        writeHeaders(range, boundary, contentType, fullLength)
+        current.copyTo(this)
+        writeByteArray(NEWLINE)
     }
 
-    channel.writeByteArray("--$boundary--".toByteArray(Charsets.ISO_8859_1))
-    channel.writeByteArray(NEWLINE)
+    writeByteArray("--$boundary--".toByteArray(Charsets.ISO_8859_1))
+    writeByteArray(NEWLINE)
 }
 
 private suspend fun ByteWriteChannel.writeHeaders(

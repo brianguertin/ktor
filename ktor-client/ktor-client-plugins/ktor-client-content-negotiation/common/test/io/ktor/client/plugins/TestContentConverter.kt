@@ -6,11 +6,10 @@ package io.ktor.client.plugins
 
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.io.charsets.*
 import io.ktor.serialization.*
 import io.ktor.util.reflect.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.charsets.*
 
 typealias ContentConverterSerialize = suspend (ContentType, Charset, TypeInfo, Any?) -> OutgoingContent?
 typealias ContentConverterDeserialize = suspend (Charset, TypeInfo, ByteReadChannel) -> Any?

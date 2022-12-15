@@ -16,9 +16,6 @@ import io.ktor.io.*
 import io.ktor.serialization.*
 import io.ktor.util.*
 import io.ktor.util.reflect.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.charsets.*
-import io.ktor.utils.io.core.*
 import kotlin.test.*
 
 class ContentNegotiationTests {

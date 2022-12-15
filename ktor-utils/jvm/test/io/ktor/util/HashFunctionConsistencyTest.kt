@@ -5,7 +5,6 @@
 package io.ktor.util
 
 import io.ktor.io.*
-import io.ktor.utils.io.core.*
 import java.security.*
 import kotlin.random.*
 import kotlin.test.*

@@ -7,7 +7,6 @@ package test.server
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.util.*
-import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
 
 fun makeArray(size: Int): ByteArray = ByteArray(size) { it.toByte() }

@@ -8,13 +8,12 @@ package io.ktor.server.response
 
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.io.charsets.*
 import io.ktor.server.application.*
 import io.ktor.server.util.*
 import io.ktor.util.*
 import io.ktor.util.reflect.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.charsets.*
 import kotlin.jvm.*
 
 /**

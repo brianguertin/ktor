@@ -8,7 +8,6 @@ import io.ktor.http.*
 import io.ktor.http.parsing.*
 import io.ktor.io.charsets.*
 import io.ktor.util.*
-import io.ktor.utils.io.charsets.*
 
 private val TOKEN_EXTRA = setOf('!', '#', '$', '%', '&', '\'', '*', '+', '-', '.', '^', '_', '`', '|', '~')
 private val TOKEN68_EXTRA = setOf('-', '.', '_', '~', '+', '/')
@@ -367,7 +366,7 @@ public sealed class HttpAuthHeader(public val authScheme: String) {
             LinkedHashMap<String, String>().apply {
                 put(Parameters.Realm, realm)
                 if (charset != null) {
-                    put(Parameters.Charset, charset.name)
+                    put(Parameters.Charset, charset.name())
                 }
             }
         )

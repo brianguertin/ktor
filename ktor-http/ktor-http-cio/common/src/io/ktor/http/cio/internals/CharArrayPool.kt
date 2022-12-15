@@ -5,7 +5,6 @@
 package io.ktor.http.cio.internals
 
 import io.ktor.io.pool.*
-import io.ktor.utils.io.pool.*
 
 internal expect fun isPoolingDisabled(): Boolean
 

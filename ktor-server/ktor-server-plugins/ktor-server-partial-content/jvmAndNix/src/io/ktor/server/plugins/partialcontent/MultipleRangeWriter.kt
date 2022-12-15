@@ -4,7 +4,7 @@
 
 package io.ktor.server.plugins.partialcontent
 
-import io.ktor.utils.io.*
+import io.ktor.io.*
 import kotlinx.coroutines.*
 
 /**

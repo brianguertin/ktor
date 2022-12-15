@@ -13,7 +13,6 @@ import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.io.*
 import io.ktor.util.reflect.*
-import io.ktor.utils.io.core.*
 
 @Deprecated(
     "Please use ContentNegotiation plugin and its converters: https://ktor.io/docs/migrating-2.html#serialization-client" // ktlint-disable max-line-length

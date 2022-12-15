@@ -22,7 +22,7 @@ private val versionComponents = java_version
 
 val IDEA_ACTIVE: Boolean = System.getProperty("idea.active") == "true"
 
-val OS_NAME = System.getProperty("os.name").toLowerCase()
+val OS_NAME = System.getProperty("os.name").lowercase()
 
 val HOST_NAME = when {
     OS_NAME.startsWith("linux") -> "linux"

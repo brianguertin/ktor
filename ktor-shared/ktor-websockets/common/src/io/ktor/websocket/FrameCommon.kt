@@ -5,8 +5,6 @@
 package io.ktor.websocket
 
 import io.ktor.io.*
-import io.ktor.utils.io.charsets.*
-import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 
 /**

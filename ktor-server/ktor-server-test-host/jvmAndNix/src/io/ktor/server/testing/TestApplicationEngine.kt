@@ -15,7 +15,6 @@ import io.ktor.server.testing.client.*
 import io.ktor.server.testing.internal.*
 import io.ktor.util.*
 import io.ktor.util.pipeline.*
-import io.ktor.utils.io.core.*
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.*

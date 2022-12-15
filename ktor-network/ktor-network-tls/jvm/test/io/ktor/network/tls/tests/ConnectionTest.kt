@@ -5,13 +5,13 @@
 
 package io.ktor.network.tls.tests
 
+import io.ktor.io.*
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import io.ktor.network.sockets.InetSocketAddress
 import io.ktor.network.tls.*
 import io.ktor.network.tls.certificates.*
 import io.ktor.util.cio.*
-import io.ktor.utils.io.*
 import io.netty.bootstrap.*
 import io.netty.channel.*
 import io.netty.channel.nio.*
@@ -24,10 +24,12 @@ import org.junit.*
 import org.junit.Ignore
 import org.junit.Test
 import java.io.*
+import java.io.IOException
 import java.net.ServerSocket
 import java.security.*
 import java.security.cert.*
 import javax.net.ssl.*
+import kotlin.io.use
 import kotlin.test.*
 
 @Suppress("UNCHECKED_CAST")

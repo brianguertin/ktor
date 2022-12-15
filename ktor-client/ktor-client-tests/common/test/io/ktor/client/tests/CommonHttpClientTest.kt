@@ -7,9 +7,8 @@ package io.ktor.client.tests
 import io.ktor.client.*
 import io.ktor.client.engine.mock.*
 import io.ktor.client.plugins.*
+import io.ktor.io.*
 import io.ktor.util.*
-import io.ktor.utils.io.concurrent.*
-import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import kotlin.test.*
 

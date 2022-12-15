@@ -6,9 +6,9 @@ package io.ktor.client.content
 
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.util.cio.*
-import io.ktor.utils.io.*
 import java.io.*
 
 /**

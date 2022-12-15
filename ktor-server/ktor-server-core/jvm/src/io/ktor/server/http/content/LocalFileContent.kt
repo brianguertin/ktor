@@ -6,10 +6,11 @@ package io.ktor.server.http.content
 
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.util.cio.*
-import io.ktor.utils.io.*
 import java.io.*
+import java.io.IOException
 import java.nio.file.*
 
 /**
@@ -37,7 +38,7 @@ public class LocalFileContent(
     // Or even make it dual-content so engine implementation can choose
     override fun readFrom(): ByteReadChannel = file.readChannel()
 
-    override fun readFrom(range: LongRange): ByteReadChannel = file.readChannel(range.start, range.endInclusive)
+    override fun readFrom(range: LongRange): ByteReadChannel = file.readChannel(range.first, range.last)
 }
 
 /**

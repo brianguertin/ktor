@@ -8,9 +8,6 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.io.*
 import io.ktor.io.charsets.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.charsets.*
-import io.ktor.utils.io.core.*
 
 internal fun Appendable.logHeaders(
     headers: Set<Map.Entry<String, List<String>>>,

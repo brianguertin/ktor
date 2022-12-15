@@ -92,4 +92,10 @@ public class ByteBufferBuffer(
 
         return String(state.array(), state.arrayOffset() + state.position(), state.remaining())
     }
+
+    override fun readByteBuffer(): ByteBuffer {
+        val result = state.slice()
+        readIndex = writeIndex
+        return result
+    }
 }

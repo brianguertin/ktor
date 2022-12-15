@@ -6,13 +6,12 @@ package io.ktor.server.application
 
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
 import io.ktor.util.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import kotlin.test.*
 

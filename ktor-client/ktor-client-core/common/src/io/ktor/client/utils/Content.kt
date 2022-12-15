@@ -6,7 +6,7 @@ package io.ktor.client.utils
 
 import io.ktor.http.*
 import io.ktor.http.content.*
-import io.ktor.utils.io.*
+import io.ktor.io.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.*
 

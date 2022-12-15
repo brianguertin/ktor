@@ -5,11 +5,11 @@
 package io.ktor.server.netty.cio
 
 import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.server.netty.*
 import io.ktor.server.netty.http1.*
 import io.ktor.util.*
 import io.ktor.util.cio.*
-import io.ktor.utils.io.*
 import io.netty.buffer.Unpooled
 import io.netty.channel.*
 import io.netty.handler.codec.http.*
@@ -17,6 +17,7 @@ import io.netty.handler.codec.http2.*
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 import java.io.*
+import java.io.IOException
 import kotlin.coroutines.*
 
 private const val UNFLUSHED_LIMIT = 65536
@@ -317,38 +318,7 @@ internal class NettyHttpResponsePipeline constructor(
         var lastFuture: ChannelFuture = requestMessageFuture
 
         @Suppress("DEPRECATION")
-        channel.lookAheadSuspend {
-            while (true) {
-                val buffer = request(0, 1)
-                if (buffer == null) {
-                    if (!awaitAtLeast(1)) break
-                    continue
-                }
-
-                val rc = buffer.remaining()
-                val buf = context.alloc().buffer(rc)
-                val idx = buf.writerIndex()
-                buf.setBytes(idx, buffer)
-                buf.writerIndex(idx + rc)
-
-                consumed(rc)
-                unflushedBytes += rc
-
-                val message = call.prepareMessage(buf, false)
-
-                if (shouldFlush.invoke(channel, unflushedBytes)) {
-                    context.read()
-                    val future = context.writeAndFlush(message)
-                    isDataNotFlushed.compareAndSet(expect = true, update = false)
-                    lastFuture = future
-                    future.suspendAwait()
-                    unflushedBytes = 0
-                } else {
-                    lastFuture = context.write(message)
-                    isDataNotFlushed.compareAndSet(expect = false, update = true)
-                }
-            }
-        }
+        TODO()
 
         val lastMessage = response.prepareTrailerMessage() ?: call.prepareEndOfStreamMessage(false)
         handleLastResponseMessage(call, lastMessage, lastFuture)

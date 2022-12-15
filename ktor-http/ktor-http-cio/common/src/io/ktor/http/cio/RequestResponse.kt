@@ -6,7 +6,7 @@ package io.ktor.http.cio
 
 import io.ktor.http.*
 import io.ktor.http.cio.internals.*
-import io.ktor.utils.io.core.*
+import io.ktor.io.*
 
 /**
  * Represents a base HTTP message type for request and response

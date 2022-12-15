@@ -5,7 +5,7 @@
 package io.ktor.http.content
 
 import io.ktor.http.*
-import io.ktor.utils.io.*
+import io.ktor.io.*
 
 /**
  * [OutgoingContent] to respond with [ByteWriteChannel].

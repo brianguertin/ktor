@@ -4,7 +4,7 @@
 
 package io.ktor.util.cio
 
-import io.ktor.utils.io.*
+import io.ktor.io.*
 import kotlinx.coroutines.*
 import java.io.*
 import kotlin.coroutines.*

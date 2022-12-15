@@ -5,9 +5,6 @@ package io.ktor.http
 
 import io.ktor.io.*
 import io.ktor.io.charsets.*
-import io.ktor.utils.io.charsets.*
-import io.ktor.utils.io.core.*
-import kotlinx.atomicfu.TraceBase.None.append
 
 private val URL_ALPHABET: Set<Byte> = ((('a'..'z') + ('A'..'Z') + ('0'..'9')).map { it.code.toByte() }).toSet()
 private val URL_ALPHABET_CHARS: Set<Char> = ((('a'..'z') + ('A'..'Z') + ('0'..'9'))).toSet()

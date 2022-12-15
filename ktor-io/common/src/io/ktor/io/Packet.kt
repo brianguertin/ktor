@@ -251,10 +251,6 @@ public class Packet : Closeable {
         return Float.fromBits(readInt())
     }
 
-    public fun readLine(charset: Charset = Charsets.UTF_8): String? {
-        TODO()
-    }
-
     public fun discardExact(count: Int): Int {
         checkCanRead(count)
         return discard(count)

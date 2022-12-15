@@ -5,11 +5,10 @@
 package io.ktor.server.servlet
 
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.server.engine.*
 import io.ktor.util.*
 import io.ktor.util.cio.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.CancellationException
 import javax.servlet.http.*

@@ -7,14 +7,10 @@ package io.ktor.client.plugins.cache.storage
 import io.ktor.client.plugins.cache.*
 import io.ktor.http.*
 import io.ktor.io.*
-import io.ktor.io.copyTo
 import io.ktor.io.jvm.javaio.*
 import io.ktor.util.*
 import io.ktor.util.collections.*
 import io.ktor.util.date.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
-import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.*
 import java.io.*
@@ -174,9 +170,8 @@ private class FileCacheStorage(
                 put(key, value)
             }
         }
-        val bodyCount = channel.readInt()
-        val body = ByteArray(bodyCount)
-        channel.readFully(body)
+        val bodySize = channel.readInt()
+        val body = channel.readByteArray(bodySize)
         return CachedResponseData(
             url = Url(url),
             statusCode = status,

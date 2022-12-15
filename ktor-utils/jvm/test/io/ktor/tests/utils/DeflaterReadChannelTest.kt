@@ -4,20 +4,23 @@
 
 package io.ktor.tests.utils
 
+import io.ktor.io.*
+import io.ktor.io.IOException
+import io.ktor.io.jvm.javaio.*
 import io.ktor.test.dispatcher.*
 import io.ktor.util.*
 import io.ktor.util.cio.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.debug.junit4.*
 import org.junit.*
 import java.io.*
 import java.nio.*
+import java.nio.file.Files.*
 import java.util.zip.*
 import kotlin.random.*
 import kotlin.test.*
 import kotlin.test.Test
+import kotlin.text.toByteArray
 
 class DeflaterReadChannelTest : CoroutineScope {
     private val testJob = Job()

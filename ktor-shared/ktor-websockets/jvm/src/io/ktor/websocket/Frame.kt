@@ -6,7 +6,6 @@ package io.ktor.websocket
 
 import io.ktor.io.*
 import io.ktor.util.*
-import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import java.nio.*
 import kotlin.text.toByteArray

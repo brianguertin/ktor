@@ -8,7 +8,6 @@ import io.ktor.server.application.*
 import io.ktor.util.*
 import io.ktor.util.collections.*
 import io.ktor.util.pipeline.*
-import io.ktor.utils.io.concurrent.*
 
 /**
  * Describes a node in a routing tree.

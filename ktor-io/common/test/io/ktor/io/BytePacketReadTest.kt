@@ -20,21 +20,6 @@ class BytePacketReadTest {
     }
 
     @Test
-    fun testReadTextLimited() {
-        val packet = buildPacket {
-            writeByte(0xc6.toByte())
-            writeByte(0x86.toByte())
-            writeByte(0xc6.toByte())
-            writeByte(0x86.toByte())
-        }
-
-        TODO()
-//        assertEquals("\u0186", packet.readString(charset = Charsets.UTF_8, max = 1))
-        assertEquals(2, packet.availableForRead)
-        packet.close()
-    }
-
-    @Test
     fun testReadBytesAll() {
         val pkt = buildPacket {
             writeInt(0x01020304)

@@ -9,11 +9,12 @@ import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.request.*
 import io.ktor.client.tests.utils.*
 import io.ktor.http.*
-import io.ktor.utils.io.*
+import io.ktor.io.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.slf4j.*
 import org.slf4j.*
 import kotlin.test.*
+import kotlin.text.toByteArray
 
 private class LoggerWithMdc : Logger {
     val logs = mutableListOf<Pair<String, String>>()

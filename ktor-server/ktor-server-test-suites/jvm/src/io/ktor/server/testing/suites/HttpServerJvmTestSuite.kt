@@ -14,9 +14,6 @@ import io.ktor.server.plugins.defaultheaders.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
-import io.ktor.utils.io.writePacket
 import kotlinx.coroutines.*
 import java.net.*
 import java.nio.*

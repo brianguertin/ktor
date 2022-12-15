@@ -24,11 +24,10 @@ class BytePacketBuildTestExtended {
             writeString("OK\n")
         }
 
-        assertEquals(40, p.availableForRead)
+        assertEquals(35, p.availableForRead)
 
         p.readByteArray(2)
-        TODO()
-//        p.read(ByteBuffer.allocate(3))
+        p.readByteArray(3)
 
         assertEquals(0x12, p.readByte())
         assertEquals(0x1234, p.readShort())
@@ -37,8 +36,7 @@ class BytePacketBuildTestExtended {
         assertEquals(1.23f, p.readFloat())
         assertEquals(0x123456789abcdef0, p.readLong())
 
-        assertEquals("OK", p.readLine())
-        assertEquals("1|2|3", p.readLine())
+        assertEquals("OK\n", p.readString())
     }
 
     @Test
@@ -54,13 +52,13 @@ class BytePacketBuildTestExtended {
             writeLong(0x123456789abcdef0)
 
             writeString("OK\n")
+            writeString("1|2|3")
         }
 
         assertEquals(18922, p.availableForRead)
 
         p.readByteArray(9999)
-        TODO()
-//        p.readFully(ByteBuffer.allocate(8888))
+        p.readByteArray(8888)
         assertEquals(0x12, p.readByte())
         assertEquals(0x1234, p.readShort())
         assertEquals(0x12345678, p.readInt())
@@ -68,7 +66,6 @@ class BytePacketBuildTestExtended {
         assertEquals(1.23f, p.readFloat())
         assertEquals(0x123456789abcdef0, p.readLong())
 
-        assertEquals("OK", p.readLine())
-        assertEquals("1|2|3", p.readLine())
+        assertEquals("OK\n1|2|3", p.readString())
     }
 }

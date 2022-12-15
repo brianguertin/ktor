@@ -9,7 +9,6 @@ import io.ktor.io.*
 import io.ktor.network.sockets.*
 import io.ktor.test.dispatcher.*
 import io.ktor.util.network.*
-import io.ktor.utils.io.core.*
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 import kotlin.test.*

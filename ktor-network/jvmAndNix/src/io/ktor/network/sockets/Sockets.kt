@@ -4,9 +4,7 @@
 
 package io.ktor.network.sockets
 
-import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
-import io.ktor.utils.io.errors.*
+import io.ktor.io.*
 import kotlinx.coroutines.*
 
 /**

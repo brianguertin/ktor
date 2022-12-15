@@ -7,9 +7,6 @@ package io.ktor.server.plugins.doublereceive
 
 import io.ktor.io.*
 import io.ktor.io.pool.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
-import io.ktor.utils.io.pool.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.*
 
@@ -22,19 +19,18 @@ internal class MemoryCache(
 
     @OptIn(DelicateCoroutinesApi::class)
     private val reader: ByteReadChannel = GlobalScope.writer(coroutineContext) {
-        val buffer = ByteArrayPool.borrow()
         val packet = Packet()
         while (!body.isClosedForRead) {
-            val size = body.readAvailable(buffer)
-            if (size == -1) break
-            packet.writeByteArray(buffer, 0, size)
+            val buffer = body.readBuffer()
+            if (buffer.isEmpty) break
+            packet.writeBuffer(buffer.clone())
 
-            channel.writeByteArray(buffer, 0, size)
+            writeBuffer(buffer)
         }
 
         if (body.closedCause != null) {
             cause = body.closedCause
-            channel.close(body.closedCause)
+            close(body.closedCause)
         }
 
         fullBody = packet.toByteArray()
@@ -43,8 +39,9 @@ internal class MemoryCache(
     override fun read(): ByteReadChannel {
         val currentCause = cause
         if (currentCause != null) {
-            TODO()
-//            return ByteChannel().apply { close(currentCause) }
+            return ByteReadChannel {
+                close(currentCause)
+            }
         }
 
         return fullBody?.let { ByteReadChannel(it) } ?: reader

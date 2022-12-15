@@ -16,7 +16,6 @@ import io.ktor.http.content.*
 import io.ktor.io.*
 import io.ktor.test.dispatcher.*
 import io.ktor.util.reflect.*
-import io.ktor.utils.io.core.*
 import kotlin.test.*
 
 class JsonPluginMockTest {

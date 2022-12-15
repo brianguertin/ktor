@@ -6,8 +6,6 @@ package io.ktor.server.servlet
 
 import io.ktor.io.*
 import io.ktor.io.pool.DefaultPool
-import io.ktor.utils.io.*
-import io.ktor.utils.io.pool.*
 import javax.servlet.*
 
 internal fun servletWriter(output: ServletOutputStream): ByteWriteChannel = ServletWriter(output)

@@ -6,12 +6,12 @@ package io.ktor.tests.server.testing
 
 import io.ktor.client.request.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
-import io.ktor.utils.io.*
 import kotlin.test.*
 
 class TestApplicationRequestTest {

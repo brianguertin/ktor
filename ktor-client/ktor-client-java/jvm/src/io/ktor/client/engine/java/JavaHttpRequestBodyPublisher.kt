@@ -4,7 +4,7 @@
 
 package io.ktor.client.engine.java
 
-import io.ktor.utils.io.*
+import io.ktor.io.*
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 import java.net.http.*

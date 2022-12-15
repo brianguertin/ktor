@@ -5,7 +5,7 @@
 package io.ktor.client.engine.java
 
 import io.ktor.http.*
-import io.ktor.utils.io.*
+import io.ktor.io.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.future.*
 import java.net.http.*
@@ -13,6 +13,7 @@ import java.net.http.HttpHeaders
 import java.nio.*
 import kotlin.coroutines.*
 import kotlin.test.*
+import kotlin.text.toByteArray
 
 class ResponseConsumerTest {
     @Test

@@ -6,12 +6,14 @@ package io.ktor.tests.server.cio
 
 import io.ktor.http.*
 import io.ktor.http.cio.*
-import io.ktor.utils.io.*
+import io.ktor.io.*
 import kotlinx.coroutines.*
 import java.net.*
 import java.nio.channels.*
 import java.util.concurrent.*
+import kotlin.io.use
 import kotlin.test.*
+import kotlin.text.toByteArray
 
 class IntegrationTest {
     private val pool = ForkJoinPool(4)

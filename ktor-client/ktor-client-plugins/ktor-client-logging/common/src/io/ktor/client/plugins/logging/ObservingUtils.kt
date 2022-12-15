@@ -5,8 +5,8 @@
 package io.ktor.client.plugins.logging
 
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.util.*
-import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 
 internal suspend fun OutgoingContent.observe(log: ByteWriteChannel): OutgoingContent = when (this) {
@@ -19,14 +19,14 @@ internal suspend fun OutgoingContent.observe(log: ByteWriteChannel): OutgoingCon
         val content = readFrom()
 
         val responseChannel = GlobalScope.writer(Dispatchers.Unconfined) {
-            content.copyToBoth(log, channel)
+            content.copyToBoth(log, this)
         }
         LoggedContent(this, responseChannel)
     }
     is OutgoingContent.WriteChannelContent -> {
         val content = toReadChannel()
         val responseChannel = GlobalScope.writer(Dispatchers.Unconfined) {
-            content.copyToBoth(log, channel)
+            content.copyToBoth(log, this)
         }
         LoggedContent(this, responseChannel)
     }
@@ -39,5 +39,5 @@ internal suspend fun OutgoingContent.observe(log: ByteWriteChannel): OutgoingCon
 @OptIn(DelicateCoroutinesApi::class)
 private fun OutgoingContent.WriteChannelContent.toReadChannel(): ByteReadChannel =
     GlobalScope.writer(Dispatchers.Default) {
-        writeTo(channel)
+        writeTo(this)
     }

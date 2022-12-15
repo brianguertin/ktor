@@ -6,7 +6,6 @@ package io.ktor.network.tls.extensions
 
 import io.ktor.io.*
 import io.ktor.network.tls.*
-import io.ktor.utils.io.core.*
 
 public enum class TLSExtensionType(public val code: Short) {
     SERVER_NAME(0),

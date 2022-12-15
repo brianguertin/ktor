@@ -7,7 +7,7 @@ package io.ktor.client.engine.jetty
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.http.HttpMethod
-import io.ktor.utils.io.*
+import io.ktor.io.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import org.eclipse.jetty.http.*
@@ -17,6 +17,7 @@ import org.eclipse.jetty.http2.client.*
 import org.eclipse.jetty.http2.frames.*
 import org.eclipse.jetty.util.*
 import java.io.*
+import java.io.IOException
 import java.nio.*
 import java.nio.channels.*
 import kotlin.coroutines.*

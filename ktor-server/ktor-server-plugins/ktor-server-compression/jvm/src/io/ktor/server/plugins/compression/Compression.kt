@@ -6,6 +6,7 @@ package io.ktor.server.plugins.compression
 
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.http.content.*
 import io.ktor.server.request.*
@@ -14,7 +15,6 @@ import io.ktor.util.*
 import io.ktor.util.cio.*
 import io.ktor.util.logging.*
 import io.ktor.util.pipeline.*
-import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 
 internal val LOGGER = KtorSimpleLogger("io.ktor.server.plugins.compression.Compression")

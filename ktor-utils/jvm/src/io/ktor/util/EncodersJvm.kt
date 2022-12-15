@@ -4,9 +4,8 @@
 
 package io.ktor.util
 
+import io.ktor.io.*
 import io.ktor.util.cio.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.bits.*
 import kotlinx.coroutines.*
 import java.nio.*
 import java.util.zip.*
@@ -101,13 +100,13 @@ private fun CoroutineScope.inflate(
         var totalSize = 0
         while (true) {
             if (source.availableForRead == 0 && !source.awaitBytes()) break
-            val readBuffer = source.readAvailable()
+            val readBuffer = source.readBuffer().readByteBuffer()
             readBuffer.flip()
 
             inflater.setInput(readBuffer.array(), readBuffer.position(), readBuffer.remaining())
 
             while (!inflater.needsInput() && !inflater.finished()) {
-                totalSize += inflater.inflateTo(channel, writeBuffer, checksum)
+                totalSize += inflater.inflateTo(this, writeBuffer, checksum)
                 readBuffer.position(readBuffer.limit() - inflater.remaining)
             }
 
@@ -119,7 +118,7 @@ private fun CoroutineScope.inflate(
         readBuffer.flip()
 
         while (!inflater.finished()) {
-            totalSize += inflater.inflateTo(channel, writeBuffer, checksum)
+            totalSize += inflater.inflateTo(this, writeBuffer, checksum)
             readBuffer.position(readBuffer.limit() - inflater.remaining)
         }
 

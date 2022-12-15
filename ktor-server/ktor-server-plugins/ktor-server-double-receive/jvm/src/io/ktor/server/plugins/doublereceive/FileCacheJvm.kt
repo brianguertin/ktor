@@ -5,8 +5,8 @@
 
 package io.ktor.server.plugins.doublereceive
 
+import io.ktor.io.*
 import io.ktor.util.cio.*
-import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import java.io.*
 import java.nio.*
