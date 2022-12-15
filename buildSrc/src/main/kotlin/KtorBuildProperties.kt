@@ -22,12 +22,12 @@ private val versionComponents = java_version
 
 val IDEA_ACTIVE: Boolean = System.getProperty("idea.active") == "true"
 
-val OS_NAME = System.getProperty("os.name").lowercase()
+val OS_NAME = System.getProperty("os.name")
 
 val HOST_NAME = when {
-    OS_NAME.startsWith("linux") -> "linux"
-    OS_NAME.startsWith("windows") -> "windows"
-    OS_NAME.startsWith("mac") -> "macos"
+    OS_NAME.startsWith("linux", ignoreCase = true) -> "linux"
+    OS_NAME.startsWith("windows", ignoreCase = true) -> "windows"
+    OS_NAME.startsWith("mac", ignoreCase = true) -> "macos"
     else -> error("Unknown os name `$OS_NAME`")
 }
 
