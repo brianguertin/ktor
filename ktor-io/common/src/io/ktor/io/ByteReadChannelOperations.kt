@@ -5,6 +5,8 @@
 package io.ktor.io
 
 import io.ktor.io.charsets.*
+import kotlinx.coroutines.*
+import kotlin.contracts.*
 
 public val ByteReadChannel.availableForRead: Int get() = readablePacket.availableForRead
 
@@ -301,3 +303,49 @@ public fun ByteReadChannel.discard(max: Long = Long.MAX_VALUE): Long {
 public suspend fun ByteReadChannel.readString(charset: Charset = Charsets.UTF_8): String {
     return readRemaining().readString(charset)
 }
+
+/**
+ * Convert [ByteReadChannel] to [ByteArray]
+ */
+public suspend fun ByteReadChannel.toByteArray(limit: Int = Int.MAX_VALUE): ByteArray =
+    readRemaining(limit.toLong()).toByteArray()
+
+/**
+ * Executes [block] on [ByteWriteChannel] and close it down correctly whether an exception
+ */
+@OptIn(ExperimentalContracts::class)
+public inline fun ByteWriteChannel.use(block: ByteWriteChannel.() -> Unit) {
+    contract {
+        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+    }
+
+    try {
+        block()
+    } catch (cause: Throwable) {
+        close(cause)
+        throw cause
+    } finally {
+        close()
+    }
+}
+
+/**
+ * Split source [ByteReadChannel] into 2 new one.
+ * Cancel of one channel in split(input or both outputs) cancels other channels.
+ */
+public fun ByteReadChannel.split(coroutineScope: CoroutineScope): Pair<ByteReadChannel, ByteReadChannel> {
+    TODO()
+}
+
+/**
+ * Copy source channel to both output channels chunk by chunk.
+ */
+@OptIn(DelicateCoroutinesApi::class)
+public fun ByteReadChannel.copyToBoth(first: ByteWriteChannel, second: ByteWriteChannel) {
+    TODO()
+}
+
+/**
+ * Read channel to byte array.
+ */
+public suspend fun ByteReadChannel.toByteArray(): ByteArray = readRemaining().toByteArray()

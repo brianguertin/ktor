@@ -4,6 +4,7 @@
 
 package io.ktor.http
 
+import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.util.date.*
 import kotlin.jvm.*

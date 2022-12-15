@@ -7,6 +7,7 @@ package io.ktor.client.plugins.websocket
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.http.websocket.*
+import io.ktor.io.*
 import io.ktor.util.*
 
 private const val WEBSOCKET_VERSION = "13"

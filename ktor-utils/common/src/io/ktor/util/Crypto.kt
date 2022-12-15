@@ -101,7 +101,6 @@ public suspend fun Digest.build(bytes: ByteArray): ByteArray {
  */
 @InternalAPI
 public suspend fun Digest.build(string: String, charset: Charset = Charsets.UTF_8): ByteArray {
-    TODO()
-//    this += string.toByteArray(charset)
+    this += string.toByteArray(charset)
     return build()
 }

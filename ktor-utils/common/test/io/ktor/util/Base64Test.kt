@@ -4,6 +4,7 @@
 
 package io.ktor.util
 
+import io.ktor.io.*
 import kotlin.test.*
 
 class Base64Test {
