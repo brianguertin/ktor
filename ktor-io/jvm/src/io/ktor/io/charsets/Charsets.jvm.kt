@@ -4,5 +4,4 @@
 
 package io.ktor.io.charsets
 
-import io.ktor.io.*
-import io.ktor.io.internal.*
+public actual typealias Charsets = kotlin.text.Charsets

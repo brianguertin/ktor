@@ -50,7 +50,7 @@ open class BytePacketStringTest {
         }
 
         try {
-            assertEquals("1", Charsets.UTF_8.newDecoder().decode(packet))
+            assertEquals("1", Charsets.UTF_8.newDecoder().decodePacket(packet))
         } finally {
             packet.close()
         }
@@ -63,7 +63,7 @@ open class BytePacketStringTest {
         }
 
         try {
-            assertEquals("\u0422", Charsets.UTF_8.newDecoder().decode(packet))
+            assertEquals("\u0422", Charsets.UTF_8.newDecoder().decodePacket(packet))
         } finally {
             packet.close()
         }
@@ -76,7 +76,7 @@ open class BytePacketStringTest {
         }
 
         try {
-            assertEquals("\u0422e\u0438", Charsets.UTF_8.newDecoder().decode(packet))
+            assertEquals("\u0422e\u0438", Charsets.UTF_8.newDecoder().decodePacket(packet))
         } finally {
             packet.close()
         }

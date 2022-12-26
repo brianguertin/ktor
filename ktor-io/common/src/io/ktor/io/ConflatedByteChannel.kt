@@ -33,7 +33,11 @@ public class ConflatedByteChannel : ByteReadChannel, ByteWriteChannel {
 
     override suspend fun flush() {
         if (writablePacket.isEmpty) return
-        channel.send(writablePacket.steal())
+        try {
+            channel.send(writablePacket.steal())
+        } catch (_: Throwable) {
+            closedCause?.let { throw it }
+        }
     }
 
     override suspend fun awaitBytes(predicate: () -> Boolean): Boolean {
@@ -66,6 +70,7 @@ public class ConflatedByteChannel : ByteReadChannel, ByteWriteChannel {
     override fun close(cause: Throwable?): Boolean {
         if (!closing.compareAndSet(false, true)) return false
         closeStackTrace.value = Exception().stackTraceToString()
+        closedToken = ClosedCause(cause)
 
         // TODO: use IO dispatcher
         GlobalScope.launch(Dispatchers.Default) {
@@ -75,7 +80,6 @@ public class ConflatedByteChannel : ByteReadChannel, ByteWriteChannel {
                 flush()
                 channel.close()
             }
-            closedToken = ClosedCause(cause)
         }
 
         return true

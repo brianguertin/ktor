@@ -25,6 +25,7 @@ class ReaderTest {
         var failed = false
         try {
             reader.writeByte(42)
+            reader.flush()
         } catch (cause: IllegalStateException) {
             failed = true
             assertEquals("Expected", cause.message)

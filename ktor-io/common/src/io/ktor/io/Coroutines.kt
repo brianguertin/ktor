@@ -10,7 +10,11 @@ public fun CoroutineScope.reader(
     val result = ConflatedByteChannel()
 
     launch(coroutineContext) {
-        result.block()
+        try {
+            result.block()
+        } catch (cause: Throwable) {
+            result.cancel(cause)
+        }
     }
 
     return result

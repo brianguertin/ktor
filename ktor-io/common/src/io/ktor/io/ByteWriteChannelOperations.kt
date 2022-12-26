@@ -7,12 +7,12 @@ package io.ktor.io
 import io.ktor.io.charsets.*
 
 public fun ByteWriteChannel.writeBuffer(buffer: ReadableBuffer) {
-    check(!isClosedForWrite) { "Can't write to closed channel." }
+    checkCanWrite()
     writablePacket.writeBuffer(buffer)
 }
 
 public fun ByteWriteChannel.writePacket(packet: Packet) {
-    check(!isClosedForWrite) { "Can't write to closed channel." }
+    checkCanWrite()
     writablePacket.writePacket(packet)
 }
 
@@ -21,7 +21,7 @@ public fun ByteWriteChannel.writePacket(packet: Packet) {
  * Crashes if channel get closed while writing.
  */
 public fun ByteWriteChannel.writeLong(l: Long) {
-    check(!isClosedForWrite) { "Can't write to closed channel." }
+    checkCanWrite()
     writablePacket.writeLong(l)
 }
 
@@ -30,7 +30,7 @@ public fun ByteWriteChannel.writeLong(l: Long) {
  * Crashes if channel get closed while writing.
  */
 public fun ByteWriteChannel.writeInt(i: Int) {
-    check(!isClosedForWrite) { "Can't write to closed channel." }
+    checkCanWrite()
     writablePacket.writeInt(i)
 }
 
@@ -39,7 +39,7 @@ public fun ByteWriteChannel.writeInt(i: Int) {
  * Crashes if channel get closed while writing.
  */
 public fun ByteWriteChannel.writeShort(s: Short) {
-    check(!isClosedForWrite) { "Can't write to closed channel." }
+    checkCanWrite()
     writablePacket.writeShort(s)
 }
 
@@ -48,7 +48,7 @@ public fun ByteWriteChannel.writeShort(s: Short) {
  * Crashes if channel get closed while writing.
  */
 public fun ByteWriteChannel.writeByte(b: Byte) {
-    check(!isClosedForWrite) { "Can't write to closed channel." }
+    checkCanWrite()
     writablePacket.writeByte(b)
 }
 
@@ -57,7 +57,7 @@ public fun ByteWriteChannel.writeByte(b: Byte) {
  * Crashes if channel get closed while writing.
  */
 public fun ByteWriteChannel.writeDouble(d: Double) {
-    check(!isClosedForWrite) { "Can't write to closed channel." }
+    checkCanWrite()
     writablePacket.writeDouble(d)
 }
 
@@ -66,7 +66,7 @@ public fun ByteWriteChannel.writeDouble(d: Double) {
  * Crashes if channel get closed while writing.
  */
 public fun ByteWriteChannel.writeFloat(f: Float) {
-    check(!isClosedForWrite) { "Can't write to closed channel." }
+    checkCanWrite()
     writablePacket.writeFloat(f)
 }
 
@@ -75,11 +75,17 @@ public fun ByteWriteChannel.writeByteArray(
     offset: Int = 0,
     length: Int = value.size - offset
 ) {
-    check(!isClosedForWrite) { "Can't write to closed channel." }
+    checkCanWrite()
     writablePacket.writeBuffer(ByteArrayBuffer(value, offset, length))
 }
 
 public fun ByteWriteChannel.writeString(value: String, charset: Charset = Charsets.UTF_8) {
-    check(!isClosedForWrite) { "Can't write to closed channel." }
+    checkCanWrite()
     writablePacket.writeString(value, charset = charset)
+}
+
+internal fun ByteWriteChannel.checkCanWrite() {
+    if (!isClosedForWrite) return
+    closedCause?.let { throw it }
+    throw IllegalStateException("Channel is closed for writing.")
 }

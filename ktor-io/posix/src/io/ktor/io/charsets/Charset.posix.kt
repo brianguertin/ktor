@@ -82,16 +82,10 @@ private fun checkErrors(iconvOpenResults: COpaquePointer?, charset: String) {
     }
 }
 
-public actual fun CharsetEncoder.encodeToByteArray(input: CharSequence, fromIndex: Int, toIndex: Int): ByteArray =
-    TODO()
-
-internal actual fun CharsetEncoder.encodeImpl(input: CharSequence, fromIndex: Int, toIndex: Int, dst: Packet): Int {
+internal actual fun CharsetEncoder.encodeCharSequence(input: CharSequence, fromIndex: Int, toIndex: Int, dst: Packet): Int {
     TODO()
 }
 
-public actual fun CharsetEncoder.encodeUTF8(input: Packet, dst: Packet) {
-    TODO()
-}
 
 private fun checkIconvResult(errno: Int) {
     if (errno == EILSEQ) throw MalformedInputException("Malformed or unmappable bytes at input")
@@ -101,13 +95,10 @@ private fun checkIconvResult(errno: Int) {
     throw IllegalStateException("Failed to call 'iconv' with error code $errno")
 }
 
-internal actual fun CharsetEncoder.encodeComplete(dst: Packet): Boolean = true
-
-internal actual fun CharsetDecoder.decodeBuffer(
-    input: Packet,
+internal actual fun CharsetDecoder.decodeBufferTo(
+    input: ReadableBuffer,
     out: Appendable,
-    lastBuffer: Boolean,
-    max: Int
+    lastBuffer: Boolean
 ): Int {
     TODO()
 }
@@ -120,14 +111,6 @@ private data class CharsetDecoderImpl(private val charset: Charset) : CharsetDec
 public actual val CharsetDecoder.charset: Charset get() = _charset
 
 private val platformUtf16: String = if (ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN) "UTF-16BE" else "UTF-16LE"
-
-public actual fun CharsetDecoder.decode(input: Packet, dst: Appendable, max: Int): Int {
-    TODO()
-}
-
-public actual fun CharsetDecoder.decodeExactBytes(input: Packet, inputLength: Int): String {
-    TODO()
-}
 
 // -----------------------------------------------------------
 

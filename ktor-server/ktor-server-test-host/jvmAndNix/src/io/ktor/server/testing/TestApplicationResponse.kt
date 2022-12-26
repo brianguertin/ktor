@@ -31,7 +31,7 @@ public class TestApplicationResponse(
     val content: String?
         get() {
             val charset = headers[HttpHeaders.ContentType]?.let { ContentType.parse(it).charset() } ?: Charsets.UTF_8
-            return byteContent?.let { charset.newDecoder().decode(Packet(it)) }
+            return byteContent?.let { charset.newDecoder().decodePacket(Packet(it)) }
         }
 
     /**
