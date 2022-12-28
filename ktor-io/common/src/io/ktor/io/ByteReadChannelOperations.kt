@@ -200,6 +200,11 @@ public suspend fun ByteReadChannel.readRemaining(limit: Long = Long.MAX_VALUE): 
  * @return `true` if line has been read (possibly empty) or `false` if channel has been closed
  * and no characters were read.
  */
+@Deprecated(
+    "Read line is deprecated",
+    replaceWith = ReplaceWith("this.stringReader().use { it.readLineTo(out, limit) }"),
+    level = DeprecationLevel.ERROR
+)
 public suspend fun <A : Appendable> ByteReadChannel.readUTF8LineTo(out: A, limit: Long = Long.MAX_VALUE): Boolean {
     if (isClosedForRead) return false
     if (readablePacket.isEmpty) awaitBytes()
@@ -280,14 +285,12 @@ private suspend fun <A : Appendable> ByteReadChannel.readUTF8LineRemaining(
     throw TooLongLineException("Line limit exceeded: $limit")
 }
 
+@Deprecated(
+    "Read line is deprecated",
+    replaceWith = ReplaceWith("this.stringReader(charset).use { it.readLine(limit) }"),
+    level = DeprecationLevel.ERROR
+)
 public suspend fun ByteReadChannel.readLine(charset: Charset = Charsets.UTF_8, limit: Long = Long.MAX_VALUE): String? {
-    if (charset == Charsets.UTF_8) {
-        val builder = StringBuilder()
-        val result = readUTF8LineTo(builder, limit)
-        if (!result && builder.isEmpty()) return null
-        return builder.toString()
-    }
-
     TODO("Unsupported charset $charset")
 }
 

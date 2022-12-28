@@ -18,7 +18,7 @@ class ByteChannelTextTest {
         }
 
         assertFailsWith<TooLongLineException> {
-            channel.readLine(limit = 50)
+            channel.stringReader().use { it.readLine(limit = 50) }
         }
     }
 
@@ -28,7 +28,7 @@ class ByteChannelTextTest {
         val bytes = line.encodeToByteArray()
         val channel = ByteReadChannel(bytes)
 
-        val result = channel.readLine()
+        val result = channel.stringReader().use { it.readLine() }
         assertEquals(line, result)
     }
 
@@ -39,7 +39,7 @@ class ByteChannelTextTest {
             writeString(line)
         }
 
-        val result = channel.readLine()
+        val result = channel.stringReader().use { it.readLine() }
         assertEquals(line, result)
     }
 
@@ -48,9 +48,11 @@ class ByteChannelTextTest {
         val text = ByteReadChannel("\r\n\r\n")
 
         runBlocking {
-            assertEquals("", text.readLine())
-            assertEquals("", text.readLine())
-            assertNull(text.readLine())
+            text.stringReader().use {
+                assertEquals("", it.readLine())
+                assertEquals("", it.readLine())
+                assertNull(it.readLine())
+            }
         }
     }
 }
