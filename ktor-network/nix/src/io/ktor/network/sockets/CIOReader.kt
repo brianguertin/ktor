@@ -6,17 +6,13 @@ package io.ktor.network.sockets
 
 import io.ktor.io.*
 import io.ktor.network.selector.*
-import kotlinx.cinterop.*
 import kotlinx.coroutines.*
-import platform.posix.*
 
 internal fun CoroutineScope.attachForReadingImpl(
     descriptor: Int,
     selectable: Selectable,
     selector: SelectorManager
 ): ByteReadChannel = object : ByteReadChannel {
-    override val isClosedForRead: Boolean
-        get() = TODO("Not yet implemented")
     override val closedCause: Throwable?
         get() = TODO("Not yet implemented")
     override val readablePacket: Packet
@@ -29,7 +25,6 @@ internal fun CoroutineScope.attachForReadingImpl(
     override fun cancel(cause: Throwable?): Boolean {
         TODO("Not yet implemented")
     }
-
 }
 /**
 writer(Dispatchers.Unconfined) {

@@ -15,8 +15,6 @@ import io.ktor.util.*
 import kotlinx.atomicfu.*
 import kotlinx.cinterop.*
 import kotlinx.coroutines.*
-import kotlin.collections.MutableMap
-import kotlin.collections.mutableMapOf
 import kotlin.collections.set
 import kotlin.coroutines.*
 
@@ -55,12 +53,7 @@ internal class WinHttpRequestProducer(
     }
 
     private suspend fun writeChunkedBody(requestBody: ByteReadChannel) {
-        while (!requestBody.isClosedForRead) {
-            if (requestBody.availableForRead == 0) {
-                requestBody.awaitBytes()
-                continue
-            }
-
+        while (requestBody.awaitBytes()) {
             val bytes = requestBody.readBuffer().toByteArray()
             writeBodyChunk(bytes)
         }
@@ -86,11 +79,7 @@ internal class WinHttpRequestProducer(
     }
 
     private suspend fun writeRegularBody(requestBody: ByteReadChannel) {
-        while (!requestBody.isClosedForRead) {
-            if (requestBody.availableForRead == 0) {
-                requestBody.awaitBytes()
-                continue
-            }
+        while (requestBody.awaitBytes()) {
             val buffer = requestBody.readBuffer().toByteArray()
             buffer.usePinned { src ->
                 request.writeData(src, buffer.size)

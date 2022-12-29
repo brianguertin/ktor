@@ -16,9 +16,6 @@ public class ConflatedByteChannel : ByteReadChannel, ByteWriteChannel {
 
     private val channel = Channel<Packet>()
 
-    override val isClosedForRead: Boolean
-        get() = closedToken != null && readablePacket.isEmpty
-
     override val isClosedForWrite: Boolean
         get() = closing.value
 
@@ -45,13 +42,19 @@ public class ConflatedByteChannel : ByteReadChannel, ByteWriteChannel {
             val value = channel.receiveCatching()
             when {
                 value.isClosed -> {
-                    closedToken = ClosedCause(value.exceptionOrNull())
+                    val cause = value.exceptionOrNull()
+                    if (cause != null) {
+                        readablePacket.close()
+                    }
+                    closedToken = ClosedCause(cause)
                     return false
                 }
 
                 value.isFailure -> {
-                    closedToken = ClosedCause(value.exceptionOrNull())
-                    throw value.exceptionOrNull()!!
+                    readablePacket.close()
+                    val cause = value.exceptionOrNull()
+                    closedToken = ClosedCause(cause)
+                    throw cause ?: IllegalStateException("Internal error: cause is null")
                 }
 
                 value.isSuccess -> {
@@ -61,7 +64,7 @@ public class ConflatedByteChannel : ByteReadChannel, ByteWriteChannel {
             }
         }
 
-        return true
+        return closedToken == null || readablePacket.isNotEmpty
     }
 
     override fun cancel(cause: Throwable?): Boolean = close(cause)
@@ -75,6 +78,7 @@ public class ConflatedByteChannel : ByteReadChannel, ByteWriteChannel {
         // TODO: use IO dispatcher
         GlobalScope.launch(Dispatchers.Default) {
             if (cause != null) {
+                writablePacket.close()
                 channel.close(cause)
             } else {
                 flush()

@@ -17,7 +17,7 @@ internal class Utf8StringReader(
 
     override suspend fun readLineTo(out: Appendable, limit: Long): Boolean {
         require(limit >= 0) { "limit shouldn't be negative: $limit" }
-        if (input.isClosedForRead) return false
+        if (!input.awaitBytes()) return false
 
         if (limit == Long.MAX_VALUE) {
             return readLineToNoLimit(out)
@@ -29,11 +29,7 @@ internal class Utf8StringReader(
     private suspend fun readLineToNoLimit(out: Appendable): Boolean {
         if (readLineFromCacheNoLimit(out)) return true
 
-        while (!input.isClosedForRead) {
-            if (input.availableForRead == 0) {
-                input.awaitBytes()
-                continue
-            }
+        while (!input.awaitBytes()) {
             val chunk = input.readablePacket.readString()
             val newLine = chunk.indexOf('\n')
 

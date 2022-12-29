@@ -33,8 +33,6 @@ public fun Packet.readByteBuffer(): ByteBuffer {
 }
 
 public suspend fun ByteReadChannel.readByteBuffer(): ByteBuffer {
-    if (!isClosedForRead && availableForRead == 0) awaitBytes()
-    if (isClosedForRead) return EmptyByteBuffer
-
+    if (!awaitBytes()) return EmptyByteBuffer
     return readablePacket.readByteBuffer()
 }

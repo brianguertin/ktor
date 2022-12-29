@@ -29,13 +29,7 @@ public suspend fun ByteReadChannel.copyTo(dst: ByteWriteChannel, limit: Long = L
     }
 
     var remaining = limit
-    while (!isClosedForRead && remaining > 0) {
-        if (readablePacket.isEmpty) {
-            dst.flush()
-            awaitBytes()
-            continue
-        }
-
+    while (awaitBytes() && remaining > 0) {
         if (remaining >= readablePacket.availableForRead) {
             remaining -= readablePacket.availableForRead
             dst.writePacket(readablePacket)
@@ -44,6 +38,8 @@ public suspend fun ByteReadChannel.copyTo(dst: ByteWriteChannel, limit: Long = L
             dst.writePacket(packet)
             remaining = 0
         }
+
+        dst.flush()
     }
 
     dst.flush()
@@ -62,9 +58,7 @@ public suspend fun ByteReadChannel.copyAndClose(dst: ByteWriteChannel, limit: Lo
 }
 
 public suspend fun ByteReadChannel.readBuffer(): ReadableBuffer {
-    if (!isClosedForRead && availableForRead == 0) awaitBytes()
-    if (isClosedForRead) return ReadableBuffer.Empty
-
+    if (!awaitBytes()) return ReadableBuffer.Empty
     return readablePacket.readBuffer()
 }
 
@@ -175,8 +169,7 @@ public suspend fun ByteReadChannel.readPacket(size: Int): Packet {
  */
 public suspend fun ByteReadChannel.readRemaining(limit: Long = Long.MAX_VALUE): Packet = buildPacket {
     var remaining = limit
-    while (!isClosedForRead) {
-        if (readablePacket.isEmpty) awaitBytes()
+    while (awaitBytes()) {
         val packet = if (remaining >= readablePacket.availableForRead) {
             readablePacket
         } else {
@@ -206,83 +199,7 @@ public suspend fun ByteReadChannel.readRemaining(limit: Long = Long.MAX_VALUE): 
     level = DeprecationLevel.ERROR
 )
 public suspend fun <A : Appendable> ByteReadChannel.readUTF8LineTo(out: A, limit: Long = Long.MAX_VALUE): Boolean {
-    if (isClosedForRead) return false
-    if (readablePacket.isEmpty) awaitBytes()
-    if (isClosedForRead) return false
-
-    val buffer = readablePacket.peek()
-    val oldIndex = buffer.readIndex
-    val string = buffer.readString()
-
-    val newLine = string.indexOf('\n')
-    if (newLine == -1) {
-        if (string.length > limit) {
-            throw TooLongLineException("Line limit exceeded: $limit")
-        }
-
-        readablePacket.readBuffer()
-        return readUTF8LineRemaining(string, out, limit)
-    }
-
-    val endIndex = if (newLine > 0 && string[newLine - 1] == '\r') newLine - 1 else newLine
-
-    if (endIndex > limit) {
-        throw TooLongLineException("Line length limit exceeded: $endIndex > $limit")
-    }
-
-    val bytesLength = string.lengthInUtf8Bytes(newLine + 1)
-    buffer.readIndex = oldIndex
-    readablePacket.discardExact(bytesLength)
-    out.append(string, 0, endIndex)
-
-    return true
-}
-
-private suspend fun <A : Appendable> ByteReadChannel.readUTF8LineRemaining(
-    prefix: String,
-    out: A,
-    limit: Long
-): Boolean {
-    val builder = StringBuilder(prefix)
-    var remaining = limit - prefix.length
-    while (remaining > 0) {
-        if (availableForRead == 0) awaitBytes()
-        if (isClosedForRead) {
-            out.append(builder)
-            return false
-        }
-
-        val buffer = readablePacket.peek()
-        val oldIndex = buffer.readIndex
-        val string = buffer.readString()
-
-        val newLine = string.indexOf('\n')
-        if (newLine == -1) {
-            readablePacket.readBuffer()
-
-            if (string.length > remaining) {
-                throw TooLongLineException("Line limit exceeded: $limit")
-            }
-
-            builder.append(string)
-            remaining -= string.length
-            continue
-        }
-
-        val endIndex = if (newLine > 0 && string[newLine - 1] == '\r') newLine - 1 else newLine
-        if (endIndex > limit) {
-            throw TooLongLineException("Line length limit exceeded: $endIndex > $limit")
-        }
-
-        val bytesLength = string.lengthInUtf8Bytes(newLine + 1)
-        buffer.readIndex = oldIndex
-        readablePacket.discardExact(bytesLength)
-        builder.append(string, 0, endIndex)
-        out.append(builder)
-        return true
-    }
-
-    throw TooLongLineException("Line limit exceeded: $limit")
+    TODO()
 }
 
 @Deprecated(

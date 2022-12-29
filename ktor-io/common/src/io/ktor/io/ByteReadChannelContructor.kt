@@ -24,15 +24,16 @@ public fun ByteReadChannel(content: ByteArray, offset: Int = 0, length: Int = co
 }
 
 public fun ByteReadChannel(packet: Packet): ByteReadChannel = object : ByteReadChannel {
-    override val isClosedForRead: Boolean
-        get() = packet.isEmpty
-
     override var closedCause: Throwable? = null
         private set
 
     override val readablePacket: Packet = packet
 
-    override suspend fun awaitBytes(predicate: () -> Boolean): Boolean = predicate()
+    override suspend fun awaitBytes(predicate: () -> Boolean): Boolean {
+        closedCause?.let { throw it }
+        predicate()
+        return readablePacket.isNotEmpty
+    }
 
     override fun cancel(cause: Throwable?): Boolean {
         if (closedCause != null || packet.isEmpty) return false

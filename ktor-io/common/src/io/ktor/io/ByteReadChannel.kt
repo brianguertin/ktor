@@ -1,6 +1,6 @@
 package io.ktor.io
 
-import io.ktor.io.internal.EmptyByteReadChannel
+import io.ktor.io.internal.*
 
 /**
  * Channel for asynchronous reading of sequences of bytes.
@@ -10,18 +10,17 @@ import io.ktor.io.internal.EmptyByteReadChannel
  */
 public interface ByteReadChannel {
     /**
-     * Returns `true` if the channel is closed and no remaining bytes are available for read.
-     * It implies that [availableForRead] is zero.
-     */
-    public val isClosedForRead: Boolean
-
-    /**
      * A closure causes exception or `null` if closed successfully or not yet closed
      */
     public val closedCause: Throwable?
 
     public val readablePacket: Packet
 
+    /**
+     * Wait more bytes from source until [predicate] returns true or channel is closed.
+     *
+     * @return `true` if there are bytes available for reading or `false` if EOF reached.
+     */
     public suspend fun awaitBytes(predicate: () -> Boolean = { readablePacket.availableForRead > 0 }): Boolean
 
     /**

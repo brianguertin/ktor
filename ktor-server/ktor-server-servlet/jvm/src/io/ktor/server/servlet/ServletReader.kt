@@ -24,8 +24,6 @@ private class ServletReader(val input: ServletInputStream, val contentLength: In
         TODO("Not yet implemented")
     }
 
-    override val isClosedForRead: Boolean
-        get() = TODO("Not yet implemented")
     override val closedCause: Throwable?
         get() = TODO("Not yet implemented")
     override val readablePacket: Packet

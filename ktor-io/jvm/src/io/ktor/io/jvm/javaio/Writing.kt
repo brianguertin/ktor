@@ -16,8 +16,7 @@ public suspend fun ByteReadChannel.copyTo(out: OutputStream, limit: Long = Long.
     return withContext(Dispatchers.IO) {
         var copied = 0L
 
-        while (!isClosedForRead && copied < limit) {
-            if (availableForRead == 0) awaitBytes()
+        while (awaitBytes() && copied < limit) {
             val array = readBuffer().toByteArray()
             if (array.isEmpty()) continue
             out.write(array)

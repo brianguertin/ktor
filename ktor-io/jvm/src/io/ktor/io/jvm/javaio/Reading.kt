@@ -1,7 +1,6 @@
 package io.ktor.io.jvm.javaio
 
 import io.ktor.io.*
-import io.ktor.io.pool.*
 import kotlinx.coroutines.*
 import java.io.*
 
@@ -23,32 +22,39 @@ public suspend fun InputStream.copyTo(channel: ByteWriteChannel, limit: Long = L
 public fun InputStream.toByteReadChannel(): ByteReadChannel = object : ByteReadChannel {
     private var closed = false
 
-    override val isClosedForRead: Boolean get() = closed && readablePacket.isEmpty
-
     override var closedCause: Throwable? = null
         private set
 
     override val readablePacket: Packet = Packet()
 
-    override suspend fun awaitBytes(predicate: () -> Boolean): Boolean = withContext(Dispatchers.IO) {
-        while (!predicate()) {
-            val buffer = ByteArray(4096)
-            try {
-                val count = read(buffer)
-                if (count == -1) {
-                    closed = true
-                    return@withContext false
-                }
+    override suspend fun awaitBytes(predicate: () -> Boolean): Boolean {
+        closedCause?.let { throw it }
+        if (closed && readablePacket.isEmpty) return false
 
-                readablePacket.writeByteArray(buffer, 0, count)
-            } catch (cause: Throwable) {
-                closed = true
-                closedCause = cause
-                throw cause
+        withContext(Dispatchers.IO) {
+            while (!closed && !predicate()) {
+                fill()
             }
         }
 
-        return@withContext true
+        return !closed || readablePacket.isNotEmpty
+    }
+
+    private fun fill() {
+        val buffer = ByteArray(4096)
+        try {
+            val count = read(buffer)
+            if (count == -1) {
+                closed = true
+                return
+            }
+
+            readablePacket.writeByteArray(buffer, 0, count)
+        } catch (cause: Throwable) {
+            closed = true
+            closedCause = cause
+            throw cause
+        }
     }
 
     override fun cancel(cause: Throwable?): Boolean {
