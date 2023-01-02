@@ -6,7 +6,6 @@ package io.ktor.websocket
 
 import io.ktor.io.*
 import io.ktor.util.*
-import io.ktor.util.cio.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.*

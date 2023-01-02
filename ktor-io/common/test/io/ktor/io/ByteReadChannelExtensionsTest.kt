@@ -21,15 +21,14 @@ class ByteReadChannelExtensionsTest {
             }
         )
 
-        channel.stringReader().use {
-            assertEquals("GET / HTTP/1.1", it.readLine())
-            assertEquals("Host: 127.0.0.1:9090", it.readLine())
-            assertEquals("Accept-Charset: UTF-8", it.readLine())
-            assertEquals("Accept: */*", it.readLine())
-            assertEquals("User-Agent: Ktor client", it.readLine())
+        val reader = channel.stringReader()
+        assertEquals("GET / HTTP/1.1", reader.readLine())
+        assertEquals("Host: 127.0.0.1:9090", reader.readLine())
+        assertEquals("Accept-Charset: UTF-8", reader.readLine())
+        assertEquals("Accept: */*", reader.readLine())
+        assertEquals("User-Agent: Ktor client", reader.readLine())
 
-            assertFalse(it.readLineTo(StringBuilder()))
-        }
+        assertFalse(reader.readLineTo(StringBuilder()))
     }
 
     @Test
@@ -44,14 +43,13 @@ class ByteReadChannelExtensionsTest {
             }
         )
 
-        channel.stringReader().use {
-            assertEquals("GET / HTTP/1.1", it.readLine())
-            assertEquals("Host: 127.0.0.1:9090", it.readLine())
-            assertEquals("Accept-Charset: UTF-8", it.readLine())
-            assertEquals("Accept: */*", it.readLine())
-            assertEquals("User-Agent: Ktor client", it.readLine())
+        val reader = channel.stringReader()
+        assertEquals("GET / HTTP/1.1", reader.readLine())
+        assertEquals("Host: 127.0.0.1:9090", reader.readLine())
+        assertEquals("Accept-Charset: UTF-8", reader.readLine())
+        assertEquals("Accept: */*", reader.readLine())
+        assertEquals("User-Agent: Ktor client", reader.readLine())
 
-            assertFalse(it.readLineTo(StringBuilder()))
-        }
+        assertFalse(reader.readLineTo(StringBuilder()))
     }
 }

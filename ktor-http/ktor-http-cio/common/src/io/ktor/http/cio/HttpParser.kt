@@ -24,10 +24,11 @@ private val hostForbiddenSymbols = setOf('/', '?', '#', '@')
 public suspend fun parseRequest(input: ByteReadChannel): Request? {
     val builder = CharArrayBuilder()
     val range = MutableRange(0, 0)
+    val reader = input.stringReader()
 
     try {
         while (true) {
-            if (!input.readUTF8LineTo(builder, HTTP_LINE_LIMIT.toLong())) return null
+            if (!reader.readLineTo(builder, HTTP_LINE_LIMIT.toLong())) return null
             range.end = builder.length
             if (range.start == range.end) continue
 
@@ -42,13 +43,13 @@ public suspend fun parseRequest(input: ByteReadChannel): Request? {
             if (uri.isEmpty()) throw ParserException("URI is not specified")
             if (version.isEmpty()) throw ParserException("HTTP version is not specified")
 
-            val headers = parseHeaders(input, builder, range) ?: return null
+            val headers = parseHeaders(reader, builder, range) ?: return null
 
             return Request(method, uri, version, headers, builder)
         }
-    } catch (t: Throwable) {
+    } catch (cause: Throwable) {
         builder.release()
-        throw t
+        throw cause
     }
 }
 
@@ -58,9 +59,10 @@ public suspend fun parseRequest(input: ByteReadChannel): Request? {
 public suspend fun parseResponse(input: ByteReadChannel): Response? {
     val builder = CharArrayBuilder()
     val range = MutableRange(0, 0)
+    val reader = input.stringReader()
 
     try {
-        if (!input.readUTF8LineTo(builder, HTTP_LINE_LIMIT.toLong())) return null
+        if (!reader.readLineTo(builder, HTTP_LINE_LIMIT.toLong())) return null
         range.end = builder.length
 
         val version = parseVersion(builder, range)
@@ -69,7 +71,7 @@ public suspend fun parseResponse(input: ByteReadChannel): Response? {
         val statusText = builder.subSequence(range.start, range.end)
         range.start = range.end
 
-        val headers = parseHeaders(input, builder, range) ?: HttpHeadersMap(builder)
+        val headers = parseHeaders(reader, builder, range) ?: HttpHeadersMap(builder)
 
         return Response(version, statusCode, statusText, headers, builder)
     } catch (t: Throwable) {
@@ -95,10 +97,11 @@ internal suspend fun parseHeaders(
     range: MutableRange = MutableRange(0, 0)
 ): HttpHeadersMap? {
     val headers = HttpHeadersMap(builder)
+    val reader = input.stringReader()
 
     try {
         while (true) {
-            if (!input.readUTF8LineTo(builder, HTTP_LINE_LIMIT.toLong())) {
+            if (!reader.readLineTo(builder, HTTP_LINE_LIMIT.toLong())) {
                 headers.release()
                 return null
             }
@@ -131,9 +134,9 @@ internal suspend fun parseHeaders(
         }
 
         return headers
-    } catch (t: Throwable) {
+    } catch (cause: Throwable) {
         headers.release()
-        throw t
+        throw cause
     }
 }
 

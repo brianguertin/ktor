@@ -148,10 +148,10 @@ class RawWebSocketTest : BaseTest() {
         parent.complete()
         parent.join()
 
-        assertTrue("client -> server channel should be closed") { client2server.isClosedForRead }
+        assertTrue("client -> server channel should be closed") { !client2server.awaitBytes() }
         assertTrue("client -> server channel should be closed") { client2server.isClosedForWrite }
 
-        assertTrue("server -> client channel should be closed") { server2client.isClosedForRead }
+        assertTrue("server -> client channel should be closed") { !server2client.awaitBytes() }
         assertTrue("server -> client channel should be closed") { server2client.isClosedForWrite }
 
         try {

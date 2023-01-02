@@ -15,7 +15,7 @@ public fun ByteReadChannel.stringReader(charset: Charset = Charsets.UTF_8): Stri
     TODO("Unsupported charset: $charset")
 }
 
-public interface StringReader : Closeable {
+public interface StringReader : ByteReadChannel {
     public val charset: Charset
 
     public suspend fun readLineTo(out: Appendable, limit: Long = Long.MAX_VALUE): Boolean

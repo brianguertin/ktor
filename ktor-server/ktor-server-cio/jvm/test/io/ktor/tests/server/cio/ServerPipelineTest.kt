@@ -84,13 +84,15 @@ class ServerPipelineTest : CoroutineScope {
         input.writeString("GET / HTTP/1.1\r\nConnection: close\r\n\r\n")
         input.flush()
 
-        assertEquals("HTTP/1.1 200 OK", output.readLine())
-        assertEquals("Connection: close", output.readLine())
-        assertEquals("", output.readLine())
+        val reader = output.stringReader()
+
+        assertEquals("HTTP/1.1 200 OK", reader.readLine())
+        assertEquals("Connection: close", reader.readLine())
+        assertEquals("", reader.readLine())
         assertEquals("/", requestsReceived.single())
 
         input.close()
-        output.readRemaining().close()
+        reader.readRemaining().close()
     }
 
     @Test
@@ -120,13 +122,15 @@ class ServerPipelineTest : CoroutineScope {
         input.writeString("GET / HTTP/1.1\r\nUpgrade: test\r\nConnection: Upgrade\r\n\r\n")
         input.flush()
 
-        assertEquals("HTTP/1.1 200 OK", output.readLine())
-        assertEquals("Connection: close", output.readLine())
-        assertEquals("", output.readLine())
+        val reader = output.stringReader()
+
+        assertEquals("HTTP/1.1 200 OK", reader.readLine())
+        assertEquals("Connection: close", reader.readLine())
+        assertEquals("", reader.readLine())
         assertEquals("/", requestsReceived.single())
 
         input.close()
-        output.readRemaining().close()
+        reader.readRemaining().close()
     }
 
     @Test
@@ -160,10 +164,12 @@ class ServerPipelineTest : CoroutineScope {
         input.writeString("GET / HTTP/1.1\r\nUpgrade: test\r\nConnection: Upgrade\r\n\r\n")
         input.flush()
 
-        assertEquals("HTTP/1.1 101 Switching", output.readLine())
-        assertEquals("Upgrade: test", output.readLine())
-        assertEquals("Connection: Upgrade", output.readLine())
-        assertEquals("", output.readLine())
+        val reader = output.stringReader()
+
+        assertEquals("HTTP/1.1 101 Switching", reader.readLine())
+        assertEquals("Upgrade: test", reader.readLine())
+        assertEquals("Connection: Upgrade", reader.readLine())
+        assertEquals("", reader.readLine())
         assertEquals("/", requestsReceived.single())
 
         delay(100)
@@ -171,7 +177,7 @@ class ServerPipelineTest : CoroutineScope {
         latch.complete()
 
         input.close()
-        output.readRemaining().close()
+        reader.readRemaining().close()
     }
 
     @Test

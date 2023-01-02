@@ -55,7 +55,7 @@ internal class BlockingServletApplicationResponse(
 
     @Suppress("BlockingMethodInNonBlockingContext")
     private suspend fun writeLoop(from: ByteReadChannel, output: ServletOutputStream) {
-        while (!from.isClosedForRead) {
+        while (from.awaitBytes()) {
             if (from.availableForRead == 0) from.awaitBytes()
 
             val buffer = from.readablePacket.readBuffer().toByteArray()

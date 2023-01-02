@@ -88,24 +88,21 @@ public abstract class NettyApplicationResponse(
         return null
     }
 
-    internal fun sendResponse(chunked: Boolean = true, content: ByteReadChannel) {
+    internal suspend fun sendResponse(chunked: Boolean = true, content: ByteReadChannel) {
         if (responseMessageSent) return
 
         responseChannel = content
         responseMessage = when {
-            content.isClosedForRead -> {
-                responseMessage(chunked = false, data = EmptyByteArray)
-            }
-            else -> {
-                responseMessage(chunked, last = false)
-            }
+            !content.awaitBytes() -> responseMessage(chunked = false, data = EmptyByteArray)
+            else -> responseMessage(chunked, last = false)
         }
         responseReady.setSuccess()
         responseMessageSent = true
     }
 
     internal fun ensureResponseSent() {
-        sendResponse(content = ByteReadChannel.Empty)
+        if (responseMessageSent) return
+        responseMessage(chunked = false, data = EmptyByteArray)
     }
 
     internal fun close() {

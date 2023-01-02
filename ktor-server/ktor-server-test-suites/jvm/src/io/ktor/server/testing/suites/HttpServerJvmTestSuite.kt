@@ -341,7 +341,7 @@ abstract class HttpServerJvmTestSuite<TEngine : ApplicationEngine, TConfiguratio
                                     output.writePacket(packet)
                                     output.close()
 
-                                    while (!input.isClosedForRead) {
+                                    while (input.awaitBytes()) {
                                         assertEquals(0, input.readRemaining().availableForRead)
                                     }
 

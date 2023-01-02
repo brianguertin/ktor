@@ -66,12 +66,7 @@ private suspend fun ByteReadChannel.deflateTo(
             destination.putGzipHeader()
         }
 
-        while (true) {
-            if (availableForRead == 0) {
-                awaitBytes()
-            }
-            if (isClosedForRead) break
-
+        while (awaitBytes()) {
             val input = readByteBuffer()
             crc.updateKeepPosition(input)
             deflater.setInputBuffer(input)

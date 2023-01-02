@@ -65,11 +65,12 @@ public suspend fun decodeChunked(input: ByteReadChannel, out: ByteWriteChannel) 
 public suspend fun decodeChunked(input: ByteReadChannel, out: ByteWriteChannel, contentLength: Long) {
     val chunkSizeBuffer = ChunkSizeBufferPool.borrow()
     var totalBytesCopied = 0L
+    val reader = input.stringReader()
 
     try {
         while (true) {
             chunkSizeBuffer.clear()
-            if (!input.readUTF8LineTo(chunkSizeBuffer, MAX_CHUNK_SIZE_LENGTH.toLong())) {
+            if (!reader.readLineTo(chunkSizeBuffer, MAX_CHUNK_SIZE_LENGTH.toLong())) {
                 throw EOFException("Chunked stream has ended unexpectedly: no chunk size")
             } else if (chunkSizeBuffer.isEmpty()) {
                 throw EOFException("Invalid chunk size: empty")
@@ -80,16 +81,14 @@ public suspend fun decodeChunked(input: ByteReadChannel, out: ByteWriteChannel, 
             else
                 chunkSizeBuffer.parseHexLong()
 
-            input.readablePacket.validate()
             if (chunkSize > 0) {
-                input.copyTo(out, chunkSize)
+                reader.copyTo(out, chunkSize)
                 out.flush()
                 totalBytesCopied += chunkSize
             }
 
             chunkSizeBuffer.clear()
-            input.readablePacket.validate()
-            if (!input.readUTF8LineTo(chunkSizeBuffer, 2)) {
+            if (!reader.readLineTo(chunkSizeBuffer, 2)) {
                 throw EOFException("Invalid chunk: content block of size $chunkSize ended unexpectedly")
             }
             if (chunkSizeBuffer.isNotEmpty()) {
@@ -123,7 +122,7 @@ public suspend fun encodeChunked(
  */
 public suspend fun encodeChunked(output: ByteWriteChannel, input: ByteReadChannel) {
     try {
-        while (!input.isClosedForRead) {
+        while (input.awaitBytes()) {
             val buffer = input.readBuffer()
             if (buffer.isEmpty) continue
 

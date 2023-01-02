@@ -20,9 +20,8 @@ internal class MemoryCache(
     @OptIn(DelicateCoroutinesApi::class)
     private val reader: ByteReadChannel = GlobalScope.writer(coroutineContext) {
         val packet = Packet()
-        while (!body.isClosedForRead) {
+        while (body.awaitBytes()) {
             val buffer = body.readBuffer()
-            if (buffer.isEmpty) break
             packet.writeBuffer(buffer.clone())
 
             writeBuffer(buffer)

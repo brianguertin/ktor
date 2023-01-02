@@ -80,7 +80,7 @@ private suspend fun client(
         val buffer = DefaultByteBufferPool.borrow()
 
         try {
-            while (!outgoing.isClosedForRead) {
+            while (outgoing.awaitBytes()) {
                 val buffer = outgoing.readByteBuffer()
                 while (buffer.hasRemaining()) {
                     socket.write(buffer)

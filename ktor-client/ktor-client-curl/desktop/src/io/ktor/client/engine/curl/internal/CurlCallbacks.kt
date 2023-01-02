@@ -72,9 +72,7 @@ internal fun onBodyChunkRequested(
     val body = wrapper.body
     val requested = (size * count).toInt()
 
-    if (body.isClosedForRead) {
-        return if (body.closedCause != null) -1 else 0
-    }
+    TODO("Check for EOF state")
 
     val source = body.readablePacket.peek()
 

@@ -72,9 +72,7 @@ public class ResponseObserver(
                     }
 
                     val content = sideResponse.content
-                    if (!content.isClosedForRead) {
-                        content.discard()
-                    }
+                    content.cancel()
                 }
 
                 proceedWith(newResponse)

@@ -33,10 +33,8 @@ internal actual class FileCache actual constructor(
         runCatching {
             file.delete()
         }
-        if (!body.isClosedForRead) {
-            runCatching {
-                body.cancel()
-            }
+        runCatching {
+            body.cancel()
         }
     }
 }

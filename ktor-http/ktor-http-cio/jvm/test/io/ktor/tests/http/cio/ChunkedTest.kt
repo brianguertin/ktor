@@ -7,10 +7,7 @@ package io.ktor.tests.http.cio
 import io.ktor.http.cio.*
 import io.ktor.io.*
 import io.ktor.io.EOFException
-import io.ktor.util.*
 import kotlinx.coroutines.*
-import java.io.*
-import java.nio.*
 import kotlin.test.*
 import kotlin.text.toByteArray
 
@@ -67,7 +64,7 @@ class ChunkedTest {
         }
 
         assertEquals(0, parsed.availableForRead)
-        assertTrue { parsed.isClosedForRead }
+        assertFalse { parsed.awaitBytes() }
     }
 
     @Test
@@ -79,7 +76,7 @@ class ChunkedTest {
         }
 
         assertEquals(0, parsed.availableForRead)
-        assertTrue { parsed.isClosedForRead }
+        assertFalse { parsed.awaitBytes() }
         assertEquals("trailing", ch.readRemaining().readString())
     }
 
@@ -90,7 +87,7 @@ class ChunkedTest {
 
         val parsed = ByteReadChannel {
             decodeChunked(ch, this)
-        }
+        }.stringReader()
 
         assertEquals("123", parsed.readLine())
     }
@@ -101,7 +98,7 @@ class ChunkedTest {
         val ch = ByteReadChannel(bodyText.toByteArray())
         val parsed = ByteReadChannel {
             decodeChunked(ch, this)
-        }
+        }.stringReader()
 
         assertEquals("123456", parsed.readLine())
     }
@@ -112,7 +109,7 @@ class ChunkedTest {
         val ch = ByteReadChannel(bodyText.toByteArray())
         val parsed = ByteReadChannel {
             decodeChunked(ch, this)
-        }
+        }.stringReader()
 
         assertEquals("123456", parsed.readLine())
     }

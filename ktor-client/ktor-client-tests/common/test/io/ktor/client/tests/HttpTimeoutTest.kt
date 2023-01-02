@@ -210,7 +210,7 @@ class HttpTimeoutTest : ClientLoader() {
             val response = client.prepareRequest("$TEST_URL/with-stream") {
                 method = HttpMethod.Get
                 parameter("delay", 500)
-            }.body<ByteReadChannel>()
+            }.body<ByteReadChannel>().stringReader()
 
             assertFailsWith<HttpRequestTimeoutException> {
                 response.readLine()
@@ -230,7 +230,7 @@ class HttpTimeoutTest : ClientLoader() {
                 parameter("delay", 10000)
 
                 timeout { requestTimeoutMillis = 1000 }
-            }.body<ByteReadChannel>()
+            }.body<ByteReadChannel>().stringReader()
             assertFailsWith<HttpRequestTimeoutException> {
                 response.readLine()
             }
@@ -247,7 +247,7 @@ class HttpTimeoutTest : ClientLoader() {
             val response = client.prepareGet("$TEST_URL/with-stream") {
                 parameter("delay", 10000)
                 timeout { requestTimeoutMillis = 1000 }
-            }.body<ByteReadChannel>()
+            }.body<ByteReadChannel>().stringReader()
             assertFailsWith<HttpRequestTimeoutException> {
                 response.readLine()
             }

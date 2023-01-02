@@ -93,37 +93,7 @@ internal class JavaHttpRequestBodyPublisher(
         }
 
         private fun readData() {
-            // It's possible to have another request for data come in after we've closed the channel.
-            if (inputChannel.isClosedForRead) {
-                tryToSignalOnErrorFromChannel()
-                return
-            }
-
-            launch {
-                do {
-                    val buffer = ByteBuffer.allocate(DEFAULT_BUFFER_SIZE)
-                    val result = try {
-                        TODO()
-//                        inputChannel.readAvailable(buffer)
-                    } catch (cause: Throwable) {
-                        signalOnError(cause)
-                        closeChannel()
-                        return@launch
-                    }
-
-//                    if (result > 0) {
-//                        buffer.flip()
-//                        signalOnNext(buffer)
-//                    }
-                    // If we have more permits, queue up another read.
-                } while (checkHaveMorePermits())
-
-                if (inputChannel.isClosedForRead) {
-                    // Reached the end of the channel, notify the subscriber and cleanup
-                    signalOnComplete()
-                    closeChannel()
-                }
-            }
+            TODO()
         }
 
         private fun closeChannel() {

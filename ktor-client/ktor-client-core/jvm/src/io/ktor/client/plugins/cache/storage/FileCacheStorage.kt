@@ -7,6 +7,7 @@ package io.ktor.client.plugins.cache.storage
 import io.ktor.client.plugins.cache.*
 import io.ktor.http.*
 import io.ktor.io.*
+import io.ktor.io.StringReader
 import io.ktor.io.jvm.javaio.*
 import io.ktor.util.*
 import io.ktor.util.collections.*
@@ -109,7 +110,7 @@ private class FileCacheStorage(
 
             try {
                 file.inputStream().buffered().use {
-                    val channel = it.toByteReadChannel()
+                    val channel = it.toByteReadChannel().stringReader()
                     val requestsCount = channel.readInt()
                     val caches = mutableSetOf<CachedResponseData>()
                     for (i in 0 until requestsCount) {
@@ -148,7 +149,7 @@ private class FileCacheStorage(
         channel.writeByteArray(cache.body)
     }
 
-    private suspend fun readCache(channel: ByteReadChannel): CachedResponseData {
+    private suspend fun readCache(channel: StringReader): CachedResponseData {
         val url = channel.readLine()!!
         val status = HttpStatusCode(channel.readInt(), channel.readLine()!!)
         val version = HttpProtocolVersion.parse(channel.readLine()!!)

@@ -4,6 +4,7 @@
 
 package io.ktor.server.servlet
 
+import io.ktor.io.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.util.*

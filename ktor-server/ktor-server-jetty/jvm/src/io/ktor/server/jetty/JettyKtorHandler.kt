@@ -5,6 +5,7 @@
 package io.ktor.server.jetty
 
 import io.ktor.http.*
+import io.ktor.io.*
 import io.ktor.server.engine.*
 import io.ktor.server.response.*
 import io.ktor.server.util.*
@@ -95,7 +96,7 @@ internal class JettyKtorHandler(
                     pipeline().execute(call)
                 } catch (cancelled: CancellationException) {
                     response.sendErrorIfNotCommitted(HttpServletResponse.SC_GONE)
-                } catch (channelFailed: ChannelIOException) {
+                } catch (_: ChannelIOException) {
                 } catch (error: Throwable) {
                     logError(call, error)
                     if (!response.isCommitted) {
@@ -104,7 +105,7 @@ internal class JettyKtorHandler(
                 } finally {
                     try {
                         request.asyncContext?.complete()
-                    } catch (expected: IllegalStateException) {
+                    } catch (_: IllegalStateException) {
                     }
                 }
             }

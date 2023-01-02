@@ -15,6 +15,12 @@ internal class Utf8StringReader(
     var cache: String? = null
     var cacheStart: Int = 0
 
+    override val closedCause: Throwable?
+        get() = TODO("Not yet implemented")
+
+    override val readablePacket: Packet
+        get() = TODO("Not yet implemented")
+
     override suspend fun readLineTo(out: Appendable, limit: Long): Boolean {
         require(limit >= 0) { "limit shouldn't be negative: $limit" }
         if (!input.awaitBytes()) return false
@@ -24,6 +30,14 @@ internal class Utf8StringReader(
         }
 
         TODO("Case with limit")
+    }
+
+    override suspend fun awaitBytes(predicate: () -> Boolean): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun cancel(cause: Throwable?): Boolean {
+        TODO("Not yet implemented")
     }
 
     private suspend fun readLineToNoLimit(out: Appendable): Boolean {
@@ -75,9 +89,6 @@ internal class Utf8StringReader(
         return false
     }
 
-    override fun close() {
-        input.cancel()
-    }
 
     private fun saveInCache(chunk: String, start: Int) {
         cache = chunk

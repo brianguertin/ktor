@@ -77,31 +77,29 @@ internal class ApacheRequestProducer(
         producerJob.completeExceptionally(mappedCause)
     }
 
+    @Volatile
+    var closed = false
+
     override fun produceContent(encoder: ContentEncoder, ioctrl: IOControl) {
-        if (interestController.outputSuspended) {
+        if (closed) {
+            encoder.complete()
             return
         }
 
+        if (interestController.outputSuspended) return
         val buffer = channel.readablePacket.readBuffer().readByteBuffer()
         var result: Int
         do {
             result = encoder.write(buffer)
         } while (buffer.hasRemaining())
 
-        if (channel.isClosedForRead) {
-            channel.closedCause?.let { throw it }
-            encoder.complete()
-            return
-        }
-
-        if (result == -1) {
-            interestController.suspendOutput(ioctrl)
-            launch(Dispatchers.Unconfined) {
-                try {
-                    channel.awaitBytes()
-                } finally {
-                    interestController.resumeOutputIfPossible()
-                }
+        if (result != -1) return
+        interestController.suspendOutput(ioctrl)
+        launch(Dispatchers.Unconfined) {
+            try {
+                closed = channel.awaitBytes()
+            } finally {
+                interestController.resumeOutputIfPossible()
             }
         }
     }

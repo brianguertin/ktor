@@ -4,12 +4,14 @@
 
 package io.ktor.server.netty
 
+import io.ktor.io.*
 import io.ktor.util.cio.*
 import io.netty.channel.*
 import io.netty.util.concurrent.*
 import io.netty.util.concurrent.Future
 import kotlinx.coroutines.*
 import java.io.*
+import java.io.IOException
 import java.util.concurrent.*
 import kotlin.coroutines.*
 

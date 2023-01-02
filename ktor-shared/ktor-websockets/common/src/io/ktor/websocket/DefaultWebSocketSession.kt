@@ -6,7 +6,6 @@ package io.ktor.websocket
 
 import io.ktor.io.*
 import io.ktor.util.*
-import io.ktor.util.cio.*
 import io.ktor.util.logging.*
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
