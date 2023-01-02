@@ -23,7 +23,7 @@ internal class Utf8StringReader(
 
     override suspend fun readLineTo(out: Appendable, limit: Long): Boolean {
         require(limit >= 0) { "limit shouldn't be negative: $limit" }
-        if (!input.awaitBytes()) return false
+        if (cacheIsEmpty() && !input.awaitBytes()) return false
 
         if (limit == Long.MAX_VALUE) {
             return readLineToNoLimit(out)
@@ -43,7 +43,7 @@ internal class Utf8StringReader(
     private suspend fun readLineToNoLimit(out: Appendable): Boolean {
         if (readLineFromCacheNoLimit(out)) return true
 
-        while (!input.awaitBytes()) {
+        while (input.awaitBytes()) {
             val chunk = input.readablePacket.readString()
             val newLine = chunk.indexOf('\n')
 
@@ -59,7 +59,7 @@ internal class Utf8StringReader(
             val last = if (newLine > 0 && chunk[newLine - 1] == '\r') newLine - 1 else newLine
             out.append(chunk, 0, last)
             if (last < chunk.length) {
-                saveInCache(chunk, last + 1)
+                saveInCache(chunk, newLine + 1)
             }
 
             return true
@@ -76,7 +76,12 @@ internal class Utf8StringReader(
             val last = if (position == start || chunk[position - 1] != '\r') position else position - 1
             out.append(chunk, start, last)
 
-            if (position == chunk.length) dropCache()
+            if (position == chunk.lastIndex) {
+                dropCache()
+            } else {
+                cacheStart = position + 1
+            }
+
             return true
         }
 
@@ -89,10 +94,14 @@ internal class Utf8StringReader(
         return false
     }
 
-
     private fun saveInCache(chunk: String, start: Int) {
         cache = chunk
         cacheStart = start
+    }
+
+    private fun cacheIsEmpty(): Boolean {
+        val cache = cache ?: return true
+        return cacheStart >= cache.length
     }
 
     private fun dropCache() {

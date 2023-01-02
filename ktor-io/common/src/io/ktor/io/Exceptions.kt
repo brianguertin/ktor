@@ -29,3 +29,7 @@ public class ChannelReadException(
     message: String = "Cannot read from a channel",
     exception: Throwable
 ) : ChannelIOException(message, exception)
+
+public class TooLongLineException(limit: Int) : MalformedInputException("The line is longer than limit $limit")
+
+public open class MalformedInputException(message: String) : Throwable(message)

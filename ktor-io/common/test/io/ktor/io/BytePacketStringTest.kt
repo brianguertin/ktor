@@ -4,7 +4,6 @@
 
 package io.ktor.io
 
-import io.ktor.io.charsets.*
 import kotlin.test.*
 
 open class BytePacketStringTest {
@@ -44,72 +43,10 @@ open class BytePacketStringTest {
     }
 
     @Test
-    fun testDecodePacketSingleByte() {
-        val packet = buildPacket {
-            writeString("1")
-        }
-
-        try {
-            assertEquals("1", Charsets.UTF_8.newDecoder().decodePacket(packet))
-        } finally {
-            packet.close()
-        }
-    }
-
-    @Test
-    fun testDecodePacketMultiByte() {
-        val packet = buildPacket {
-            writeString("\u0422")
-        }
-
-        try {
-            assertEquals("\u0422", Charsets.UTF_8.newDecoder().decodePacket(packet))
-        } finally {
-            packet.close()
-        }
-    }
-
-    @Test
-    fun testDecodePacketMultiByteSeveralCharacters() {
-        val packet = buildPacket {
-            writeString("\u0422e\u0438")
-        }
-
-        try {
-            assertEquals("\u0422e\u0438", Charsets.UTF_8.newDecoder().decodePacket(packet))
-        } finally {
-            packet.close()
-        }
-    }
-
-    @Test
-    fun testEncode() {
-        assertTrue { byteArrayOf(0x41).contentEquals(Charsets.UTF_8.newEncoder().encode("A").toByteArray()) }
-        assertTrue {
-            byteArrayOf(0x41, 0x42, 0x43).contentEquals(Charsets.UTF_8.newEncoder().encode("ABC").toByteArray())
-        }
-        assertTrue {
-            byteArrayOf(0xd0.toByte(), 0xa2.toByte(), 0x41, 0xd0.toByte(), 0xb8.toByte()).contentEquals(
-                Charsets.UTF_8.newEncoder().encode("\u0422A\u0438").toByteArray()
-            )
-        }
-    }
-
-    @Test
     fun testToByteArray() {
         assertEquals(
             byteArrayOf(0xF0.toByte(), 0xA6.toByte(), 0x88.toByte(), 0x98.toByte()).hexdump(),
             "\uD858\uDE18".toByteArray().hexdump()
-        )
-    }
-
-    @Test
-    fun testEncodeToByteArraySequence() {
-        assertEquals(
-            byteArrayOf(0xF0.toByte(), 0xA6.toByte(), 0x88.toByte(), 0x98.toByte()).hexdump(),
-            Charsets.UTF_8.newEncoder().encodeToByteArray(
-                StringBuilder().apply { append("\uD858\uDE18") }
-            ).hexdump()
         )
     }
 

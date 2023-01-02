@@ -10,8 +10,6 @@ import platform.iconv.*
 import platform.posix.*
 
 public actual abstract class Charset(internal val _name: String) {
-    public actual abstract fun newEncoder(): CharsetEncoder
-    public actual abstract fun newDecoder(): CharsetDecoder
 
     public actual companion object {
         public actual fun forName(name: String): Charset {
@@ -56,22 +54,6 @@ private class CharsetImpl(name: String) : Charset(name) {
         checkErrors(v, name)
         iconv_close(v)
     }
-
-    override fun newEncoder(): CharsetEncoder = CharsetEncoderImpl(this)
-    override fun newDecoder(): CharsetDecoder = CharsetDecoderImpl(this)
-}
-
-// -----------------------
-
-public actual abstract class CharsetEncoder(internal val _charset: Charset)
-
-private data class CharsetEncoderImpl(private val charset: Charset) : CharsetEncoder(charset)
-
-public actual val CharsetEncoder.charset: Charset get() = _charset
-
-private fun iconvCharsetName(name: String) = when (name) {
-    "UTF-16" -> platformUtf16
-    else -> name
 }
 
 private val negativePointer = (-1L).toCPointer<IntVar>()
@@ -82,42 +64,10 @@ private fun checkErrors(iconvOpenResults: COpaquePointer?, charset: String) {
     }
 }
 
-internal actual fun CharsetEncoder.encodeCharSequence(input: CharSequence, fromIndex: Int, toIndex: Int, dst: Packet): Int {
-    TODO()
-}
-
-
-private fun checkIconvResult(errno: Int) {
-    if (errno == EILSEQ) throw MalformedInputException("Malformed or unmappable bytes at input")
-    if (errno == EINVAL) return // too few input bytes
-    if (errno == E2BIG) return // too few output buffer bytes
-
-    throw IllegalStateException("Failed to call 'iconv' with error code $errno")
-}
-
-internal actual fun CharsetDecoder.decodeBufferTo(
-    input: ReadableBuffer,
-    out: Appendable,
-    lastBuffer: Boolean
-): Int {
-    TODO()
-}
-
-// ----------------------------------------------------------------------
-
-public actual abstract class CharsetDecoder(internal val _charset: Charset)
-private data class CharsetDecoderImpl(private val charset: Charset) : CharsetDecoder(charset)
-
-public actual val CharsetDecoder.charset: Charset get() = _charset
-
 private val platformUtf16: String = if (ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN) "UTF-16BE" else "UTF-16LE"
-
-// -----------------------------------------------------------
 
 public actual object Charsets {
     public actual val UTF_8: Charset = CharsetImpl("UTF-8")
     public actual val ISO_8859_1: Charset = CharsetImpl("ISO-8859-1")
     internal val UTF_16: Charset = CharsetImpl(platformUtf16)
 }
-
-public actual open class MalformedInputException actual constructor(message: String) : Throwable(message)

@@ -7,8 +7,6 @@ package io.ktor.io.charsets
 import io.ktor.io.*
 
 public actual abstract class Charset(private val name: String) {
-    public actual abstract fun newEncoder(): CharsetEncoder
-    public actual abstract fun newDecoder(): CharsetDecoder
     public actual fun name(): String = name
 
     override fun equals(other: Any?): Boolean {
@@ -48,34 +46,3 @@ public actual abstract class Charset(private val name: String) {
     }
 
 }
-
-internal data class CharsetEncoderImpl(private val charset: Charset) : CharsetEncoder(charset)
-
-public actual val CharsetEncoder.charset: Charset get() = _charset
-
-internal actual fun CharsetEncoder.encodeCharSequence(
-    input: CharSequence,
-    fromIndex: Int,
-    toIndex: Int,
-    dst: Packet
-): Int {
-    TODO()
-}
-
-// ----------------------------------------------------------------------
-
-public actual abstract class CharsetDecoder(internal val _charset: Charset)
-
-internal data class CharsetDecoderImpl(private val charset: Charset) : CharsetDecoder(charset)
-
-public actual val CharsetDecoder.charset: Charset get() = _charset
-
-internal actual fun CharsetDecoder.decodeBufferTo(
-    input: ReadableBuffer,
-    out: Appendable,
-    lastBuffer: Boolean
-): Int {
-    TODO()
-}
-
-public actual open class MalformedInputException actual constructor(message: String) : Throwable(message)
