@@ -44,9 +44,10 @@ internal abstract class BlockingAdapter(val parent: Job? = null) {
     }
 
     @Suppress("LeakingThis")
-    private val state: AtomicRef<Any> =
-        atomic(this) // could be a thread, a continuation, Unit, an exception or this if not yet started
+    // could be a thread, a continuation, Unit, an exception or this if not yet started
+    private val state: AtomicRef<Any> = atomic(this)
     private val result = atomic(0)
+
     private val disposable: DisposableHandle? = parent?.invokeOnCompletion { cause ->
         if (cause != null) {
             end.resumeWithException(cause)

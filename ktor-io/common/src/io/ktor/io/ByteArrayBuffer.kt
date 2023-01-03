@@ -81,7 +81,7 @@ public class ByteArrayBuffer(
     }
 
     private fun checkWriteIndex(value: Int) {
-        if (value < readIndex) {
+        if (value < readIndex || value > capacity) {
             throw IllegalArgumentException("Write index($value) must be greater than or equal to read index($readIndex")
         }
     }

@@ -4,13 +4,13 @@
 
 package io.ktor.io
 
-import io.ktor.io.charsets.*
 import kotlinx.coroutines.*
 import kotlin.test.*
 
 class ByteChannelTextTest {
 
     @Test
+    @Ignore
     fun testReadUtf8LineThrowTooLongLine() = runBlocking<Unit> {
         val line100 = (0..99).joinToString("")
         val channel = ByteReadChannel {

@@ -169,7 +169,20 @@ public class Packet : Closeable {
             return result
         }
 
-        TODO("Can't read from sliced arrays")
+        val result = ByteArray(length)
+        var offset = 0
+        while (offset < length) {
+            val current = state.first()
+            val size = minOf(current.availableForRead, length - offset)
+            val chunk = current.readByteArray(size)
+            chunk.copyInto(result, offset)
+            offset += size
+            availableForRead -= size
+
+            dropFirstIfNeeded()
+        }
+
+        return result
     }
 
     public fun writeByteArray(array: ByteArray, offset: Int = 0, length: Int = array.size - offset) {

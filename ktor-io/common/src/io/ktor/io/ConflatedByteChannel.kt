@@ -43,10 +43,11 @@ public class ConflatedByteChannel : ByteReadChannel, ByteWriteChannel {
             when {
                 value.isClosed -> {
                     val cause = value.exceptionOrNull()
+                    closedToken = ClosedCause(cause)
                     if (cause != null) {
                         readablePacket.close()
+                        throw cause
                     }
-                    closedToken = ClosedCause(cause)
                     return false
                 }
 

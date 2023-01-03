@@ -7,6 +7,7 @@ package io.ktor.io.jvm.javaio
 import io.ktor.io.*
 import kotlinx.coroutines.*
 import java.io.*
+import java.lang.Integer.*
 
 /**
  * Create blocking [java.io.InputStream] for this channel that does block every time the channel suspends at read
@@ -21,23 +22,21 @@ public fun ByteReadChannel.toInputStream(parent: Job? = null): InputStream = Inp
 public fun ByteWriteChannel.toOutputStream(parent: Job? = null): OutputStream = OutputAdapter(parent, this)
 
 private class InputAdapter(parent: Job?, private val channel: ByteReadChannel) : InputStream() {
-    private val context = Job(parent)
 
     private val loop = object : BlockingAdapter(parent) {
         override suspend fun loop() {
             var readCount = 0
             while (true) {
                 val buffer = rendezvous(readCount) as ByteArray
-                if (channel.readablePacket.isEmpty) channel.awaitBytes()
-                val size = buffer.size
+                if (!channel.awaitBytes()) break
 
-                readCount = TODO("channel.readAvailable(buffer, offset, length)")
-                if (readCount == -1) {
-                    context.complete()
-                    break
-                }
+                val size = min(channel.availableForRead, buffer.size)
+                val data = channel.readByteArray(size)
+                data.copyInto(buffer, 0, 0, data.size)
+                readCount = size
             }
-            finish(readCount)
+
+            finish(-1)
         }
     }
 
@@ -57,17 +56,14 @@ private class InputAdapter(parent: Job?, private val channel: ByteReadChannel) :
     }
 
     @Synchronized
-    override fun read(b: ByteArray?, off: Int, len: Int): Int {
-        return loop.submitAndAwait(b!!, off, len)
+    override fun read(b: ByteArray, off: Int, len: Int): Int {
+        return loop.submitAndAwait(b, off, len)
     }
 
     @Synchronized
     override fun close() {
         super.close()
         channel.cancel()
-        if (!context.isCompleted) {
-            context.cancel()
-        }
         loop.shutdown()
     }
 }
