@@ -20,6 +20,7 @@ public interface ByteReadChannel {
      * Wait more bytes from source until [predicate] returns true or channel is closed.
      *
      * @return `true` if there are bytes available for reading or `false` if EOF reached.
+     * @throws closedCause if channel is closed with an exception.
      */
     public suspend fun awaitBytes(predicate: () -> Boolean = { readablePacket.availableForRead > 0 }): Boolean
 

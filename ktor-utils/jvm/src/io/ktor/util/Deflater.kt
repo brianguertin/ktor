@@ -81,6 +81,8 @@ private suspend fun ByteReadChannel.deflateTo(
         if (gzip) {
             destination.putGzipTrailer(crc, deflater)
         }
+    } catch (cause: Throwable) {
+        destination.close(cause)
     } finally {
         deflater.end()
     }
@@ -101,9 +103,14 @@ public fun ByteReadChannel.deflated(
 /**
  * Launch a coroutine on [coroutineContext] that does deflate compression
  * optionally doing CRC and writing GZIP header and trailer if [gzip] = `true`
+ *
+ * The origin [ByteWriteChannel] is fully consumed and will be closed when the result channel is closed.
  */
 @OptIn(DelicateCoroutinesApi::class)
 public fun ByteWriteChannel.deflated(
     gzip: Boolean = true,
     coroutineContext: CoroutineContext = Dispatchers.Unconfined
-): ByteWriteChannel = TODO()
+): ByteWriteChannel = GlobalScope.reader(coroutineContext) {
+    deflateTo(this@deflated, gzip)
+    this@deflated.close()
+}

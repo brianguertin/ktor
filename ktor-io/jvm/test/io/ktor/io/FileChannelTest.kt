@@ -1,13 +1,13 @@
 /*
- * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.
+ * Copyright 2014-2023 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.
  */
 
-package io.ktor.tests.utils
+package io.ktor.io
 
 import io.ktor.io.*
 import io.ktor.io.jvm.javaio.*
-import io.ktor.util.cio.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.debug.junit4.*
 import org.junit.*
 import org.junit.Ignore
 import java.io.*
@@ -19,6 +19,9 @@ class FileChannelTest {
     private val sandbox = File("build/files")
     private lateinit var temp: File
 
+    @get:Rule
+    val timeout = CoroutinesTimeout.seconds(10)
+
     @Before
     fun setUp() {
         if (!sandbox.mkdirs() && !sandbox.isDirectory) {
@@ -29,7 +32,13 @@ class FileChannelTest {
     }
 
     @Test
-    fun testEmptyFileDefaults() {
+    fun testReadEmptyFile() = runBlocking {
+        val channel = temp.readChannel()
+        assertFalse(channel.awaitBytes())
+    }
+
+    @Test
+    fun testEmptyFileWithInputStream() {
         assertEquals(0, temp.readChannel().toInputStream().use { it.readBytes().size })
     }
 
@@ -39,18 +48,6 @@ class FileChannelTest {
 
         val stream = temp.readChannel().toInputStream()
         assertEquals(listOf(7.toByte()), stream.use { it.readBytes().toList() })
-    }
-
-    @Test
-    fun testSingleByteFileOffsetEnd() {
-        temp.writeBytes(byteArrayOf(7))
-
-        assertEquals(
-            0,
-            temp.readChannel(start = 1L, endInclusive = temp.length() - 1)
-                .toInputStream()
-                .use { it.readBytes().size }
-        )
     }
 
     @Test
@@ -66,7 +63,15 @@ class FileChannelTest {
     }
 
     @Test
-    fun test3Bytes() {
+    fun test3Bytes() = runBlocking {
+        temp.writeBytes(byteArrayOf(7, 42, 84))
+
+        val result = temp.readChannel().toByteArray()
+        assertArrayEquals(byteArrayOf(7, 42, 84), result)
+    }
+
+    @Test
+    fun test3BytesWithStream() {
         temp.writeBytes(byteArrayOf(7, 8, 9))
 
         assertEquals(byteArrayOf(7, 8, 9).toList(), temp.readChannel().toInputStream().use { it.readBytes().toList() })
@@ -82,7 +87,7 @@ class FileChannelTest {
         val unused = temp.readChannel()
 
         // Assert (we cannot delete if there is a file handle open on it)
-        assertTrue(temp.delete())
+        assertFalse(temp.delete())
     }
 
     @Test
@@ -116,5 +121,27 @@ class FileChannelTest {
 
         // Assert (we cannot delete if there is a file handle open on it)
         assertTrue(temp.delete())
+    }
+
+    @Test
+    fun testReadWithoutTail() = runBlocking {
+        temp.writeBytes(byteArrayOf(7, 8, 9))
+
+        val channel = temp.readChannel(endInclusive = 1L)
+        assertArrayEquals(byteArrayOf(7, 8), channel.toByteArray())
+    }
+
+    @Test
+    fun testReadWithoutHead() = runBlocking {
+        temp.writeBytes(byteArrayOf(7, 8, 9))
+        val channel = temp.readChannel(start = 1L)
+        assertArrayEquals(byteArrayOf(8, 9), channel.toByteArray())
+    }
+
+    @Test
+    fun testReadWithoutHeadAndTail() = runBlocking {
+        temp.writeBytes(byteArrayOf(7, 8, 9))
+        val channel = temp.readChannel(start = 1L, endInclusive = 1L)
+        assertArrayEquals(byteArrayOf(8), channel.toByteArray())
     }
 }

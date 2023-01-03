@@ -2,32 +2,28 @@
  * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.
  */
 
-package io.ktor.tests.utils
+package io.ktor.util
 
 import io.ktor.io.*
-import io.ktor.io.IOException
 import io.ktor.io.jvm.javaio.*
-import io.ktor.test.dispatcher.*
-import io.ktor.util.*
-import io.ktor.util.cio.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.debug.junit4.*
 import org.junit.*
+import org.junit.Test
 import java.io.*
+import java.io.IOException
 import java.nio.*
-import java.nio.file.Files.*
 import java.util.zip.*
 import kotlin.random.*
 import kotlin.test.*
-import kotlin.test.Test
 import kotlin.text.toByteArray
 
 class DeflaterReadChannelTest : CoroutineScope {
     private val testJob = Job()
     override val coroutineContext get() = testJob + Dispatchers.Unconfined
 
-//    @get:Rule
-//    val timeout = CoroutinesTimeout.seconds(60)
+    @get:Rule
+    val timeout = CoroutinesTimeout.seconds(60)
 
     @AfterTest
     fun after() {
@@ -37,7 +33,7 @@ class DeflaterReadChannelTest : CoroutineScope {
     @Test
     fun testWithRealFile() {
         val file = listOf(
-            File("jvm/test/io/ktor/tests/utils/DeflaterReadChannelTest.kt"),
+            File("jvm/test/io/ktor/util/DeflaterReadChannelTest.kt"),
             File("ktor-server/ktor-server-tests/jvm/test/io/ktor/tests/utils/DeflaterReadChannelTest.kt")
         ).first(File::exists)
 
@@ -48,7 +44,7 @@ class DeflaterReadChannelTest : CoroutineScope {
     @Test
     fun testFileChannel() {
         val file = listOf(
-            File("jvm/test/io/ktor/tests/utils/DeflaterReadChannelTest.kt"),
+            File("jvm/test/io/ktor/util/DeflaterReadChannelTest.kt"),
             File("ktor-server/ktor-server-tests/jvm/test/io/ktor/tests/utils/DeflaterReadChannelTest.kt")
         ).first(File::exists)
 
@@ -63,14 +59,14 @@ class DeflaterReadChannelTest : CoroutineScope {
 
     @Test
     fun testDeflateChar() {
-//        testReadChannel("1", ByteReadChannel { writeChar('1') })
+        testReadChannel("1", ByteReadChannel { writeChar('1') })
         testWriteChannel("1", ByteReadChannel { writeChar('1') })
     }
 
     @Test
     fun testDeflateShort() {
-        testReadChannel("12", ByteReadChannel { writeString("12")})
-        testWriteChannel("12", ByteReadChannel { writeString("12")})
+        testReadChannel("12", ByteReadChannel { writeString("12") })
+        testWriteChannel("12", ByteReadChannel { writeString("12") })
     }
 
     @Test
@@ -114,7 +110,6 @@ class DeflaterReadChannelTest : CoroutineScope {
 
         for (step in 1..text.length) {
             val chunk = text.substring(0, step)
-            println(chunk)
             testReadChannel(chunk, asyncOf(chunk))
             testWriteChannel(chunk, asyncOf(chunk))
         }
@@ -184,32 +179,38 @@ class DeflaterReadChannelTest : CoroutineScope {
     private fun OutputStream.gzip() = GZIPOutputStream(this)
     private fun InputStream.ungzip() = GZIPInputStream(this)
 
-    private fun testReadChannel(expected: String, src: ByteReadChannel) {
-        assertEquals(expected, src.deflated().toInputStream().ungzip().reader().readText())
+    private fun testReadChannel(expected: String, src: ByteReadChannel) = runBlocking {
+        val deflated = src.deflated().toByteArray()
+        val content = ByteArrayInputStream(deflated).ungzip().reader().readText()
+        assertEquals(expected, content)
     }
 
-    private fun testWriteChannel(expected: String, src: ByteReadChannel) {
-        val channel = ByteReadChannel {
-            val dst = deflated()
-            src.copyAndClose(dst)
-            dst.flush()
-            dst.close()
+    private fun testWriteChannel(expected: String, src: ByteReadChannel) = runBlocking {
+        val buffer = ConflatedByteChannel()
+        val deflator = (buffer as ByteWriteChannel).deflated()
+
+        launch {
+            src.copyAndClose(deflator)
         }
 
-        val result = channel.toInputStream().ungzip().reader().readText()
+        val deflated = buffer.toByteArray()
+        val result = ByteArrayInputStream(deflated).ungzip().reader().readText()
         assertEquals(expected, result)
     }
 
     private fun testFaultyWriteChannel(src: ByteReadChannel) = runBlocking {
 
         withContext(Dispatchers.IO) {
-            val channel = ByteReadChannel {
-                val destination = deflated()
-                src.copyAndClose(destination)
-                destination.close(IOException("Broken pipe"))
+            val channel = ConflatedByteChannel()
+            val deflator = (channel as ByteWriteChannel).deflated()
+            launch {
+                src.copyTo(deflator)
+                deflator.close(IOException("Broken pipe"))
             }
 
-            assertFailsWith(IOException::class) { throw channel.closedCause!! }
+            assertFailsWith<IOException> {
+                channel.toByteArray()
+            }
         }
     }
 }

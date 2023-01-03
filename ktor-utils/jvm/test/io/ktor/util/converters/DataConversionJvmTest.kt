@@ -2,7 +2,7 @@
  * Copyright 2014-2021 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.
  */
 
-package io.ktor.tests.utils.converters
+package io.ktor.util.converters
 
 import io.ktor.util.converters.*
 import io.ktor.util.reflect.*
@@ -10,7 +10,7 @@ import java.math.*
 import java.util.*
 import kotlin.test.*
 
-class DataConversionTest {
+class DataConversionJvmTest {
 
     private enum class Enum { A, B }
 

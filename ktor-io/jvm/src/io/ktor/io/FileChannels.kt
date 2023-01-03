@@ -1,10 +1,10 @@
 /*
- * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.
+ * Copyright 2014-2023 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.
  */
 
-package io.ktor.util.cio
+package io.ktor.io
 
-import io.ktor.io.*
+import io.ktor.io.internal.FileReadChannel
 import kotlinx.coroutines.*
 import java.io.*
 import kotlin.coroutines.*
@@ -22,7 +22,7 @@ public fun File.readChannel(
 ): ByteReadChannel {
     val fileLength = length()
     require(start >= 0)
-    require(endInclusive == -1L || start < endInclusive)
+    require(endInclusive == -1L || start <= endInclusive)
     require(endInclusive == -1L || endInclusive < fileLength)
 
     val endIndex = if (endInclusive < 0) fileLength else endInclusive + 1
