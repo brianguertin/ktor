@@ -10,6 +10,8 @@ private val URL_ALPHABET: Set<Byte> = ((('a'..'z') + ('A'..'Z') + ('0'..'9')).ma
 private val URL_ALPHABET_CHARS: Set<Char> = ((('a'..'z') + ('A'..'Z') + ('0'..'9'))).toSet()
 private val HEX_ALPHABET = (('a'..'f') + ('A'..'F') + ('0'..'9')).toSet()
 
+private val HEX = "0123456789ABCDEF".toCharArray();
+
 /**
  * https://tools.ietf.org/html/rfc3986#section-2
  */
@@ -48,16 +50,14 @@ private val SPECIAL_SYMBOLS = listOf('-', '.', '_', '~').map { it.code.toByte() 
 public fun String.encodeURLQueryComponent(
     encodeFull: Boolean = false,
     spaceToPlus: Boolean = false,
-    charset: Charset = Charsets.UTF_8
 ): String = buildString {
-    val content = charset.newEncoder().encode(this@encodeURLQueryComponent)
-    val encoded = content.readString()
-    encoded.forEach {
-        val code = it.code.toByte()
+    this@encodeURLQueryComponent.forEach {
+        val code = it.code
+
         when {
             it == ' ' -> if (spaceToPlus) append('+') else append("%20")
-            code in URL_ALPHABET || (!encodeFull && code in URL_PROTOCOL_PART) -> append(it)
-            else -> append(code.percentEncode())
+            code <= 0x7F && (code.toByte() in URL_ALPHABET || (!encodeFull && code.toByte() in URL_PROTOCOL_PART)) -> append(it)
+            else -> percentEncodeUtf8Char(code)
         }
     }
 }
@@ -73,8 +73,6 @@ public fun String.encodeURLPath(): String = encodeURLPath(encodeSlash = false)
 public fun String.encodeURLPathPart(): String = encodeURLPath(encodeSlash = true)
 
 internal fun String.encodeURLPath(encodeSlash: Boolean): String = buildString {
-    val charset = Charsets.UTF_8
-
     var index = 0
     while (index < this@encodeURLPath.length) {
         val current = this@encodeURLPath[index]
@@ -84,6 +82,7 @@ internal fun String.encodeURLPath(encodeSlash: Boolean): String = buildString {
             continue
         }
 
+        // Char is already encoded
         if (current == '%' &&
             index + 2 < this@encodeURLPath.length &&
             this@encodeURLPath[index + 1] in HEX_ALPHABET &&
@@ -97,13 +96,87 @@ internal fun String.encodeURLPath(encodeSlash: Boolean): String = buildString {
             continue
         }
 
-        val symbolSize = if (current.isSurrogate()) 2 else 1
-        // we need to call newEncoder() for every symbol, otherwise it won't work
-//        charset.newEncoder().encode(this@encodeURLPath, index, index + symbolSize).forEach {
-//            append(it.percentEncode())
-//        }
-        index += symbolSize
+        if (current.isSurrogate()) {
+            val high = current.code
+            val low = this@encodeURLPath[index + 1].code
+            val codepoint = codePointFromSurrogates(high, low)
+            percentEncodeUtf8Char(codepoint)
+            index += 2
+            continue
+        }
+
+        percentEncodeUtf8Char(current.code)
+        index++
     }
+}
+
+private fun codePointFromSurrogates(high: Int, low: Int): Int {
+    return (high - 0xd800) * 0x400 + (low - 0xdc00) + 0x10000
+}
+
+private fun StringBuilder.percentEncodeUtf8Char(code: Int) {
+    when (val size = code.codeSize()) {
+        1 -> {
+            append("%")
+            append(HEX[code ushr 4])
+            append(HEX[code and 0xF])
+        }
+        2 -> {
+            val first = code ushr 4
+            val second = first ushr 2
+            val third = second ushr 4
+            append("%")
+            append(HEX[0xC or third])
+            append(HEX[0xF and second])
+
+            append("%")
+            append(HEX[0x8 or (first and 0x3)])
+            append(HEX[code and 0xF])
+        }
+        3 -> {
+            val first = code ushr 4
+            val second = first ushr 2
+            val third = second ushr 4
+            val fourth = third ushr 2
+
+            append("%E")
+            append(HEX[fourth])
+            append("%")
+            append(HEX[0x8 or (third and 0x3)])
+            append(HEX[second and 0xF])
+            append("%")
+            append(HEX[0x8 or (first and 0x3)])
+            append(HEX[code and 0xF])
+        }
+        4 -> {
+            val first = code ushr 4
+            val second = first ushr 2
+            val third = second ushr 4
+            val fourth = third ushr 2
+            val fifth = fourth ushr 4
+            val sixth = fifth ushr 2
+
+            append("%F")
+            append(HEX[sixth and 0x7])
+            append("%")
+            append(HEX[0x8 or (fifth and 0x3)])
+            append(HEX[fourth and 0xF])
+            append("%")
+            append(HEX[0x8 or (third and 0x3)])
+            append(HEX[second and 0xF])
+            append("%")
+            append(HEX[0x8 or (first and 0x3)])
+            append(HEX[code and 0xF])
+        }
+        else -> error("Invalid char size: $size")
+    }
+}
+
+private fun Int.codeSize() = when(this) {
+    in 0..0x7F -> 1
+    in 0x80..0x7FF -> 2
+    in 0x800..0xFFFF -> 3
+    else -> 4
 }
 
 /**

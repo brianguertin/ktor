@@ -13,7 +13,7 @@ import kotlin.text.toByteArray
 
 class ChunkedTest {
     @Test(expected = EOFException::class)
-    fun testEmptyBroken() = runBlocking {
+    fun testEmptyBroken(): Unit = runBlocking {
         val bodyText = ""
         val ch = ByteReadChannel(bodyText.toByteArray())
         ByteReadChannel {
@@ -22,7 +22,7 @@ class ChunkedTest {
     }
 
     @Test
-    fun testChunkedWithContentLength() = runBlocking {
+    fun testChunkedWithContentLength(): Unit = runBlocking {
         val chunkedContent = listOf(
             "3\r\n",
             "a=1\r\n",
@@ -45,7 +45,7 @@ class ChunkedTest {
     }
 
     @Test(expected = EOFException::class)
-    fun testEmptyWithoutCrLf() = runBlocking {
+    fun testEmptyWithoutCrLf(): Unit = runBlocking {
         val bodyText = "0"
         val ch = ByteReadChannel(bodyText.toByteArray())
 
@@ -55,7 +55,7 @@ class ChunkedTest {
     }
 
     @Test
-    fun testEmpty() = runBlocking {
+    fun testEmpty(): Unit = runBlocking {
         val bodyText = "0\r\n\r\n"
         val ch = ByteReadChannel(bodyText.toByteArray())
 
@@ -68,7 +68,7 @@ class ChunkedTest {
     }
 
     @Test
-    fun testEmptyWithTrailing() = runBlocking {
+    fun testEmptyWithTrailing(): Unit = runBlocking {
         val bodyText = "0\r\n\r\ntrailing"
         val ch = ByteReadChannel(bodyText.toByteArray())
         val parsed = ByteReadChannel {
@@ -81,7 +81,7 @@ class ChunkedTest {
     }
 
     @Test
-    fun testContent() = runBlocking {
+    fun testContent(): Unit = runBlocking {
         val bodyText = "3\r\n123\r\n0\r\n\r\n"
         val ch = ByteReadChannel(bodyText.toByteArray())
 
@@ -93,7 +93,7 @@ class ChunkedTest {
     }
 
     @Test
-    fun testContentMultipleChunks() = runBlocking {
+    fun testContentMultipleChunks(): Unit = runBlocking {
         val bodyText = "3\r\n123\r\n2\r\n45\r\n1\r\n6\r\n0\r\n\r\n"
         val ch = ByteReadChannel(bodyText.toByteArray())
         val parsed = ByteReadChannel {
@@ -104,7 +104,7 @@ class ChunkedTest {
     }
 
     @Test
-    fun testContentMixedLineEndings() = runBlocking {
+    fun testContentMixedLineEndings(): Unit = runBlocking {
         val bodyText = "3\n123\n2\r\n45\r\n1\r6\r0\r\n\n"
         val ch = ByteReadChannel(bodyText.toByteArray())
         val parsed = ByteReadChannel {

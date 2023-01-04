@@ -13,7 +13,7 @@ import io.ktor.util.*
  */
 public data class URLProtocol(val name: String, val defaultPort: Int) {
     init {
-        require(name.all { it.isLowerCase() }) { "All characters should be lower case" }
+        require(name.none { it.isUpperCase() }) { "All characters should be lower case" }
     }
 
     @Suppress("PublicApiImplicitType")
