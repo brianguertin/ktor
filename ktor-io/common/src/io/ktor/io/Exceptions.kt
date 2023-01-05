@@ -30,6 +30,6 @@ public class ChannelReadException(
     exception: Throwable
 ) : ChannelIOException(message, exception)
 
-public class TooLongLineException(limit: Int) : MalformedInputException("The line is longer than limit $limit")
+public class TooLongLineException(limit: Long) : MalformedInputException("The line is longer than limit $limit")
 
 public open class MalformedInputException(message: String) : Throwable(message)

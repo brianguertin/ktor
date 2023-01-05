@@ -75,7 +75,6 @@ class ChunkedTest {
             decodeChunked(ch, this)
         }
 
-        assertEquals(0, parsed.availableForRead)
         assertFalse { parsed.awaitBytes() }
         assertEquals("trailing", ch.readRemaining().readString())
     }

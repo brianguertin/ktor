@@ -18,6 +18,15 @@ public fun ByteReadChannel.stringReader(charset: Charset = Charsets.UTF_8): Stri
 public interface StringReader : ByteReadChannel {
     public val charset: Charset
 
+    /**
+     * Reads line until `\n` or `\r\n` from the channel and appends it to the [out] buffer. Delimiter is not included
+     * in the result and dropped form the input.
+     *
+     * If line is longer than [limit], [TooLongLineException] will be thrown.
+     *
+     * @return `true` if `\n\` or `\r\n` was read, `false` if no delimiter was found and channel is closed.
+     * If no delimiter found and channel is closed, [out] will contain the rest of the input.
+     */
     public suspend fun readLineTo(out: Appendable, limit: Long = Long.MAX_VALUE): Boolean
 }
 
