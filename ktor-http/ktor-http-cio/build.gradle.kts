@@ -7,6 +7,11 @@ kotlin.sourceSets {
         }
     }
 
+    commonTest {
+        dependencies {
+            api(project(":ktor-test-dispatcher"))
+        }
+    }
     jvmMain {
         dependencies {
             api(project(":ktor-network"))

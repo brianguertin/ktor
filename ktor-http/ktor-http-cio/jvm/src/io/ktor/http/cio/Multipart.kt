@@ -143,7 +143,6 @@ public fun CoroutineScope.parseMultipart(
     totalLength: Long?
 ): ReceiveChannel<MultipartEvent> = produce {
     TODO()
-//    @Suppress("DEPRECATION")
 //    val readBeforeParse = input.totalBytesRead
 //    val firstBoundary = boundaryPrefixed.duplicate()!!.apply {
 //        position(2)

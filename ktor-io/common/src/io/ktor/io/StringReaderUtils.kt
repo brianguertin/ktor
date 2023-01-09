@@ -16,18 +16,17 @@ package io.ktor.io
  */
 public suspend fun StringReader.readLine(limit: Long = Long.MAX_VALUE): String? {
     val builder = StringBuilder()
-    val hasNewLine = readLineTo(builder, limit)
-    return if (hasNewLine || builder.isNotEmpty()) builder.toString() else null
+    val hasBytes = readLineTo(builder, limit)
+    return if (hasBytes) builder.toString() else null
 }
 
 /**
- * Reads line until `\n` or `\r\n` from the channel and appends it to the [out] buffer. Delimiter is not included
- * in the result and dropped form the input.
+ * Reads string to [out] until `\n` or `\r\n` or end of the [StringReader] and appends it to the [out]. Delimiter is not
+ * included in the result and dropped form the input.
  *
  * If line is longer than [limit], [TooLongLineException] will be thrown.
  *
- * @return `true` if `\n\` or `\r\n` was read, `false` if no delimiter was found and channel is closed.
- * If no delimiter found and channel is closed, [out] will contain the rest of the input.
+ * @return `true` if some characters were read or `false` if the [StringReader] is closed and no characters available.
  */
 public suspend fun StringReader.readLineTo(out: Appendable, limit: Long = Long.MAX_VALUE): Boolean {
     var remaining = limit
@@ -67,7 +66,7 @@ public suspend fun StringReader.readLineTo(out: Appendable, limit: Long = Long.M
         }
     }
 
-    return newLineFound
+    return newLineFound || remaining < limit
 }
 
 private fun newLineCase(

@@ -84,33 +84,34 @@ class ChunkedTest {
         val bodyText = "3\r\n123\r\n0\r\n\r\n"
         val ch = ByteReadChannel(bodyText.toByteArray())
 
-        val parsed = ByteReadChannel {
+        ByteReadChannel {
             decodeChunked(ch, this)
-        }.stringReader()
-
-        assertEquals("123", parsed.readLine())
+        }.stringReader { parsed ->
+            assertEquals("123", parsed.readLine())
+        }
     }
 
     @Test
     fun testContentMultipleChunks(): Unit = runBlocking {
         val bodyText = "3\r\n123\r\n2\r\n45\r\n1\r\n6\r\n0\r\n\r\n"
         val ch = ByteReadChannel(bodyText.toByteArray())
-        val parsed = ByteReadChannel {
+        ByteReadChannel {
             decodeChunked(ch, this)
-        }.stringReader()
+        }.stringReader { parsed ->
+            assertEquals("123456", parsed.readLine())
+        }
 
-        assertEquals("123456", parsed.readLine())
     }
 
     @Test
     fun testContentMixedLineEndings(): Unit = runBlocking {
         val bodyText = "3\n123\n2\r\n45\r\n1\r6\r0\r\n\n"
         val ch = ByteReadChannel(bodyText.toByteArray())
-        val parsed = ByteReadChannel {
+        ByteReadChannel {
             decodeChunked(ch, this)
-        }.stringReader()
-
-        assertEquals("123456", parsed.readLine())
+        }.stringReader { parsed ->
+            assertEquals("123456", parsed.readLine())
+        }
     }
 
     @Test

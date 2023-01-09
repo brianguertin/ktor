@@ -26,7 +26,7 @@ internal class Utf8StringReader(
     override suspend fun readStringChunk(block: (chunk: String, startIndex: Int) -> Int) {
         if (chunkIsEmpty() && !awaitBytes()) return
 
-        if (cacheIsInvalid()) {
+        if (chunkIsEmpty() || cacheIsInvalid()) {
             chunk = readablePacket.clone().readString()
             chunkStart = 0
             bytesInPacket = readablePacket.availableForRead

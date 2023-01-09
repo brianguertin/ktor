@@ -7,6 +7,7 @@ package io.ktor.tests.http.cio
 import io.ktor.http.*
 import io.ktor.http.cio.*
 import io.ktor.io.*
+import io.ktor.test.dispatcher.*
 import kotlin.test.*
 
 private const val HTAB: Char = '\u0009'
@@ -14,7 +15,7 @@ private const val HTAB: Char = '\u0009'
 class HeaderParserTest {
 
     @Test
-    fun parseHeadersSmokeTest(): Unit = test {
+    fun parseHeadersSmokeTest(): Unit = testSuspend {
         val encodedHeaders = """
             name: value
             name2:${HTAB}p1${HTAB}p2 p3$HTAB
@@ -32,7 +33,7 @@ class HeaderParserTest {
     }
 
     @Test
-    fun testParseCookieHeader() = test {
+    fun testParseCookieHeader() = testSuspend {
         val rawHeaders = "Set-Cookie: ___utmvazauvysSB=kDu\u0001xSkE; path=/; Max-Age=900\r\n\r\n"
 
         val channel = ByteReadChannel(rawHeaders)
@@ -47,7 +48,7 @@ class HeaderParserTest {
     }
 
     @Test
-    fun parseHeadersNoLeadingSpace(): Unit = test {
+    fun parseHeadersNoLeadingSpace(): Unit = testSuspend {
         val encodedHeaders = """
             name:value
         """.trimIndent() + "\r\n\r\n"
@@ -63,7 +64,7 @@ class HeaderParserTest {
     }
 
     @Test
-    fun parseHeadersNoLeadingSpaceWithTrailingSpaces(): Unit = test {
+    fun parseHeadersNoLeadingSpaceWithTrailingSpaces(): Unit = testSuspend {
         val encodedHeaders = """
             name:value
         """.trimIndent() + "    \r\n\r\n"
@@ -79,7 +80,7 @@ class HeaderParserTest {
     }
 
     @Test
-    fun parseHeadersSpaceAfterHeaderNameShouldBeProhibited(): Unit = test {
+    fun parseHeadersSpaceAfterHeaderNameShouldBeProhibited(): Unit = testSuspend {
         val encodedHeaders = """
             name :value
         """.trimIndent() + "\r\n\r\n"
@@ -91,7 +92,7 @@ class HeaderParserTest {
     }
 
     @Test
-    fun parseHeadersSpacesInHeaderNameShouldBeProhibited(): Unit = test {
+    fun parseHeadersSpacesInHeaderNameShouldBeProhibited(): Unit = testSuspend {
         val encodedHeaders = """
             name and more: value
         """.trimIndent() + "\r\n\r\n"
@@ -103,7 +104,7 @@ class HeaderParserTest {
     }
 
     @Test
-    fun parseHeadersSpacesInHeaderNameShouldBeProhibitedFixed(): Unit = test {
+    fun parseHeadersSpacesInHeaderNameShouldBeProhibitedFixed(): Unit = testSuspend {
         val encodedHeaders = """
             name-and-more: value
         """.trimIndent() + "\r\n\r\n"
@@ -113,7 +114,7 @@ class HeaderParserTest {
     }
 
     @Test
-    fun parseHeadersDelimitersInHeaderNameShouldBeProhibited(): Unit = test {
+    fun parseHeadersDelimitersInHeaderNameShouldBeProhibited(): Unit = testSuspend {
         val encodedHeaders = """
             name,: value
         """.trimIndent() + "\r\n\r\n"
@@ -125,7 +126,7 @@ class HeaderParserTest {
     }
 
     @Test
-    fun parseHeadersEmptyHeaderNameShouldBeProhibited(): Unit = test {
+    fun parseHeadersEmptyHeaderNameShouldBeProhibited(): Unit = testSuspend {
         val encodedHeaders = """
             : value
         """.trimIndent() + "\r\n\r\n"
@@ -139,7 +140,7 @@ class HeaderParserTest {
     }
 
     @Test
-    fun parseHeadersFoldingShouldBeProhibited(): Unit = test {
+    fun parseHeadersFoldingShouldBeProhibited(): Unit = testSuspend {
         val encodedHeaders = "A:\r\n folding\r\n\r\n"
         val channel = ByteReadChannel(encodedHeaders)
 

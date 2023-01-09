@@ -6,11 +6,12 @@ package io.ktor.tests.http.cio
 
 import io.ktor.http.cio.*
 import io.ktor.io.*
+import io.ktor.test.dispatcher.*
 import kotlin.test.*
 
 class ResponseParserTest {
     @Test
-    fun parseStatusCodeShouldBeValid(): Unit = test {
+    fun parseStatusCodeShouldBeValid(): Unit = testSuspend {
         listOf(
             """
             HTTP/1.1 100 OK
@@ -25,7 +26,7 @@ class ResponseParserTest {
     }
 
     @Test
-    fun parseStatusCodeShouldFailWhenOutOfRange(): Unit = test {
+    fun parseStatusCodeShouldFailWhenOutOfRange(): Unit = testSuspend {
         assertFailsWith<ParserException> {
             parseResponse(ByteReadChannel("HTTP/1.1 0 OK"))!!
         }
@@ -38,14 +39,14 @@ class ResponseParserTest {
     }
 
     @Test
-    fun parseStatusCodeShouldFailWhenStatusCodeIsNegative(): Unit = test {
+    fun parseStatusCodeShouldFailWhenStatusCodeIsNegative(): Unit = testSuspend {
         assertFailsWith<NumberFormatException> {
             parseResponse(ByteReadChannel("HTTP/1.1 -100 OK"))!!
         }
     }
 
     @Test
-    fun testInvalidResponse(): Unit = test {
+    fun testInvalidResponse(): Unit = testSuspend {
         val cases = listOf("A", "H", "a")
 
         for (case in cases) {

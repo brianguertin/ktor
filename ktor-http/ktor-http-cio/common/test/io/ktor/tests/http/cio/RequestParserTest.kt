@@ -7,12 +7,13 @@ package io.ktor.tests.http.cio
 import io.ktor.http.*
 import io.ktor.http.cio.*
 import io.ktor.io.*
+import io.ktor.test.dispatcher.*
 import kotlin.test.*
 
 class RequestParserTest {
 
     @Test
-    fun testParseVersion() = test {
+    fun testParseVersion() = testSuspend {
         val cases = listOf(
             """
         GET / HTTP/1.6
@@ -48,7 +49,7 @@ class RequestParserTest {
     }
 
     @Test
-    fun testColonAfterHost() = test {
+    fun testColonAfterHost() = testSuspend {
         val case = """
         GET / HTTP/1.1
         Host: www.example.com:
@@ -62,7 +63,7 @@ class RequestParserTest {
     }
 
     @Test
-    fun testParseGetRoot() = test {
+    fun testParseGetRoot() = testSuspend {
         val requestText = "GET / HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n"
         val ch = ByteReadChannel(requestText)
 
@@ -78,7 +79,7 @@ class RequestParserTest {
     }
 
     @Test
-    fun testParseGetRootAlternativeSpaces() = test {
+    fun testParseGetRootAlternativeSpaces() = testSuspend {
         val requestText = "GET  /  HTTP/1.1\nHost:  localhost\nConnection:close\n\n"
         val ch = ByteReadChannel(requestText.toByteArray())
 
