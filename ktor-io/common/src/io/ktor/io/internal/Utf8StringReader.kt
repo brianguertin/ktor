@@ -7,206 +7,66 @@ package io.ktor.io.internal
 import io.ktor.io.*
 import io.ktor.io.charsets.*
 
+@PublishedApi
 internal class Utf8StringReader(
     private val input: ByteReadChannel
 ) : StringReader {
     override val charset: Charset = Charsets.UTF_8
 
-    var cache: String? = null
-    var cacheStart: Int = 0
+    override val closedCause: Throwable?
+        get() = input.closedCause
 
-    override val closedCause: Throwable? = input.closedCause
+    override val readablePacket: Packet
+        get() = input.readablePacket
 
-    override val readablePacket: Packet = input.readablePacket
+    var chunk: String = readablePacket.clone().readString()
+    var chunkStart: Int = 0
+    var bytesInPacket = readablePacket.availableForRead
 
-    override suspend fun readLineTo(out: Appendable, limit: Long): Boolean {
-        require(limit >= 0) { "limit shouldn't be negative: $limit" }
-        if (cacheIsEmpty() && !input.awaitBytes()) return false
+    override suspend fun readStringChunk(block: (chunk: String, startIndex: Int) -> Int) {
+        if (chunkIsEmpty() && !awaitBytes()) return
 
-        if (limit == Long.MAX_VALUE) {
-            return readLineToNoLimit(out)
+        if (cacheIsInvalid()) {
+            chunk = readablePacket.clone().readString()
+            chunkStart = 0
+            bytesInPacket = readablePacket.availableForRead
         }
 
-        return readLineToWithLimit(out, limit)
+        val consumed = block(chunk, chunkStart)
+        check(consumed >= 0) { "Block should return non-negative number of consumed bytes: $consumed" }
+
+        readablePacket.discardExact(sizeInBytes(chunk, chunkStart, chunkStart + consumed))
+        chunkStart += consumed
     }
 
-    override suspend fun awaitBytes(predicate: () -> Boolean): Boolean = input.awaitBytes(predicate)
-
-    override fun cancel(cause: Throwable?): Boolean = input.cancel(cause)
-
-    private suspend fun readLineToNoLimit(out: Appendable): Boolean {
-        if (readLineFromCacheNoLimit(out)) return true
-
-        while (input.awaitBytes()) {
-            val chunk = input.readablePacket.clone().readString()
-            val newLine = chunk.indexOf('\n')
-
-            if (newLine == -1) {
-                if (chunk.last() == '\r') {
-                    TODO("Case with \\r")
-                }
-
-                out.appendDiscarding(chunk, 0, 0, chunk.length)
-                continue
-            }
-
-            val hasCaret = newLine > 0 && chunk[newLine - 1] == '\r'
-            val last = if (hasCaret) newLine - 1 else newLine
-            out.appendDiscarding(chunk, if (hasCaret) 2 else 1, 0, last)
-            if (last < chunk.length) {
-                saveInCache(chunk, newLine + 1)
-            }
-
-            return true
-        }
-
-        return false
+    override suspend fun awaitBytes(predicate: () -> Boolean): Boolean {
+        chunk = ""
+        chunkStart = 0
+        return input.awaitBytes(predicate)
     }
 
-    private suspend fun readLineFromCacheNoLimit(out: Appendable): Boolean {
-        val chunk = cache ?: return false
-        val start = cacheStart
-        val position = chunk.indexOf('\n', start)
-        if (position > 0) {
-            val hasCaret = position == start || chunk[position - 1] != '\r'
-            val last = if (hasCaret) position else position - 1
-            out.appendDiscarding(chunk, if (hasCaret) 2 else 1, start, last)
-
-            if (position == chunk.lastIndex) {
-                dropCache()
-            } else {
-                cacheStart = position + 1
-            }
-
-            return true
-        }
-
-        if (chunk.last() == '\r') {
-            TODO("Case with \\r at the end")
-        }
-
-        out.appendDiscarding(chunk, 0, start, chunk.length)
-        dropCache()
-        return false
+    override fun cancel(cause: Throwable?): Boolean {
+        return input.cancel()
     }
 
-    private suspend fun readLineToWithLimit(out: Appendable, limit: Long): Boolean {
-        var remaining = readLineFromCacheWithLimit(out, limit)
-        if (remaining < 0) return true
+    private fun chunkIsEmpty() = chunkStart >= chunk.length
 
-        while (awaitBytes()) {
-            val chunk = readablePacket.clone().readString()
-            val newLine = chunk.indexOf('\n')
+    private fun cacheIsInvalid() = bytesInPacket != readablePacket.availableForRead
+}
 
-            if (newLine == -1) {
-                if (chunk.length > remaining) {
-                    lineIsTooLong(limit)
-                }
-
-                if (chunk.last() == '\r') {
-                    TODO("Case with \\r")
-                }
-
-                out.appendDiscarding(chunk, 0, 0, chunk.length)
-                remaining -= chunk.length
-                continue
-            }
-
-            val hasCaret = newLine > 0 && chunk[newLine - 1] == '\r'
-            val last = if (hasCaret) newLine - 1 else newLine
-            if (remaining < last) {
-                lineIsTooLong(limit)
-            }
-
-            out.appendDiscarding(chunk, if (hasCaret) 2 else 1, 0, last)
-            if (last < chunk.length) {
-                saveInCache(chunk, newLine + 1)
-            }
-
-            return true
-        }
-
-        return false
+private fun sizeInBytes(chunk: String, startIndex: Int, endIndex: Int): Int {
+    var result = 0
+    for (i in startIndex until endIndex) {
+        result += chunk[i].sizeInBytes()
     }
+    return result
+}
 
-    /**
-     * Returns number of bytes remaining to read or -1 if delimiter was found.
-     *
-     * If 0 is returned, it means that bytes were added to [out] and delimiter expected to be found in the next chunk.
-     */
-    private suspend fun readLineFromCacheWithLimit(out: Appendable, limit: Long): Long {
-        val chunk = cache ?: return limit
-        val start = cacheStart
-        val newLine = chunk.indexOf('\n', start)
-        if (newLine == -1) {
-            val remaining = limit - (chunk.length - start)
-            if (remaining < 0) {
-                lineIsTooLong(limit)
-            }
-
-            if (chunk.last() == '\r') {
-                TODO("Case with \\r at the end")
-            }
-
-            out.appendDiscarding(chunk, 0, start, chunk.length)
-            dropCache()
-            return remaining
-        }
-
-        val hasCaret = newLine == start || chunk[newLine - 1] != '\r'
-        val end = if (hasCaret) newLine else newLine - 1
-        val length = end - start
-        if (length > limit) {
-            lineIsTooLong(limit)
-        }
-
-        out.appendDiscarding(chunk, if (hasCaret) 2 else 1, start, end)
-        if (newLine == chunk.lastIndex) {
-            dropCache()
-        } else {
-            cacheStart = newLine + 1
-        }
-
-        return -1
-    }
-
-    private fun saveInCache(chunk: String, start: Int) {
-        cache = chunk
-        cacheStart = start
-    }
-
-    private fun cacheIsEmpty(): Boolean {
-        val cache = cache ?: return true
-        return cacheStart >= cache.length
-    }
-
-    private fun dropCache() {
-        cache = null
-        cacheStart = 0
-    }
-
-    private fun lineIsTooLong(limit: Long): Nothing {
-        val cause = TooLongLineException(limit)
-        input.cancel(cause)
-        throw cause
-    }
-
-    private fun sizeInBytes(value: String, startIndex: Int, endIndex: Int): Int {
-        var size = 0
-        for (index in startIndex until endIndex) {
-            size += when (val char = value[index]) {
-                in '\u0000'..'\u007F' -> 1
-                in '\u0080'..'\u07FF' -> 2
-                in '\u0800'..'\uFFFF' -> 3
-                else -> 4
-            }
-        }
-
-        return size
-    }
-
-    private fun Appendable.appendDiscarding(value: String, newLineSize: Int, startIndex: Int, endIndex: Int) {
-        input.readablePacket.discardExact(sizeInBytes(value, startIndex, endIndex) + newLineSize)
-        append(value, startIndex, endIndex)
+private fun Char.sizeInBytes(): Int {
+    return when (this) {
+        in '\u0000'..'\u007F' -> 1
+        in '\u0080'..'\u07FF' -> 2
+        in '\u0800'..'\uFFFF' -> 3
+        else -> 4
     }
 }

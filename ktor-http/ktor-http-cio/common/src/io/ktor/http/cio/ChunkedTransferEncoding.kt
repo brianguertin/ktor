@@ -65,44 +65,44 @@ public suspend fun decodeChunked(input: ByteReadChannel, out: ByteWriteChannel) 
 public suspend fun decodeChunked(input: ByteReadChannel, out: ByteWriteChannel, contentLength: Long) {
     val chunkSizeBuffer = ChunkSizeBufferPool.borrow()
     var totalBytesCopied = 0L
-    val reader = input.stringReader()
+    input.stringReader { reader ->
+        try {
+            while (true) {
+                chunkSizeBuffer.clear()
+                if (!reader.readLineTo(chunkSizeBuffer, MAX_CHUNK_SIZE_LENGTH.toLong())) {
+                    throw EOFException("Chunked stream has ended unexpectedly: no chunk size")
+                } else if (chunkSizeBuffer.isEmpty()) {
+                    throw EOFException("Invalid chunk size: empty")
+                }
 
-    try {
-        while (true) {
-            chunkSizeBuffer.clear()
-            if (!reader.readLineTo(chunkSizeBuffer, MAX_CHUNK_SIZE_LENGTH.toLong())) {
-                throw EOFException("Chunked stream has ended unexpectedly: no chunk size")
-            } else if (chunkSizeBuffer.isEmpty()) {
-                throw EOFException("Invalid chunk size: empty")
+                val chunkSize = if (chunkSizeBuffer.length == 1 && chunkSizeBuffer[0] == '0')
+                    0
+                else
+                    chunkSizeBuffer.parseHexLong()
+
+                if (chunkSize > 0) {
+                    reader.copyTo(out, chunkSize)
+                    out.flush()
+                    totalBytesCopied += chunkSize
+                }
+
+                chunkSizeBuffer.clear()
+                if (!reader.readLineTo(chunkSizeBuffer, 2)) {
+                    throw EOFException("Invalid chunk: content block of size $chunkSize ended unexpectedly")
+                }
+                if (chunkSizeBuffer.isNotEmpty()) {
+                    throw EOFException("Invalid chunk: content block should end with CR+LF")
+                }
+
+                if (chunkSize == 0L) break
             }
-
-            val chunkSize = if (chunkSizeBuffer.length == 1 && chunkSizeBuffer[0] == '0')
-                0
-            else
-                chunkSizeBuffer.parseHexLong()
-
-            if (chunkSize > 0) {
-                reader.copyTo(out, chunkSize)
-                out.flush()
-                totalBytesCopied += chunkSize
-            }
-
-            chunkSizeBuffer.clear()
-            if (!reader.readLineTo(chunkSizeBuffer, 2)) {
-                throw EOFException("Invalid chunk: content block of size $chunkSize ended unexpectedly")
-            }
-            if (chunkSizeBuffer.isNotEmpty()) {
-                throw EOFException("Invalid chunk: content block should end with CR+LF")
-            }
-
-            if (chunkSize == 0L) break
+        } catch (cause: Throwable) {
+            out.close(cause)
+            throw cause
+        } finally {
+            ChunkSizeBufferPool.recycle(chunkSizeBuffer)
+            out.close()
         }
-    } catch (cause: Throwable) {
-        out.close(cause)
-        throw cause
-    } finally {
-        ChunkSizeBufferPool.recycle(chunkSizeBuffer)
-        out.close()
     }
 }
 

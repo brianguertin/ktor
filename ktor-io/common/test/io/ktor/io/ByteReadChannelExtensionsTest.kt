@@ -21,18 +21,20 @@ class ByteReadChannelExtensionsTest {
             }
         )
 
-        val reader = channel.stringReader()
-        assertEquals("GET / HTTP/1.1", reader.readLine())
-        assertEquals("Host: 127.0.0.1:9090", reader.readLine())
-        assertEquals("Accept-Charset: UTF-8", reader.readLine())
-        assertEquals("Accept: */*", reader.readLine())
-        assertEquals("User-Agent: Ktor client", reader.readLine())
+        channel.stringReader { reader ->
+            assertEquals("GET / HTTP/1.1", reader.readLine())
+            assertEquals("Host: 127.0.0.1:9090", reader.readLine())
+            assertEquals("Accept-Charset: UTF-8", reader.readLine())
+            assertEquals("Accept: */*", reader.readLine())
+            assertEquals("User-Agent: Ktor client", reader.readLine())
 
-        assertFalse(reader.readLineTo(StringBuilder()))
+            assertFalse(reader.readLineTo(StringBuilder()))
+        }
+
     }
 
     @Test
-    fun testReadUtf8LineWithCarretTo() = testSuspend {
+    fun testReadUtf8LineWithCaretTo() = testSuspend {
         val channel = ByteReadChannel(
             buildString {
                 append("GET / HTTP/1.1\r\n")
@@ -43,13 +45,14 @@ class ByteReadChannelExtensionsTest {
             }
         )
 
-        val reader = channel.stringReader()
-        assertEquals("GET / HTTP/1.1", reader.readLine())
-        assertEquals("Host: 127.0.0.1:9090", reader.readLine())
-        assertEquals("Accept-Charset: UTF-8", reader.readLine())
-        assertEquals("Accept: */*", reader.readLine())
-        assertEquals("User-Agent: Ktor client", reader.readLine())
+        channel.stringReader { reader ->
+            assertEquals("GET / HTTP/1.1", reader.readLine())
+            assertEquals("Host: 127.0.0.1:9090", reader.readLine())
+            assertEquals("Accept-Charset: UTF-8", reader.readLine())
+            assertEquals("Accept: */*", reader.readLine())
+            assertEquals("User-Agent: Ktor client", reader.readLine())
 
-        assertFalse(reader.readLineTo(StringBuilder()))
+            assertFalse(reader.readLineTo(StringBuilder()))
+        }
     }
 }
