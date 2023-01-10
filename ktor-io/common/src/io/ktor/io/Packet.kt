@@ -53,6 +53,14 @@ public class Packet : Closeable {
         return result
     }
 
+    public fun readShort(): Short {
+        checkCanRead(2)
+        val result = state.first().readShort()
+        availableForRead -= 2
+        dropFirstIfNeeded()
+        return result
+    }
+
     public fun readLong(): Long {
         checkCanRead(8)
         val result = state.first().readLong()
@@ -69,12 +77,8 @@ public class Packet : Closeable {
         return result
     }
 
-    public fun readShort(): Short {
-        checkCanRead(2)
-        val result = state.first().readShort()
-        availableForRead -= 2
-        dropFirstIfNeeded()
-        return result
+    public fun indexOf(buffer: Buffer): Int {
+        TODO()
     }
 
     public fun discard(limit: Int): Int {

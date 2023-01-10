@@ -4,6 +4,7 @@
 
 package io.ktor.io
 
+import io.ktor.io.internal.EmptyBuffer.getByteAt
 import kotlin.contracts.*
 
 /**
@@ -36,3 +37,4 @@ public fun Packet(value: String): Packet = Packet().apply {
 public val Packet.isEmpty: Boolean get() = availableForRead == 0
 
 public val Packet.isNotEmpty: Boolean get() = availableForRead > 0
+
