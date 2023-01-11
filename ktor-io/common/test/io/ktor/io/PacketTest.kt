@@ -26,4 +26,62 @@ class PacketTest {
 
         assertEquals(0, packet.availableForRead)
     }
+
+    @Test
+    fun testIndexOfEmpty() {
+        val emptyPacket = buildPacket { }
+        val packet = buildPacket {
+            writeByte(1)
+            writeByte(2)
+            writeByte(3)
+        }
+
+        assertEquals(0, emptyPacket.indexOf(ReadableBuffer.Empty))
+        assertEquals(0, packet.indexOf(ReadableBuffer.Empty))
+    }
+
+    @Test
+    fun testIndexOfSingle() {
+        val packet = buildPacket {
+            writeByte(1)
+            writeByte(2)
+            writeByte(3)
+        }
+
+        assertEquals(0, packet.indexOf(ByteArrayBuffer(byteArrayOf(1))))
+        assertEquals(1, packet.indexOf(ByteArrayBuffer(byteArrayOf(2))))
+        assertEquals(2, packet.indexOf(ByteArrayBuffer(byteArrayOf(3))))
+
+        assertEquals(-1, packet.indexOf(ByteArrayBuffer(byteArrayOf(4))))
+    }
+
+    @Test
+    fun testIndexOfMultiple() {
+        val packet = buildPacket {
+            repeat(1000) {
+                writeByte(it.toByte())
+            }
+        }
+
+        assertEquals(0, packet.indexOf(ByteArrayBuffer(byteArrayOf(0, 1))))
+        assertEquals(1, packet.indexOf(ByteArrayBuffer(byteArrayOf(1, 2))))
+        assertEquals(3, packet.indexOf(ByteArrayBuffer(byteArrayOf(3, 4))))
+        assertEquals(-1, packet.indexOf(ByteArrayBuffer(byteArrayOf(3, 5))))
+    }
+
+    @Test
+    fun testByteFragmented() {
+        val packet = buildPacket {
+            repeat(1000) {
+                writeByteArray(byteArrayOf(it.toByte()))
+            }
+        }
+
+        assertEquals(0, packet.indexOf(ByteArrayBuffer(byteArrayOf(0, 1))))
+        assertEquals(1, packet.indexOf(ByteArrayBuffer(byteArrayOf(1, 2))))
+        assertEquals(3, packet.indexOf(ByteArrayBuffer(byteArrayOf(3, 4))))
+        assertEquals(-1, packet.indexOf(ByteArrayBuffer(byteArrayOf(3, 5))))
+
+        assertEquals(1, packet.indexOf(ByteArrayBuffer(byteArrayOf(1, 2, 3, 4))))
+    }
 }

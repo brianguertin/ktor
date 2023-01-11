@@ -13,7 +13,7 @@ public val Buffer.availableForWrite: Int get() = capacity - writeIndex
  *
  * @return index inside current buffer or -1 if not found.
  */
-internal fun Buffer.indexOfPrefix(other: Buffer): Int {
+internal fun ReadableBuffer.indexOfPrefix(other: ReadableBuffer): Int {
     for (index in readIndex until writeIndex) {
         var matchedLength = 0
         while (matchedLength < other.availableForRead && index + matchedLength < writeIndex) {
@@ -34,11 +34,11 @@ internal fun Buffer.indexOfPrefix(other: Buffer): Int {
 /**
  * Find common prefix length between this buffer and [other] buffer.
  */
-internal fun Buffer.commonPrefixLength(other: Buffer): Int {
-    val minSize = minOf(availableForRead, other.availableForRead)
+internal fun ReadableBuffer.commonPrefixLength(other: ReadableBuffer, otherOffset: Int = 0): Int {
+    val minSize = minOf(availableForRead, other.availableForRead - otherOffset)
     var index = 0
     while (index < minSize) {
-        if (getByteAt(readIndex + index) != other.getByteAt(other.readIndex + index)) break
+        if (getByteAt(readIndex + index) != other.getByteAt(otherOffset + other.readIndex + index)) break
         index++
     }
     return index

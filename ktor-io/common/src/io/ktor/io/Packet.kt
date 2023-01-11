@@ -77,8 +77,46 @@ public class Packet : Closeable {
         return result
     }
 
-    public fun indexOf(buffer: Buffer): Int {
-        TODO()
+    public fun indexOf(buffer: ReadableBuffer): Int {
+        if (buffer.isEmpty) return 0
+
+        var index = 0
+        var bufferOffset = 0
+        for (chunk in state) {
+            if (bufferOffset > 0) {
+                val common = chunk.commonPrefixLength(buffer, bufferOffset)
+
+                // Matched whole buffer
+                if (common == buffer.availableForRead - bufferOffset) {
+                    return index
+                }
+
+                // Matched whole chunk
+                if (common == chunk.availableForRead) {
+                    bufferOffset += common
+                    continue
+                }
+
+                // Chunk not matched, start again
+                bufferOffset = 0
+            }
+
+            val startIndex = chunk.indexOfPrefix(buffer)
+            if (startIndex == -1) {
+                index += chunk.availableForRead
+                continue
+            }
+
+            val matchLength = chunk.availableForRead - startIndex
+            if (matchLength >= buffer.availableForRead) {
+                return index + startIndex
+            }
+
+            index += startIndex
+            bufferOffset = matchLength
+        }
+
+        return -1
     }
 
     public fun discard(limit: Int): Int {
