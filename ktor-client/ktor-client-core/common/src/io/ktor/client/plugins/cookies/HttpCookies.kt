@@ -13,7 +13,6 @@ import io.ktor.http.*
 import io.ktor.io.*
 import io.ktor.util.*
 import io.ktor.util.logging.*
-import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 
 private val LOGGER = KtorSimpleLogger("io.ktor.client.plugins.HttpCookies")

@@ -8,7 +8,6 @@ import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.util.*
 import io.ktor.util.logging.*
-import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 
 private val LOGGER = KtorSimpleLogger("io.ktor.client.plugins.HttpRequestLifecycle")

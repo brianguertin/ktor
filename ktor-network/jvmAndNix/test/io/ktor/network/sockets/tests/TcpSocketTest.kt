@@ -31,8 +31,9 @@ class TcpSocketTest {
             clientOutput.close()
         }
 
-        val serverInput = serverConnection.attachForReading().stringReader()
-        val message = serverInput.readLine()
+        val message = serverConnection.attachForReading().stringReader { serverInput ->
+            serverInput.readLine()
+        }
         assertEquals("Hello, world", message)
 
         val serverOutput = serverConnection.attachForWriting()
@@ -40,8 +41,9 @@ class TcpSocketTest {
             serverOutput.writeString("Hello From Server\n")
             serverOutput.flush()
 
-            val clientInput = clientConnection.attachForReading().stringReader()
-            val echo = clientInput.readLine()
+            val echo = clientConnection.attachForReading().stringReader {
+                it.readLine()
+            }
             assertEquals("Hello From Server", echo)
         } finally {
             serverOutput.close()
@@ -77,8 +79,7 @@ class TcpSocketTest {
             clientOutput.close()
         }
 
-        val serverInput = serverConnection.attachForReading().stringReader()
-        val message = serverInput.readLine()
+        val message = serverConnection.attachForReading().stringReader { it.readLine() }
         assertEquals("Hello, world", message)
 
         val serverOutput = serverConnection.attachForWriting()
@@ -86,9 +87,7 @@ class TcpSocketTest {
             serverOutput.writeString("Hello From Server\n")
             serverOutput.flush()
 
-            val clientInput = clientConnection.attachForReading().stringReader()
-            val echo = clientInput.readLine()
-
+            val echo = clientConnection.attachForReading().stringReader { it.readLine() }
             assertEquals("Hello From Server", echo)
         } finally {
             serverOutput.close()

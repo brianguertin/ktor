@@ -195,7 +195,7 @@ class ApplicationRequestContentTest {
             assertEquals("bodyContent", call.receiveText())
 
             // this also works because we already have a byte array cached
-            assertEquals("bodyContent", call.receiveChannel().stringReader().readLine())
+            assertEquals("bodyContent", call.receiveChannel().stringReader { it.readLine() })
         }
 
         handleRequest(HttpMethod.Get, "") {

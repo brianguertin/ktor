@@ -9,7 +9,6 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.io.*
 import io.ktor.util.date.*
-import io.ktor.utils.io.core.*
 import io.ktor.websocket.*
 import kotlinx.cinterop.*
 import kotlinx.coroutines.*

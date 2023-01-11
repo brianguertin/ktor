@@ -3,7 +3,7 @@
  */
 
 kotlin.sourceSets {
-    commonMain {
+    jvmAndNixMain {
         dependencies {
             api(project(":ktor-server:ktor-server-core"))
             api(libs.yamlkt.serialization)

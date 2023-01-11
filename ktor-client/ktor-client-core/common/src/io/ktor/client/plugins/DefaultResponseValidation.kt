@@ -7,11 +7,10 @@ package io.ktor.client.plugins
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.statement.*
+import io.ktor.io.*
 import io.ktor.io.charsets.*
 import io.ktor.util.*
 import io.ktor.util.logging.*
-import io.ktor.utils.io.charsets.*
-import io.ktor.utils.io.concurrent.*
 import kotlin.jvm.*
 import kotlin.native.concurrent.*
 

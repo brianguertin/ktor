@@ -10,8 +10,6 @@ import com.facebook.stetho.inspector.network.*
 import io.ktor.client.engine.*
 import io.ktor.client.request.*
 import io.ktor.websocket.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.jvm.javaio.*
 
 /**
  * Shortcut that allows to easily wrap engine factory into Stetho tracer.

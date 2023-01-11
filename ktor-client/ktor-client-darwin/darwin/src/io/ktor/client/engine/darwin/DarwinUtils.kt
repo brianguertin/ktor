@@ -6,9 +6,6 @@ package io.ktor.client.engine.darwin
 
 import io.ktor.client.call.*
 import io.ktor.http.content.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
-import io.ktor.utils.io.errors.*
 import kotlinx.cinterop.*
 import kotlinx.coroutines.*
 import platform.Foundation.*

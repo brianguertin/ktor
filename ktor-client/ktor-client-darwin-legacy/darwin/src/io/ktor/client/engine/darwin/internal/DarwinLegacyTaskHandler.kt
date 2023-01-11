@@ -9,8 +9,6 @@ import io.ktor.client.engine.darwin.handleNSError
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.util.date.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.CancellationException
 import kotlinx.cinterop.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*

@@ -207,13 +207,13 @@ class HttpTimeoutTest : ClientLoader() {
         }
 
         test { client ->
-            val response = client.prepareRequest("$TEST_URL/with-stream") {
+            client.prepareRequest("$TEST_URL/with-stream") {
                 method = HttpMethod.Get
                 parameter("delay", 500)
-            }.body<ByteReadChannel>().stringReader()
-
-            assertFailsWith<HttpRequestTimeoutException> {
-                response.readLine()
+            }.body<ByteReadChannel>().stringReader { response ->
+                assertFailsWith<HttpRequestTimeoutException> {
+                    response.readLine()
+                }
             }
         }
     }
@@ -225,14 +225,15 @@ class HttpTimeoutTest : ClientLoader() {
         }
 
         test { client ->
-            val response = client.prepareRequest("$TEST_URL/with-stream") {
+            client.prepareRequest("$TEST_URL/with-stream") {
                 method = HttpMethod.Get
                 parameter("delay", 10000)
 
                 timeout { requestTimeoutMillis = 1000 }
-            }.body<ByteReadChannel>().stringReader()
-            assertFailsWith<HttpRequestTimeoutException> {
-                response.readLine()
+            }.body<ByteReadChannel>().stringReader { response ->
+                assertFailsWith<HttpRequestTimeoutException> {
+                    response.readLine()
+                }
             }
         }
     }
@@ -244,12 +245,13 @@ class HttpTimeoutTest : ClientLoader() {
         }
 
         test { client ->
-            val response = client.prepareGet("$TEST_URL/with-stream") {
+            client.prepareGet("$TEST_URL/with-stream") {
                 parameter("delay", 10000)
                 timeout { requestTimeoutMillis = 1000 }
-            }.body<ByteReadChannel>().stringReader()
-            assertFailsWith<HttpRequestTimeoutException> {
-                response.readLine()
+            }.body<ByteReadChannel>().stringReader { response ->
+                assertFailsWith<HttpRequestTimeoutException> {
+                    response.readLine()
+                }
             }
             val result = client.get("$TEST_URL/with-delay?delay=1") {
                 timeout { requestTimeoutMillis = 10000 }

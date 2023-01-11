@@ -84,15 +84,16 @@ class ServerPipelineTest : CoroutineScope {
         input.writeString("GET / HTTP/1.1\r\nConnection: close\r\n\r\n")
         input.flush()
 
-        val reader = output.stringReader()
+        output.stringReader { reader ->
 
-        assertEquals("HTTP/1.1 200 OK", reader.readLine())
-        assertEquals("Connection: close", reader.readLine())
-        assertEquals("", reader.readLine())
-        assertEquals("/", requestsReceived.single())
+            assertEquals("HTTP/1.1 200 OK", reader.readLine())
+            assertEquals("Connection: close", reader.readLine())
+            assertEquals("", reader.readLine())
+            assertEquals("/", requestsReceived.single())
 
-        input.close()
-        reader.readRemaining().close()
+            input.close()
+            reader.readRemaining().close()
+        }
     }
 
     @Test
@@ -122,15 +123,16 @@ class ServerPipelineTest : CoroutineScope {
         input.writeString("GET / HTTP/1.1\r\nUpgrade: test\r\nConnection: Upgrade\r\n\r\n")
         input.flush()
 
-        val reader = output.stringReader()
+        output.stringReader { reader ->
 
-        assertEquals("HTTP/1.1 200 OK", reader.readLine())
-        assertEquals("Connection: close", reader.readLine())
-        assertEquals("", reader.readLine())
-        assertEquals("/", requestsReceived.single())
+            assertEquals("HTTP/1.1 200 OK", reader.readLine())
+            assertEquals("Connection: close", reader.readLine())
+            assertEquals("", reader.readLine())
+            assertEquals("/", requestsReceived.single())
 
-        input.close()
-        reader.readRemaining().close()
+            input.close()
+            reader.readRemaining().close()
+        }
     }
 
     @Test
@@ -164,20 +166,20 @@ class ServerPipelineTest : CoroutineScope {
         input.writeString("GET / HTTP/1.1\r\nUpgrade: test\r\nConnection: Upgrade\r\n\r\n")
         input.flush()
 
-        val reader = output.stringReader()
+        output.stringReader { reader ->
+            assertEquals("HTTP/1.1 101 Switching", reader.readLine())
+            assertEquals("Upgrade: test", reader.readLine())
+            assertEquals("Connection: Upgrade", reader.readLine())
+            assertEquals("", reader.readLine())
+            assertEquals("/", requestsReceived.single())
 
-        assertEquals("HTTP/1.1 101 Switching", reader.readLine())
-        assertEquals("Upgrade: test", reader.readLine())
-        assertEquals("Connection: Upgrade", reader.readLine())
-        assertEquals("", reader.readLine())
-        assertEquals("/", requestsReceived.single())
+            delay(100)
+            queue.process() // shouldn't be cancelled here because it is upgraded and running
+            latch.complete()
 
-        delay(100)
-        queue.process() // shouldn't be cancelled here because it is upgraded and running
-        latch.complete()
-
-        input.close()
-        reader.readRemaining().close()
+            input.close()
+            reader.readRemaining().close()
+        }
     }
 
     @Test
