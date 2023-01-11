@@ -11,11 +11,32 @@ import kotlin.contracts.*
 public val ByteReadChannel.availableForRead: Int get() = readablePacket.availableForRead
 
 /**
+ * Read until [buffer] and discard it.
+ *
+ * @return consumed packet before [boundary] or `null` if EOF reached and no boundary found.
+ *
+ * If no boundary found, bytes are not consumed and available for reading.
+ */
+public suspend fun ByteReadChannel.readUntil(buffer: ReadableBuffer): Packet? {
+    var boundaryStart: Int = -1
+    awaitBytes {
+        boundaryStart = readablePacket.indexOf(buffer)
+        boundaryStart > 0
+    }
+
+    if (boundaryStart < 0) return null
+
+    val result = readPacket(boundaryStart)
+    discardExact(buffer.availableForRead.toLong())
+    return result
+}
+
+/**
  * Discards exactly [n] bytes or fails if not enough bytes in the channel
  */
-public suspend inline fun ByteReadChannel.discardExact(n: Long) {
-    awaitBytes { availableForRead >= n }
-    discard(n)
+public suspend inline fun ByteReadChannel.discardExact(count: Long) {
+    awaitBytes { availableForRead >= count }
+    discard(count)
 }
 
 /**

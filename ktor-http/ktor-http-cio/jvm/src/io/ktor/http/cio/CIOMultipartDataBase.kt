@@ -5,6 +5,7 @@
 package io.ktor.http.cio
 
 import io.ktor.http.*
+import io.ktor.http.cio.internals.*
 import io.ktor.http.content.*
 import io.ktor.io.*
 import io.ktor.util.*
@@ -62,7 +63,7 @@ public class CIOMultipartDataBase(
     }
 
     private suspend fun partToData(part: MultipartEvent.MultipartPart): PartData {
-        val headers = part.headers.await()
+        val headers = part.headers
 
         val contentDisposition = headers["Content-Disposition"]?.let { ContentDisposition.parse(it.toString()) }
         val filename = contentDisposition?.parameter("filename")

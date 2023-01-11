@@ -70,7 +70,7 @@ class PacketTest {
     }
 
     @Test
-    fun testByteFragmented() {
+    fun testIndexOfByteFragmented() {
         val packet = buildPacket {
             repeat(1000) {
                 writeByteArray(byteArrayOf(it.toByte()))
@@ -83,5 +83,16 @@ class PacketTest {
         assertEquals(-1, packet.indexOf(ByteArrayBuffer(byteArrayOf(3, 5))))
 
         assertEquals(1, packet.indexOf(ByteArrayBuffer(byteArrayOf(1, 2, 3, 4))))
+    }
+
+    @Test
+    fun testIndexOfBiggerBuffer() {
+        val packet = buildPacket {
+            writeByteArray(byteArrayOf(1))
+            writeByteArray(byteArrayOf(2))
+            writeByteArray(byteArrayOf(3))
+        }
+
+        assertEquals(-1, packet.indexOf(ByteArrayBuffer(byteArrayOf(1, 2, 3, 4))))
     }
 }

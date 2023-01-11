@@ -5,6 +5,7 @@
 package io.ktor.tests.http.cio
 
 import io.ktor.http.cio.*
+import io.ktor.http.cio.internals.*
 import io.ktor.io.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
@@ -289,38 +290,35 @@ class MultipartTest {
 
     @Test
     fun testParseBoundary() {
-        testBoundary("\r\n--A", "multipart/mixed;boundary=A")
-        testBoundary("\r\n--A", "multipart/mixed; boundary=A")
-        testBoundary("\r\n--A", "multipart/mixed;  boundary=A")
-        testBoundary("\r\n--AB", "multipart/mixed; boundary=AB")
-        testBoundary("\r\n--A", "multipart/mixed; boundary=A ")
-        testBoundary("\r\n--AB", "multipart/mixed; boundary=AB ")
-        testBoundary("\r\n--AB", "multipart/mixed; boundary=AB c")
-        testBoundary("\r\n--A", "multipart/mixed; boundary=A,")
-        testBoundary("\r\n--AB", "multipart/mixed; boundary=AB,")
-        testBoundary("\r\n--AB", "multipart/mixed; boundary=AB,c")
-        testBoundary("\r\n--A", "multipart/mixed; boundary=A;")
-        testBoundary("\r\n--A", "multipart/mixed; boundary=A;b")
-        testBoundary("\r\n--AB", "multipart/mixed; boundary=AB;")
-        testBoundary("\r\n--AB", "multipart/mixed; boundary=AB;c")
-        testBoundary("\r\n--A", "multipart/mixed; boundary= A;")
-        testBoundary("\r\n--A", "multipart/mixed; boundary= A;b")
-        testBoundary("\r\n--A", "multipart/mixed; boundary= A,")
-        testBoundary("\r\n--A", "multipart/mixed; boundary= A,b")
-        testBoundary("\r\n--A", "multipart/mixed; boundary= A ")
-        testBoundary("\r\n--A", "multipart/mixed; boundary= A b")
-        testBoundary("\r\n--Ab", "multipart/mixed; boundary= Ab")
+        testBoundary("A", "multipart/mixed;boundary=A")
+        testBoundary("A", "multipart/mixed; boundary=A")
+        testBoundary("A", "multipart/mixed;  boundary=A")
+        testBoundary("AB", "multipart/mixed; boundary=AB")
+        testBoundary("A", "multipart/mixed; boundary=A ")
+        testBoundary("AB", "multipart/mixed; boundary=AB ")
+        testBoundary("AB", "multipart/mixed; boundary=AB c")
+        testBoundary("A", "multipart/mixed; boundary=A,")
+        testBoundary("AB", "multipart/mixed; boundary=AB,")
+        testBoundary("AB", "multipart/mixed; boundary=AB,c")
+        testBoundary("A", "multipart/mixed; boundary=A;")
+        testBoundary("A", "multipart/mixed; boundary=A;b")
+        testBoundary("AB", "multipart/mixed; boundary=AB;")
+        testBoundary("AB", "multipart/mixed; boundary=AB;c")
+        testBoundary("A", "multipart/mixed; boundary= A;")
+        testBoundary("A", "multipart/mixed; boundary= A;b")
+        testBoundary("A", "multipart/mixed; boundary= A,")
+        testBoundary("A", "multipart/mixed; boundary= A,b")
+        testBoundary("A", "multipart/mixed; boundary= A ")
+        testBoundary("A", "multipart/mixed; boundary= A b")
+        testBoundary("Ab", "multipart/mixed; boundary= Ab")
 
-        testBoundary("\r\n-- A\"", "multipart/mixed; boundary=\" A\\\"\"")
-        testBoundary("\r\n--A", "multipart/mixed; boundary= \"A\"")
-        testBoundary("\r\n--A", "multipart/mixed; boundary=\"A\" ")
+        testBoundary(" A\"", "multipart/mixed; boundary=\" A\\\"\"")
+        testBoundary("A", "multipart/mixed; boundary= \"A\"")
+        testBoundary("A", "multipart/mixed; boundary=\"A\" ")
 
-        testBoundary("\r\n--A", "multipart/mixed; a_boundary=\"boundary=z\"; boundary=A")
+        testBoundary("A", "multipart/mixed; a_boundary=\"boundary=z\"; boundary=A")
 
-        testBoundary(
-            "\r\n--" + "0".repeat(70),
-            "multipart/mixed; boundary=" + "0".repeat(70)
-        )
+        testBoundary("0".repeat(70), "multipart/mixed; boundary=" + "0".repeat(70))
 
         assertFails {
             parseBoundaryInternal("multipart/mixed; boundary=" + "0".repeat(71))
