@@ -5,6 +5,7 @@
 package io.ktor.network.tls
 
 import io.ktor.io.*
+import java.security.*
 
 internal fun Digest(): Digest = Digest(Packet())
 
@@ -16,7 +17,16 @@ internal value class Digest(val state: Packet) : Closeable {
         state.writePacket(packet.clone())
     }
 
-    fun doHash(hashName: String): ByteArray = TODO()
+    fun doHash(hashName: String): ByteArray = synchronized(state) {
+        val data = state.clone()
+        val digest = MessageDigest.getInstance(hashName)!!
+        while (data.isNotEmpty) {
+            val array = data.readBuffer().toByteArray()
+            digest.update(array)
+        }
+
+        digest.digest()
+    }
 
     override fun close() {
         state.close()

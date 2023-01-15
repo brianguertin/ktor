@@ -43,7 +43,9 @@ public class ByteBufferBuffer(
             return result
         }
 
-        TODO("Direct buffers are not supported")
+        val result = ByteArray(state.remaining())
+        state.get(result)
+        return result
     }
 
     override fun readByteArray(size: Int): ByteArray {

@@ -35,7 +35,7 @@ internal class JavaHttpResponseBodyHandler(
 
         private val consumerJob = Job(callContext[Job])
         override val coroutineContext: CoroutineContext = callContext + consumerJob
-        private val responseChannel: ByteWriteChannel get() = TODO()
+        private val responseChannel: ByteWriteChannel = ConflatedByteChannel()
 
         private val httpResponse = HttpResponseData(
             HttpStatusCode.fromValue(response.statusCode()),

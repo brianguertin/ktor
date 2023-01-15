@@ -146,7 +146,19 @@ internal class RawWebSocketCommon(
     }
 }
 
-private fun Packet.mask(maskKey: Int): Packet = TODO()
+private fun Packet.mask(maskKey: Int): Packet {
+    val maskBytes = ByteArray(4)
+    maskBytes[0] = (maskKey ushr 24).toByte()
+    maskBytes[1] = (maskKey ushr 16).toByte()
+    maskBytes[2] = (maskKey ushr 8).toByte()
+    maskBytes[3] = maskKey.toByte()
+
+    return buildPacket {
+        repeat(this@mask.availableForRead) { i ->
+            writeByte((readByte().toInt() xor (maskBytes[i % 4].toInt())).toByte())
+        }
+    }
+}
 
 /**
  * Serializes WebSocket [Frame] and writes the bits into the [ByteWriteChannel].

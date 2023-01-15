@@ -33,12 +33,10 @@ internal actual fun PipelineContext<*, ApplicationCall>.multiPartData(channel: B
     val contentType = call.request.header(HttpHeaders.ContentType)
         ?: throw IllegalStateException("Content-Type header is required for multipart processing")
 
-    val contentLength = call.request.header(HttpHeaders.ContentLength)?.toLong()
     return CIOMultipartDataBase(
         coroutineContext + Dispatchers.Unconfined,
         channel,
-        contentType,
-        contentLength
+        contentType
     )
 }
 

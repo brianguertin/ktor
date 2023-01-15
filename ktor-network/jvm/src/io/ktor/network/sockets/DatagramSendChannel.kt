@@ -4,6 +4,7 @@
 
 package io.ktor.network.sockets
 
+import io.ktor.io.*
 import io.ktor.io.pool.*
 import io.ktor.network.selector.*
 import io.ktor.network.util.*
@@ -52,14 +53,10 @@ internal class DatagramSendChannel(
     override fun trySend(element: Datagram): ChannelResult<Unit> {
         if (!lock.tryLock()) return ChannelResult.failure()
 
-        var result = false
-
+        val result: Boolean
         try {
-//            DefaultDatagramByteBufferPool.useInstance { buffer ->
-//                element.packet.copy().readAvailable(buffer)
-//                result = channel.send(buffer, element.address.toJavaAddress()) == 0
-//            }
-            TODO()
+            val buffer = element.packet.readByteBuffer()
+            result = channel.send(buffer, element.address.toJavaAddress()) == 0
         } finally {
             lock.unlock()
         }
@@ -74,17 +71,15 @@ internal class DatagramSendChannel(
     override suspend fun send(element: Datagram) {
         lock.withLock {
             withContext(Dispatchers.IO) {
-                DefaultDatagramByteBufferPool.useInstance { buffer ->
-                    element.writeMessageTo(buffer)
+                val buffer = element.packet.readByteBuffer()
 
-                    val rc = channel.send(buffer, element.address.toJavaAddress())
-                    if (rc != 0) {
-                        socket.interestOp(SelectInterest.WRITE, false)
-                        return@useInstance
-                    }
-
-                    sendSuspend(buffer, element.address)
+                val rc = channel.send(buffer, element.address.toJavaAddress())
+                if (rc != 0) {
+                    socket.interestOp(SelectInterest.WRITE, false)
+                    return@withContext
                 }
+
+                sendSuspend(buffer, element.address)
             }
         }
     }
@@ -145,9 +140,4 @@ private fun failInvokeOnClose(handler: ((cause: Throwable?) -> Unit)?) {
     }
 
     throw IllegalStateException(message)
-}
-
-private fun Datagram.writeMessageTo(buffer: ByteBuffer) {
-    TODO()
-    buffer.flip()
 }

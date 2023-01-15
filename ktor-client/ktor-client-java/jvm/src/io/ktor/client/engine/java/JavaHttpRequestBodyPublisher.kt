@@ -93,7 +93,33 @@ internal class JavaHttpRequestBodyPublisher(
         }
 
         private fun readData() {
-            TODO()
+            launch {
+                var closed = false
+                do {
+                    val buffer = try {
+                        inputChannel.readByteBuffer()
+                    } catch (cause: Throwable) {
+                        signalOnError(cause)
+                        closeChannel()
+                        return@launch
+                    }
+
+                    if (buffer.hasRemaining()) {
+                        signalOnNext(buffer)
+                    } else {
+                        closed = true
+                        break
+                    }
+
+                    // If we have more permits, queue up another read.
+                } while (checkHaveMorePermits())
+
+                if (closed) {
+                    // Reached the end of the channel, notify the subscriber and cleanup
+                    signalOnComplete()
+                    closeChannel()
+                }
+            }
         }
 
         private fun closeChannel() {

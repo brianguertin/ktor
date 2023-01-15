@@ -68,19 +68,15 @@ internal class DatagramSocketImpl(
 
     @Suppress("BlockingMethodInNonBlockingContext")
     private suspend fun receiveImpl(): Datagram {
-        val buffer = DefaultDatagramByteBufferPool.borrow()
-        val address = try {
-            channel.receive(buffer)
-        } catch (cause: Throwable) {
-            DefaultDatagramByteBufferPool.recycle(buffer)
-            throw cause
-        } ?: return receiveSuspend(buffer)
-
+        val buffer = ByteBuffer.allocate(8192)
+        val address = channel.receive(buffer) ?: return receiveSuspend(buffer)
         interestOp(SelectInterest.READ, false)
         buffer.flip()
-        val datagram = Datagram(buildPacket { TODO() }, address.toSocketAddress())
-        DefaultDatagramByteBufferPool.recycle(buffer)
-        return datagram
+
+        val packet = buildPacket {
+            writeByteBuffer(buffer)
+        }
+        return Datagram(packet, address.toSocketAddress())
     }
 
     private tailrec suspend fun receiveSuspend(buffer: ByteBuffer): Datagram {
@@ -90,14 +86,17 @@ internal class DatagramSocketImpl(
         val address = try {
             channel.receive(buffer)
         } catch (cause: Throwable) {
-            DefaultDatagramByteBufferPool.recycle(buffer)
             throw cause
         } ?: return receiveSuspend(buffer)
 
         interestOp(SelectInterest.READ, false)
         buffer.flip()
-        val datagram = Datagram(buildPacket { TODO() }, address.toSocketAddress())
-        DefaultDatagramByteBufferPool.recycle(buffer)
+        val datagram = Datagram(
+            buildPacket {
+                writeByteBuffer(buffer)
+            },
+            address.toSocketAddress()
+        )
         return datagram
     }
 }

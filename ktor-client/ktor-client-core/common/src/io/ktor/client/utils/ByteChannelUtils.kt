@@ -15,5 +15,12 @@ internal fun ByteReadChannel.observable(
     contentLength: Long?,
     listener: ProgressListener
 ): ByteReadChannel = GlobalScope.writer(context) {
-    TODO()
+    val total = contentLength ?: -1
+    var bytesSend = 0L
+    while (this@observable.awaitBytes()) {
+        bytesSend += this@observable.readablePacket.availableForRead
+        listener(bytesSend, total)
+        writePacket(this@observable.readablePacket)
+        flush()
+    }
 }
