@@ -6,12 +6,12 @@ package io.ktor.http.cio.internals
 
 import io.ktor.http.cio.*
 import io.ktor.io.*
-import io.ktor.util.Identity.encode
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlin.text.toByteArray
 
 private val CrLfCrLf = ByteArrayBuffer("\r\n\r\n".toByteArray())
+private val CrLf = "\r\n".toByteArray()
 
 /**
  * Starts a multipart parser coroutine producing multipart events
@@ -21,9 +21,7 @@ internal fun CoroutineScope.parseMultipart(
     headers: HttpHeadersMap
 ): ReceiveChannel<MultipartEvent> {
     val contentType = headers["Content-Type"] ?: throw IOException("Failed to parse multipart: no Content-Type header")
-    val contentLength = headers["Content-Length"]?.parseDecLong()
-
-    return parseMultipart(input, contentType, contentLength)
+    return parseMultipart(input, contentType)
 }
 
 /**
@@ -31,22 +29,14 @@ internal fun CoroutineScope.parseMultipart(
  */
 internal fun CoroutineScope.parseMultipart(
     input: ByteReadChannel,
-    contentType: CharSequence,
-    contentLength: Long?
+    contentType: CharSequence
 ): ReceiveChannel<MultipartEvent> {
     if (!contentType.startsWith("multipart/")) {
         throw IOException("Failed to parse multipart: Content-Type should be multipart/* but it is $contentType")
     }
 
     val boundary = "--" + parseBoundaryInternal(contentType)
-
-    val body = if (contentLength != null) {
-        input.limited(contentLength)
-    } else {
-        input
-    }
-
-    return parseMultipart(boundary, body)
+    return parseMultipart(boundary, input)
 }
 
 /**
@@ -74,9 +64,13 @@ internal fun CoroutineScope.parseMultipart(
             input.discardExact(2)
 
             val epilogue = input.readRemaining()
-            if (epilogue.availableForRead > 0) {
-                send(MultipartEvent.Epilogue(epilogue))
+            if (epilogue.availableForRead == 0) return@produce
+            if (epilogue.availableForRead == 2 && epilogue.clone().readByteArray(2).contentEquals(CrLf)) {
+                epilogue.close()
+                return@produce
             }
+
+            send(MultipartEvent.Epilogue(epilogue))
             return@produce
         }
 

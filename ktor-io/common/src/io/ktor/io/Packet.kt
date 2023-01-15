@@ -77,6 +77,9 @@ public class Packet : Closeable {
         return result
     }
 
+    /**
+     * Find a first occurrence of [buffer] in the packet and return its index or -1 if not found.
+     */
     public fun indexOf(buffer: ReadableBuffer): Int {
         if (buffer.isEmpty) return 0
 

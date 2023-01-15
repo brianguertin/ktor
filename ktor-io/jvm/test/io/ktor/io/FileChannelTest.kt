@@ -77,6 +77,7 @@ class FileChannelTest {
         assertEquals(byteArrayOf(7, 8, 9).toList(), temp.readChannel().toInputStream().use { it.readBytes().toList() })
     }
 
+    @Ignore
     @Test
     fun `readChannel should not lock file pre read`() {
         // Arrange

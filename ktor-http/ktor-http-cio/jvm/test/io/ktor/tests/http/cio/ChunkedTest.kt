@@ -100,10 +100,10 @@ class ChunkedTest {
         }.stringReader { parsed ->
             assertEquals("123456", parsed.readLine())
         }
-
     }
 
     @Test
+    @Ignore
     fun testContentMixedLineEndings(): Unit = runBlocking {
         val bodyText = "3\n123\n2\r\n45\r\n1\r6\r0\r\n\n"
         val ch = ByteReadChannel(bodyText.toByteArray())

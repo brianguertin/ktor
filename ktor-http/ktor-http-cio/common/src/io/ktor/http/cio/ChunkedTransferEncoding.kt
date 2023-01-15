@@ -6,7 +6,6 @@ package io.ktor.http.cio
 
 import io.ktor.http.cio.internals.*
 import io.ktor.io.*
-import io.ktor.io.Buffer
 import io.ktor.io.pool.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.*
@@ -75,10 +74,11 @@ public suspend fun decodeChunked(input: ByteReadChannel, out: ByteWriteChannel, 
                     throw EOFException("Invalid chunk size: empty")
                 }
 
-                val chunkSize = if (chunkSizeBuffer.length == 1 && chunkSizeBuffer[0] == '0')
+                val chunkSize = if (chunkSizeBuffer.length == 1 && chunkSizeBuffer[0] == '0') {
                     0
-                else
+                } else {
                     chunkSizeBuffer.parseHexLong()
+                }
 
                 if (chunkSize > 0) {
                     reader.copyTo(out, chunkSize)

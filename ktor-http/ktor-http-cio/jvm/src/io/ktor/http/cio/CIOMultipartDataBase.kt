@@ -21,11 +21,10 @@ public class CIOMultipartDataBase(
     override val coroutineContext: CoroutineContext,
     channel: ByteReadChannel,
     contentType: String,
-    contentLength: Long?,
     private val formFieldLimit: Int = 65536,
     private val inMemoryFileUploadLimit: Int = formFieldLimit
 ) : MultiPartData, CoroutineScope {
-    private val events: ReceiveChannel<MultipartEvent> = parseMultipart(channel, contentType, contentLength)
+    private val events: ReceiveChannel<MultipartEvent> = parseMultipart(channel, contentType)
 
     override suspend fun readPart(): PartData? {
         while (true) {

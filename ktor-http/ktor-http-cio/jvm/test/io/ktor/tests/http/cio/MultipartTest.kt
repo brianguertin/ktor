@@ -10,7 +10,6 @@ import io.ktor.io.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlin.test.*
-import kotlin.text.String
 import kotlin.text.toByteArray
 
 @OptIn(DelicateCoroutinesApi::class)
@@ -203,7 +202,6 @@ class MultipartTest {
         val mp = parseMultipart(ch, request.headers)
 
         val allEvents = ArrayList<MultipartEvent>()
-        @OptIn(ExperimentalCoroutinesApi::class)
         mp.consumeEach { allEvents.add(it) }
 
         val parts = allEvents.filterIsInstance<MultipartEvent.MultipartPart>()
@@ -212,7 +210,6 @@ class MultipartTest {
 
         assertEquals("Hello", title.body.readRemaining().readString())
         val fileContent = file.body.readRemaining().readString()
-//        println(fileContent)
         assertEquals(380, fileContent.length)
     }
 
@@ -409,8 +406,7 @@ class MultipartTest {
         runBlocking {
             val events = parseMultipart(
                 input,
-                "multipart/form-data; boundary=boundary",
-                body.length.toLong()
+                "multipart/form-data; boundary=boundary"
             ).toList()
 
             assertEquals(1, events.size)
