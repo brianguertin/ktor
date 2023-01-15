@@ -95,4 +95,21 @@ class PacketTest {
 
         assertEquals(-1, packet.indexOf(ByteArrayBuffer(byteArrayOf(1, 2, 3, 4))))
     }
+
+    @Test
+    fun testIndexOfAfterRead() {
+        val packet = buildPacket {
+            writeByte(42)
+            repeat(1000) {
+                writeByte(it.toByte())
+            }
+        }
+
+        assertEquals(42, packet.readByte())
+
+        assertEquals(0, packet.indexOf(ByteArrayBuffer(byteArrayOf(0, 1))))
+        assertEquals(1, packet.indexOf(ByteArrayBuffer(byteArrayOf(1, 2))))
+        assertEquals(3, packet.indexOf(ByteArrayBuffer(byteArrayOf(3, 4))))
+        assertEquals(-1, packet.indexOf(ByteArrayBuffer(byteArrayOf(3, 5))))
+    }
 }

@@ -6,6 +6,7 @@ package io.ktor.http.cio.internals
 
 import io.ktor.http.cio.*
 import io.ktor.io.*
+import io.ktor.util.Identity.encode
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlin.text.toByteArray
@@ -38,7 +39,6 @@ internal fun CoroutineScope.parseMultipart(
     }
 
     val boundary = "--" + parseBoundaryInternal(contentType)
-    val boundaryBuffer = ByteArrayBuffer(boundary.encodeToByteArray())
 
     val body = if (contentLength != null) {
         input.limited(contentLength)
@@ -46,20 +46,44 @@ internal fun CoroutineScope.parseMultipart(
         input
     }
 
-    return parseMultipart(boundaryBuffer, body)
+    return parseMultipart(boundary, body)
 }
 
 /**
  * Starts a multipart parser coroutine producing multipart events
  */
 internal fun CoroutineScope.parseMultipart(
-    boundary: ReadableBuffer,
+    boundary: String,
     input: ByteReadChannel
 ): ReceiveChannel<MultipartEvent> = produce {
-    while (true) {
+    if (!input.awaitBytes()) return@produce
+    val boundaryWithNewLine = ByteArrayBuffer(("\r\n" + boundary).encodeToByteArray())
+    val boundaryBuffer = ByteArrayBuffer(boundary.encodeToByteArray())
+
+    val preamble = input.readUntil(boundaryBuffer) ?: error("Expected part headers")
+    if (preamble.availableForRead > 0) {
+        send(MultipartEvent.Preamble(preamble))
+    }
+
+    while (input.awaitBytes()) {
+        val first = input.readByte().toInt().toChar()
+        val second = input.readByte().toInt().toChar()
+
+        if (first == '-' && second == '-') {
+            // Discard new line after boundary
+            input.discardExact(2)
+
+            val epilogue = input.readRemaining()
+            if (epilogue.availableForRead > 0) {
+                send(MultipartEvent.Epilogue(epilogue))
+            }
+            return@produce
+        }
+
+        check(first == '\r' && second == '\n') { "Expected new line after boundary, but found $first$second" }
         val headersPacket = input.readUntil(CrLfCrLf) ?: error("Expected part headers")
         val headers: HttpHeadersMap = parseHeaders(ByteReadChannel(headersPacket))
-        val body = input.readUntil(boundary) ?: Packet.Empty
+        val body = input.readUntil(boundaryWithNewLine) ?: Packet.Empty
 
         send(MultipartEvent.MultipartPart(headers, ByteReadChannel(body)))
     }

@@ -55,4 +55,31 @@ class ByteReadChannelExtensionsTest {
             assertFalse(reader.readLineTo(StringBuilder()))
         }
     }
+
+    @Test
+    fun testReadPacket() = testSuspend {
+        val channel = ByteReadChannel {
+            writeByteArray(byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
+        }
+
+        val packet = channel.readPacket(4)
+        assertEquals(4, packet.availableForRead)
+        assertArrayEquals(byteArrayOf(1, 2, 3, 4), packet.toByteArray())
+        assertEquals(6, channel.availableForRead)
+    }
+
+    @Test
+    fun testReadPacketChunked() = testSuspend {
+        val channel = ByteReadChannel {
+            repeat(10) {
+                val value = it + 1
+                writeByteArray(byteArrayOf(value.toByte()))
+            }
+        }
+
+        val packet = channel.readPacket(4)
+        assertEquals(4, packet.availableForRead)
+        assertArrayEquals(byteArrayOf(1, 2, 3, 4), packet.toByteArray())
+        assertEquals(6, channel.availableForRead)
+    }
 }

@@ -177,7 +177,7 @@ public suspend fun ByteReadChannel.readPacket(size: Int): Packet {
             remaining -= buffer.availableForRead
             result.writeBuffer(readablePacket.readBuffer())
         } else {
-            result.writeBuffer(buffer.readBuffer(remaining))
+            result.writePacket(readablePacket.readPacket(remaining))
             remaining = 0
         }
     }

@@ -24,7 +24,7 @@ internal fun ReadableBuffer.indexOfPrefix(other: ReadableBuffer): Int {
         }
 
         if (index + matchedLength == writeIndex || matchedLength == other.availableForRead) {
-            return index
+            return index - readIndex
         }
     }
 

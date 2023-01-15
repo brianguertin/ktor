@@ -4,14 +4,7 @@
 
 package io.ktor.http.cio
 
-import io.ktor.http.cio.internals.*
 import io.ktor.io.*
-import io.ktor.network.util.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.*
-import java.io.*
-import java.nio.*
-import java.nio.channels.*
 
 /**
  * Represents a multipart content starting event. Every part need to be completely consumed or released via [release]
