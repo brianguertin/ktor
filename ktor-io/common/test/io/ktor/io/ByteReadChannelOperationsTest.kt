@@ -5,6 +5,7 @@
 package io.ktor.io
 
 import io.ktor.test.dispatcher.*
+import kotlinx.coroutines.*
 import kotlin.test.*
 
 class ByteReadChannelExtensionsTest {
@@ -30,7 +31,6 @@ class ByteReadChannelExtensionsTest {
 
             assertFalse(reader.readLineTo(StringBuilder()))
         }
-
     }
 
     @Test
@@ -81,5 +81,56 @@ class ByteReadChannelExtensionsTest {
         assertEquals(4, packet.availableForRead)
         assertArrayEquals(byteArrayOf(1, 2, 3, 4), packet.toByteArray())
         assertEquals(6, channel.availableForRead)
+    }
+
+    @Test
+    fun testCopyToFromClosed() = testSuspend {
+        val channel = ByteReadChannel {
+            writeByteArray(byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
+        }
+
+        val out = ConflatedByteChannel()
+        val result = async {
+            assertArrayEquals(byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), out.toByteArray())
+        }
+
+        channel.copyAndClose(out)
+        result.await()
+    }
+
+    @Test
+    fun testCopyToFromClosedWithLimit() = testSuspend {
+        val channel = ByteReadChannel {
+            writeByteArray(byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
+        }
+
+        val out = ConflatedByteChannel()
+        val result = async {
+            assertArrayEquals(byteArrayOf(1, 2, 3, 4, 5), out.toByteArray())
+        }
+
+        channel.copyAndClose(out, limit = 5)
+        result.await()
+    }
+
+    @Test
+    fun testCopyTo() = testSuspend {
+        val latch = Job()
+        val channel = ByteReadChannel {
+            writeByteArray(byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
+            flush()
+            latch.join()
+            writeByte(42)
+        }
+
+        val out = ConflatedByteChannel()
+        val result = async {
+            assertArrayEquals(byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), out.toByteArray())
+        }
+        channel.copyAndClose(out, limit = 10)
+        result.await()
+        latch.complete()
+
+        assertEquals(42, channel.readByte())
     }
 }

@@ -12,11 +12,12 @@ import org.apache.http.*
 import org.apache.http.nio.*
 import org.apache.http.nio.protocol.*
 import org.apache.http.protocol.*
+import java.nio.*
 import kotlin.coroutines.*
 
 @OptIn(InternalCoroutinesApi::class)
 internal class ApacheResponseConsumer(
-    val parentContext: CoroutineContext,
+    parentContext: CoroutineContext,
     private val requestData: HttpRequestData
 ) : HttpAsyncResponseConsumer<Unit>, CoroutineScope {
     private val interestController = InterestControllerHolder()
@@ -24,15 +25,10 @@ internal class ApacheResponseConsumer(
     private val consumerJob = Job(parentContext[Job])
     override val coroutineContext: CoroutineContext = parentContext + consumerJob
 
-    private val waiting = atomic(false)
-//    private val channel  = ByteChannel().also {
-//        it.attachJob(consumerJob)
-//    }
-
     private val responseDeferred = CompletableDeferred<HttpResponse>()
+    private val channel = ConflatedByteChannel()
 
-    private val channel: ByteWriteChannel = TODO()
-    val responseChannel: ByteReadChannel = TODO()
+    val responseChannel: ByteReadChannel get() = channel
 
     init {
         coroutineContext[Job]?.invokeOnCompletion(onCancelling = true) { cause ->
@@ -44,30 +40,20 @@ internal class ApacheResponseConsumer(
     }
 
     override fun consumeContent(decoder: ContentDecoder, ioctrl: IOControl) {
-        check(!waiting.value)
-
         var result: Int
         do {
-            result = 0
-            TODO()
+            val buffer = ByteBuffer.allocate(8192)
+            result = decoder.read(buffer)
+            if (result > 0) {
+                buffer.flip()
+                channel.writeByteBuffer(buffer)
+            }
         } while (result > 0)
+        runBlocking { channel.flush() }
 
         if (result < 0 || decoder.isCompleted) {
             close()
             return
-        }
-
-        if (result == 0) {
-            interestController.suspendInput(ioctrl)
-            launch(Dispatchers.Unconfined) {
-                check(!waiting.getAndSet(true))
-                try {
-//                    channel.awaitFreeSpace()
-                } finally {
-                    check(waiting.getAndSet(false))
-                    interestController.resumeInputIfPossible()
-                }
-            }
         }
     }
 
@@ -101,5 +87,5 @@ internal class ApacheResponseConsumer(
         responseDeferred.complete(response)
     }
 
-    public suspend fun waitForResponse(): HttpResponse = responseDeferred.await()
+    suspend fun waitForResponse(): HttpResponse = responseDeferred.await()
 }

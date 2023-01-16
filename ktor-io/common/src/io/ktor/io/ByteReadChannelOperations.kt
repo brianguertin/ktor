@@ -50,7 +50,7 @@ public suspend fun ByteReadChannel.copyTo(dst: ByteWriteChannel, limit: Long = L
     }
 
     var remaining = limit
-    while (awaitBytes() && remaining > 0) {
+    while (remaining > 0 && awaitBytes()) {
         if (remaining >= readablePacket.availableForRead) {
             remaining -= readablePacket.availableForRead
             dst.writePacket(readablePacket)
