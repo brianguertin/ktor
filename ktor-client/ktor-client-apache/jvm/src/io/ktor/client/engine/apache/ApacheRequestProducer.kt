@@ -87,17 +87,31 @@ internal class ApacheRequestProducer(
         }
 
         if (interestController.outputSuspended) return
-        val buffer = channel.readablePacket.readBuffer().readByteBuffer()
-        var result: Int
-        do {
-            result = encoder.write(buffer)
-        } while (buffer.hasRemaining())
+        if (channel.readablePacket.isEmpty) {
+            interestController.suspendOutput(ioctrl)
+            awaitBytesInChannel()
+            return
+        }
 
-        if (result != -1) return
-        interestController.suspendOutput(ioctrl)
-        launch(Dispatchers.Unconfined) {
+        while (channel.readablePacket.isNotEmpty) {
+            val buffer = channel.readablePacket.readBuffer().readByteBuffer()
+            var result: Int
+            do {
+                result = encoder.write(buffer)
+            } while (buffer.hasRemaining())
+
+            if (result == -1) {
+                encoder.complete()
+                closed = true
+                return
+            }
+        }
+    }
+
+    private fun awaitBytesInChannel() {
+        launch(Dispatchers.IO) {
             try {
-                closed = channel.awaitBytes()
+                closed = channel.awaitBytes() && channel.readablePacket.isEmpty
             } finally {
                 interestController.resumeOutputIfPossible()
             }

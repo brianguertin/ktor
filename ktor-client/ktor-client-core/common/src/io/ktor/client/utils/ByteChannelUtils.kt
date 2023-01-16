@@ -17,10 +17,14 @@ internal fun ByteReadChannel.observable(
 ): ByteReadChannel = GlobalScope.writer(context) {
     val total = contentLength ?: -1
     var bytesSend = 0L
-    while (this@observable.awaitBytes()) {
-        bytesSend += this@observable.readablePacket.availableForRead
+    try {
+        while (this@observable.awaitBytes()) {
+            bytesSend += this@observable.readablePacket.availableForRead
+            listener(bytesSend, total)
+            writePacket(this@observable.readablePacket)
+            flush()
+        }
+    } finally {
         listener(bytesSend, total)
-        writePacket(this@observable.readablePacket)
-        flush()
     }
 }

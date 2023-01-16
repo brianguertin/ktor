@@ -29,6 +29,8 @@ public fun CoroutineScope.writer(
     launch(coroutineContext) {
         try {
             result.block()
+        } catch (cause: Throwable) {
+            result.cancel(cause)
         } finally {
             result.close()
         }

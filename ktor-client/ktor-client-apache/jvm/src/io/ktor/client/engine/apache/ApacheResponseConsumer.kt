@@ -15,26 +15,32 @@ import org.apache.http.protocol.*
 import java.nio.*
 import kotlin.coroutines.*
 
+private val WINDOW_SIZE = 8 * 1024
+
 @OptIn(InternalCoroutinesApi::class)
 internal class ApacheResponseConsumer(
     parentContext: CoroutineContext,
     private val requestData: HttpRequestData
-) : HttpAsyncResponseConsumer<Unit>, CoroutineScope {
+) : HttpAsyncResponseConsumer<Unit>, CoroutineScope, ByteReadChannel {
     private val interestController = InterestControllerHolder()
+    private val closed = atomic(false)
+
+    override var closedCause: Throwable? = null
+        private set
+
+    private val ioThreadPacket = Packet()
+    override val readablePacket: Packet = Packet()
 
     private val consumerJob = Job(parentContext[Job])
     override val coroutineContext: CoroutineContext = parentContext + consumerJob
 
     private val responseDeferred = CompletableDeferred<HttpResponse>()
-    private val channel = ConflatedByteChannel()
-
-    val responseChannel: ByteReadChannel get() = channel
 
     init {
         coroutineContext[Job]?.invokeOnCompletion(onCancelling = true) { cause ->
             if (cause != null) {
                 responseDeferred.completeExceptionally(cause)
-                responseChannel.cancel(cause)
+                cancel(cause)
             }
         }
     }
@@ -46,22 +52,58 @@ internal class ApacheResponseConsumer(
             result = decoder.read(buffer)
             if (result > 0) {
                 buffer.flip()
-                channel.writeByteBuffer(buffer)
+                synchronized(ioThreadPacket) {
+                    ioThreadPacket.writeByteBuffer(buffer)
+                }
             }
         } while (result > 0)
-        runBlocking { channel.flush() }
 
         if (result < 0 || decoder.isCompleted) {
             close()
             return
         }
+
+        synchronized(ioThreadPacket) {
+            if (ioThreadPacket.availableForRead > WINDOW_SIZE) {
+                interestController.suspendInput(ioctrl)
+            }
+        }
+    }
+
+    override suspend fun awaitBytes(predicate: () -> Boolean): Boolean {
+        flushToChannel()
+        while (!isDone && !predicate()) {
+            flushToChannel()
+        }
+
+        return readablePacket.isNotEmpty
+    }
+
+    private fun flushToChannel() {
+        synchronized(ioThreadPacket) {
+            if (ioThreadPacket.availableForRead > 0) {
+                readablePacket.writePacket(ioThreadPacket)
+            }
+        }
+
+        interestController.resumeInputIfPossible()
+    }
+
+    override fun cancel(cause: Throwable?): Boolean {
+        if (closed.compareAndSet(expect = false, update = true)) {
+            responseDeferred.completeExceptionally(cause ?: CancellationException())
+            closedCause = cause
+            return true
+        }
+
+        return false
     }
 
     override fun failed(cause: Exception) {
         val mappedCause = mapCause(cause, requestData)
         consumerJob.completeExceptionally(mappedCause)
         responseDeferred.completeExceptionally(mappedCause)
-        responseChannel.cancel(mappedCause)
+        cancel(mappedCause)
     }
 
     override fun cancel(): Boolean {
@@ -69,16 +111,16 @@ internal class ApacheResponseConsumer(
     }
 
     override fun close() {
-        channel.close()
+        closed.value = true
         consumerJob.complete()
     }
 
-    override fun getException(): Exception? = channel.closedCause as? Exception
+    override fun getException(): Exception? = closedCause as? Exception
 
     override fun getResult() {
     }
 
-    override fun isDone(): Boolean = channel.isClosedForWrite
+    override fun isDone(): Boolean = closed.value
 
     override fun responseCompleted(context: HttpContext) {
     }
