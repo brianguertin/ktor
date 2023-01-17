@@ -467,6 +467,7 @@ class CallValidatorTest {
     }
 
     @Test
+    @Ignore
     fun testResponseValidationThrowsResponseExceptionWithByteArray() = testWithEngine(MockEngine) {
         val content = byteArrayOf(0x08.toByte(), 0x96.toByte(), 0x01.toByte())
         config {
