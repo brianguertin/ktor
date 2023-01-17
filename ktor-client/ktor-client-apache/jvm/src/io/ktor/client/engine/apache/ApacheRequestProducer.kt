@@ -12,6 +12,7 @@ import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.io.*
 import io.ktor.util.*
+import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 import org.apache.http.*
 import org.apache.http.HttpHeaders
@@ -86,6 +87,11 @@ internal class ApacheRequestProducer(
             return
         }
 
+        val cause = channel.closedCause
+        if (cause != null) {
+            throw cause
+        }
+
         if (interestController.outputSuspended) return
         if (channel.readablePacket.isEmpty) {
             interestController.suspendOutput(ioctrl)
@@ -108,13 +114,17 @@ internal class ApacheRequestProducer(
         }
     }
 
+    private val waiting = atomic(false)
     private fun awaitBytesInChannel() {
-        launch(Dispatchers.IO) {
+        if (!waiting.compareAndSet(expect = false, update = true)) return
+        launch {
             try {
-                closed = channel.awaitBytes() && channel.readablePacket.isEmpty
+                closed = !channel.awaitBytes()
             } finally {
                 interestController.resumeOutputIfPossible()
             }
+        }.invokeOnCompletion {
+            waiting.value = false
         }
     }
 
