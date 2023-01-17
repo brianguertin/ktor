@@ -88,11 +88,8 @@ public class ByteBufferBuffer(
             TODO("Chraset $charset is not supported")
         }
 
-        if (!state.hasArray()) {
-            TODO("Only buffers with array are supported")
-        }
-
-        return String(state.array(), state.arrayOffset() + state.position(), state.remaining())
+        val array = toByteArray()
+        return String(array)
     }
 
     override fun readByteBuffer(): ByteBuffer {
