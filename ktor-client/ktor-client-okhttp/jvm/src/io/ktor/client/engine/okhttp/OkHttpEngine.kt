@@ -20,7 +20,6 @@ import okhttp3.*
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.internal.http.HttpMethod
 import okio.*
-import okio.use
 import java.io.*
 import java.io.Closeable
 import java.util.concurrent.*
@@ -159,21 +158,21 @@ public class OkHttpEngine(override val config: OkHttpConfig) : HttpClientEngineB
 }
 
 @OptIn(DelicateCoroutinesApi::class)
-private fun BufferedSource.toChannel(context: CoroutineContext, requestData: HttpRequestData): ByteReadChannel =
-    GlobalScope.writer(context) {
-        use { source ->
-            var lastRead = 0
-            while (source.isOpen && context.isActive && lastRead >= 0) {
-                write { buffer ->
-                    lastRead = try {
-                        source.read(buffer)
-                    } catch (cause: Throwable) {
-                        throw mapExceptions(cause, requestData)
-                    }
-                }
-            }
+private fun BufferedSource.toChannel(
+    context: CoroutineContext,
+    requestData: HttpRequestData
+): ByteReadChannel = GlobalScope.writer(context) {
+    while (!exhausted()) {
+        try {
+            context.ensureActive()
+            val data = readByteArray()
+            writeByteArray(data)
+            flush()
+        } catch (cause: Throwable) {
+            throw mapExceptions(cause, requestData)
         }
     }
+}
 
 private fun mapExceptions(cause: Throwable, request: HttpRequestData): Throwable = when (cause) {
     is java.net.SocketTimeoutException -> SocketTimeoutException(request, cause)

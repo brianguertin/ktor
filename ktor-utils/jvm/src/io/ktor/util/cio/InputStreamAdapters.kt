@@ -16,13 +16,15 @@ import kotlin.coroutines.*
  * Please note that it may block your async code when started on [Dispatchers.Unconfined]
  * since [InputStream] is blocking on it's nature
  */
+@OptIn(DelicateCoroutinesApi::class)
 public fun InputStream.toByteReadChannel(
     pool: ObjectPool<ByteBuffer> = KtorDefaultPool,
-    context: CoroutineContext = Dispatchers.Unconfined,
-    parent: Job = Job()
-): ByteReadChannel = CoroutineScope(context).writer(parent) {
+    context: CoroutineContext = Dispatchers.IO
+): ByteReadChannel = GlobalScope.writer(context) {
     try {
         while (true) {
+            coroutineContext.ensureActive()
+
             val buffer = ByteBuffer.allocate(8192)
             val readCount = read(buffer.array(), buffer.arrayOffset() + buffer.position(), buffer.remaining())
             if (readCount < 0) break
@@ -31,6 +33,7 @@ public fun InputStream.toByteReadChannel(
             buffer.position(buffer.position() + readCount)
             buffer.flip()
             writeByteBuffer(buffer)
+            flush()
         }
     } catch (cause: Throwable) {
         close(cause)
