@@ -5,12 +5,11 @@
 package io.ktor.util
 
 import io.ktor.io.*
-import io.ktor.util.cio.*
 import kotlinx.coroutines.*
-import java.nio.*
 import java.util.zip.*
 
 private const val GZIP_HEADER_SIZE: Int = 10
+private const val EXPANSION_FACTOR = 2
 
 // GZIP header flags bits
 private object GzipHeaderFlags {
@@ -58,8 +57,6 @@ private fun CoroutineScope.inflate(
     source: ByteReadChannel,
     gzip: Boolean = true
 ): ByteReadChannel = writer {
-    val readBuffer = KtorDefaultPool.borrow()
-    val writeBuffer = KtorDefaultPool.borrow()
     val inflater = Inflater(true)
     val checksum = CRC32()
 
@@ -98,62 +95,47 @@ private fun CoroutineScope.inflate(
 
     try {
         var totalSize = 0
-        while (true) {
-            if (source.availableForRead == 0 && !source.awaitBytes()) break
-            val readBuffer = source.readBuffer().readByteBuffer()
-            readBuffer.flip()
-
-            inflater.setInput(readBuffer.array(), readBuffer.position(), readBuffer.remaining())
+        var data = ByteArray(0)
+        while (source.awaitBytes()) {
+            data = source.readBuffer().toByteArray()
+            inflater.setInput(data, 0, data.size)
 
             while (!inflater.needsInput() && !inflater.finished()) {
-                totalSize += inflater.inflateTo(this, writeBuffer, checksum)
-                readBuffer.position(readBuffer.limit() - inflater.remaining)
+                val buffer = ByteArray(data.size * EXPANSION_FACTOR)
+                val size = inflater.inflate(buffer)
+                totalSize += size
+                checksum.update(buffer, 0, size)
+                writeByteArray(buffer, 0, size)
             }
 
-            readBuffer.compact()
+            flush()
         }
 
         source.closedCause?.let { throw it }
 
-        readBuffer.flip()
-
         while (!inflater.finished()) {
-            totalSize += inflater.inflateTo(this, writeBuffer, checksum)
-            readBuffer.position(readBuffer.limit() - inflater.remaining)
+            val buffer = ByteArray(inflater.remaining * EXPANSION_FACTOR)
+            val size = inflater.inflate(buffer)
+            totalSize += size
+            checksum.update(buffer, 0, size)
+            writeByteArray(buffer, 0, size)
         }
 
         if (gzip) {
-            check(readBuffer.remaining() == 8) {
-                "Expected 8 bytes in the trailer. Actual: ${readBuffer.remaining()} $"
+            check(inflater.remaining == 8) {
+                "Expected 8 bytes in the trailer. Actual: ${inflater.remaining} $"
             }
 
-            readBuffer.order(java.nio.ByteOrder.LITTLE_ENDIAN)
-            val expectedChecksum = readBuffer.getInt(readBuffer.position())
-            val expectedSize = readBuffer.getInt(readBuffer.position() + 4)
+            val buffer = ByteArrayBuffer(data, data.size - 8)
+            val expectedChecksum = buffer.readInt().reverseByteOrder()
+            val expectedSize = buffer.readInt().reverseByteOrder()
 
             check(checksum.value.toInt() == expectedChecksum) { "Gzip checksum invalid." }
             check(totalSize == expectedSize) { "Gzip size invalid. Expected $expectedSize, actual $totalSize" }
         } else {
-            check(!readBuffer.hasRemaining())
+            check(inflater.remaining == 0)
         }
-    } catch (cause: Throwable) {
-        throw cause
     } finally {
         inflater.end()
-        KtorDefaultPool.recycle(readBuffer)
-        KtorDefaultPool.recycle(writeBuffer)
     }
-}
-
-private suspend fun Inflater.inflateTo(channel: ByteWriteChannel, buffer: ByteBuffer, checksum: Checksum): Int {
-    buffer.clear()
-
-    val inflated = inflate(buffer.array(), buffer.position(), buffer.remaining())
-    buffer.position(buffer.position() + inflated)
-    buffer.flip()
-
-    checksum.updateKeepPosition(buffer)
-
-    channel.writeByteBuffer(buffer)
-    return inflated
 }
