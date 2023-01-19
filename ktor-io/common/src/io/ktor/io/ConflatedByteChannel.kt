@@ -68,7 +68,7 @@ public class ConflatedByteChannel : ByteReadChannel, ByteWriteChannel {
         return closedToken == null || readablePacket.isNotEmpty
     }
 
-    override fun cancel(cause: Throwable?): Boolean = close(cause)
+    override fun cancel(cause: Throwable?): Boolean = close(cause ?: CancellationException("Channel has bin cancelled"))
 
     @OptIn(DelicateCoroutinesApi::class)
     override fun close(cause: Throwable?): Boolean {
@@ -79,8 +79,7 @@ public class ConflatedByteChannel : ByteReadChannel, ByteWriteChannel {
         // TODO: use IO dispatcher
         GlobalScope.launch(Dispatchers.Default) {
             if (cause != null) {
-                writablePacket.close()
-                channel.close(cause)
+                channel.cancel(CancellationException("Conflated channel has been closed", cause))
             } else {
                 flush()
                 channel.close()

@@ -5,6 +5,7 @@
 package io.ktor.io
 
 import io.ktor.test.dispatcher.*
+import kotlinx.coroutines.*
 import kotlin.test.*
 
 class ConflatedChannelTest {
@@ -136,5 +137,21 @@ class ConflatedChannelTest {
         }
 
         Unit
+    }
+
+    @Test
+    fun testCancelDuringFlush() = testSuspend {
+        val channel = ConflatedByteChannel()
+        val job = async {
+            channel.writeByte(42)
+            channel.flush()
+        }
+
+        delay(1000)
+        channel.cancel()
+
+        assertFailsWith<CancellationException> {
+            job.await()
+        }
     }
 }
