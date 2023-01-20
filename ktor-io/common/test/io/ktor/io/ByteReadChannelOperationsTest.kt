@@ -133,4 +133,23 @@ class ByteReadChannelExtensionsTest {
 
         assertEquals(42, channel.readByte())
     }
+
+    @Test
+    fun testSplit() = testSuspend {
+        val data = byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+        val channel = ByteReadChannel {
+            writeByteArray(data)
+        }
+
+        val (first, second) = channel.split(this)
+        val firstJob = async {
+            assertArrayEquals(data, first.toByteArray())
+        }
+        val secondJob = async {
+            assertArrayEquals(data, second.toByteArray())
+        }
+
+        firstJob.await()
+        secondJob.await()
+    }
 }

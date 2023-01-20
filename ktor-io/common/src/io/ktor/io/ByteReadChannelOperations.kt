@@ -275,15 +275,36 @@ public inline fun ByteWriteChannel.use(block: ByteWriteChannel.() -> Unit) {
  * Cancel of one channel in split(input or both outputs) cancels other channels.
  */
 public fun ByteReadChannel.split(coroutineScope: CoroutineScope): Pair<ByteReadChannel, ByteReadChannel> {
-    TODO()
+    val first = ConflatedByteChannel()
+    val second = ConflatedByteChannel()
+
+    coroutineScope.writer {
+        copyToBoth(first, second)
+    }
+
+    return first to second
 }
 
 /**
- * Copy source channel to both output channels chunk by chunk.
+ * Copy source channel to both output channels chunk by chunk, close output channels on completion.
+ * If the source channel is closed with an exception, the first and second channels are closed with the same exception.
  */
-@OptIn(DelicateCoroutinesApi::class)
-public fun ByteReadChannel.copyToBoth(first: ByteWriteChannel, second: ByteWriteChannel) {
-    TODO()
+public suspend fun ByteReadChannel.copyToBoth(first: ByteWriteChannel, second: ByteWriteChannel) {
+    try {
+        while (awaitBytes()) {
+            val packet = readablePacket
+            first.writePacket(packet.clone())
+            first.flush()
+            second.writePacket(packet)
+            second.flush()
+        }
+    } catch (cause: Throwable) {
+        first.close(cause)
+        second.close(cause)
+    } finally {
+        first.close()
+        second.close()
+    }
 }
 
 /**
