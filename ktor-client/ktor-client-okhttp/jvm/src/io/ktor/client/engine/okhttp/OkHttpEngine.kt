@@ -157,28 +157,6 @@ public class OkHttpEngine(override val config: OkHttpConfig) : HttpClientEngineB
     }
 }
 
-@OptIn(DelicateCoroutinesApi::class)
-private fun BufferedSource.toChannel(
-    context: CoroutineContext,
-    requestData: HttpRequestData
-): ByteReadChannel = GlobalScope.writer(context) {
-    while (!exhausted()) {
-        try {
-            context.ensureActive()
-            val data = readByteArray()
-            writeByteArray(data)
-            flush()
-        } catch (cause: Throwable) {
-            throw mapExceptions(cause, requestData)
-        }
-    }
-}
-
-private fun mapExceptions(cause: Throwable, request: HttpRequestData): Throwable = when (cause) {
-    is java.net.SocketTimeoutException -> SocketTimeoutException(request, cause)
-    else -> cause
-}
-
 @OptIn(InternalAPI::class)
 private fun HttpRequestData.convertToOkHttpRequest(callContext: CoroutineContext): Request {
     val builder = Request.Builder()
@@ -207,10 +185,12 @@ internal fun OutgoingContent.convertToOkHttpBody(callContext: CoroutineContext):
     is OutgoingContent.ByteArrayContent -> bytes().let {
         it.toRequestBody(null, 0, it.size)
     }
+
     is OutgoingContent.ReadChannelContent -> StreamRequestBody(contentLength) { readFrom() }
     is OutgoingContent.WriteChannelContent -> {
         StreamRequestBody(contentLength) { GlobalScope.writer(callContext) { writeTo(this) } }
     }
+
     is OutgoingContent.NoContent -> ByteArray(0).toRequestBody(null, 0, 0)
     else -> throw UnsupportedContentTypeException(this)
 }
