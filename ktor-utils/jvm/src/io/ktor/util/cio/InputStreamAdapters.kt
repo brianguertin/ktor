@@ -36,8 +36,9 @@ public fun InputStream.toByteReadChannel(
             flush()
         }
     } catch (cause: Throwable) {
-        close(cause)
+        this@toByteReadChannel.close()
+        throw cause
     } finally {
-        close()
+        this@toByteReadChannel.close()
     }
 }
