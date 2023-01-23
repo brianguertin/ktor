@@ -66,6 +66,18 @@ actual abstract class ClientLoader actual constructor(val timeoutSeconds: Int) {
     @OptIn(ExperimentalCoroutinesApi::class)
     actual fun dumpCoroutines() {
         DebugProbes.dumpCoroutines()
+        dumpThreads()
+    }
+
+    private fun dumpThreads() {
+        println("Thread dump")
+        val threads = Thread.getAllStackTraces()
+        for ((thread, stackTrace) in threads) {
+            println("Thread: ${thread.name}")
+            for (element in stackTrace) {
+                println("\t$element")
+            }
+        }
     }
 
     /**

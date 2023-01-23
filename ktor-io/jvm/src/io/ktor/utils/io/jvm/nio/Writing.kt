@@ -1,6 +1,6 @@
 package io.ktor.utils.io.jvm.nio
 
-import io.ktor.utils.io.*
+import io.ktor.io.*
 import java.nio.*
 import java.nio.channels.*
 
