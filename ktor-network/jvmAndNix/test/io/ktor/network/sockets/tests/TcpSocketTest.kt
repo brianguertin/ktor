@@ -7,6 +7,8 @@ package io.ktor.network.sockets.tests
 import io.ktor.network.sockets.*
 import io.ktor.util.*
 import io.ktor.utils.io.*
+import io.ktor.utils.io.CancellationException
+import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import kotlin.test.*
 
@@ -103,5 +105,27 @@ class TcpSocketTest {
         server.close()
 
         removeFile(socketPath)
+    }
+
+    @Test
+    fun testReadFromCancelledSocket() = testSockets { selector ->
+        val tcp = aSocket(selector).tcp()
+        tcp.bind().use { server ->
+            async {
+                server.accept()
+            }
+
+            val port = (server.localAddress as InetSocketAddress).port
+            val client: Socket = tcp.connect("localhost", port)
+            val readChannel = client.openReadChannel()
+
+            client.cancel()
+
+            assertFailsWith<CancellationException> {
+                readChannel.readByte()
+            }
+
+            assertTrue(client.isClosed)
+        }
     }
 }
