@@ -12,6 +12,7 @@ import io.ktor.serialization.*
 import io.ktor.util.*
 import io.ktor.util.pipeline.*
 import io.ktor.util.reflect.*
+import kotlinx.coroutines.flow.*
 import kotlinx.serialization.*
 import kotlin.jvm.*
 
@@ -69,8 +70,8 @@ public class KotlinxSerializationConverter(
     override suspend fun deserialize(charset: Charset, typeInfo: TypeInfo, content: ByteReadChannel): Any? {
         val fromExtension = extensions.asFlow()
             .map { it.deserialize(charset, typeInfo, content) }
-            .firstOrNull { it != null || content.isClosedForRead }
-        if (fromExtension != null || content.isClosedForRead) return fromExtension
+            .firstOrNull { it != null || content.isClosedForRead() }
+        if (fromExtension != null || content.isClosedForRead()) return fromExtension
 
         val serializer = format.serializersModule.serializerForTypeInfo(typeInfo)
         val contentPacket = content.readRemaining()

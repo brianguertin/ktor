@@ -19,6 +19,10 @@ internal class Utf8StringReader(
     override val readablePacket: Packet
         get() = input.readablePacket
 
+    override fun isClosedForRead(): Boolean {
+        return input.isClosedForRead() && chunkIsEmpty()
+    }
+
     var chunk: String = readablePacket.clone().readString()
     var chunkStart: Int = 0
     var bytesInPacket = readablePacket.availableForRead

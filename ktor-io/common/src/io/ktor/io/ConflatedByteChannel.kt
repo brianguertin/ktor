@@ -24,6 +24,11 @@ public class ConflatedByteChannel : ByteReadChannel, ByteWriteChannel {
 
     override val readablePacket: Packet = Packet()
 
+    override fun isClosedForRead(): Boolean {
+        closedCause?.let { throw it }
+        return isClosedForWrite && readablePacket.isEmpty
+    }
+
     override val writablePacket: Packet = Packet()
 
     private val closeStackTrace = atomic<String?>(null)

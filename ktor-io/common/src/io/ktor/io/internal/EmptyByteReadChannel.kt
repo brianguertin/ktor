@@ -10,6 +10,8 @@ internal object EmptyByteReadChannel : ByteReadChannel {
     override val closedCause: Throwable? = null
     override val readablePacket: Packet = Packet()
 
+    override fun isClosedForRead(): Boolean = true
+
     override suspend fun awaitBytes(predicate: () -> Boolean): Boolean = false
 
     override fun cancel(cause: Throwable?): Boolean = false

@@ -31,6 +31,11 @@ internal class ApacheResponseConsumer(
     private val ioThreadPacket = Packet()
     override val readablePacket: Packet = Packet()
 
+    override fun isClosedForRead(): Boolean {
+        closedCause?.let { throw it }
+        return closed.value && readablePacket.isEmpty
+    }
+
     private val consumerJob = Job(parentContext[Job])
     override val coroutineContext: CoroutineContext = parentContext + consumerJob
 

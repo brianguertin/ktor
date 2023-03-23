@@ -5,7 +5,7 @@
 package io.ktor.tests.http
 
 import io.ktor.http.*
-import io.ktor.utils.io.charsets.Charsets
+import io.ktor.io.charsets.*
 import kotlin.test.*
 
 class ContentTypeTest {

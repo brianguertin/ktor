@@ -5,10 +5,11 @@
 package io.ktor.client.engine.okhttp
 
 import io.ktor.io.*
+import io.ktor.io.IOException
 import io.ktor.io.jvm.javaio.*
+import io.ktor.io.use
 import okhttp3.*
 import okio.*
-import io.ktor.io.use
 
 internal class StreamAdapterIOException(cause: Throwable) : IOException(cause)
 

@@ -27,6 +27,11 @@ public fun InputStream.toByteReadChannel(): ByteReadChannel = object : ByteReadC
 
     override val readablePacket: Packet = Packet()
 
+    override fun isClosedForRead(): Boolean {
+        closedCause?.let { throw it }
+        return closed && readablePacket.isEmpty
+    }
+
     override suspend fun awaitBytes(predicate: () -> Boolean): Boolean {
         closedCause?.let { throw it }
         if (closed && readablePacket.isEmpty) return false

@@ -54,8 +54,8 @@ public final class io/ktor/http/CodecsKt {
 	public static synthetic fun encodeURLParameter$default (Ljava/lang/String;ZILjava/lang/Object;)Ljava/lang/String;
 	public static final fun encodeURLPath (Ljava/lang/String;)Ljava/lang/String;
 	public static final fun encodeURLPathPart (Ljava/lang/String;)Ljava/lang/String;
-	public static final fun encodeURLQueryComponent (Ljava/lang/String;ZZLjava/nio/charset/Charset;)Ljava/lang/String;
-	public static synthetic fun encodeURLQueryComponent$default (Ljava/lang/String;ZZLjava/nio/charset/Charset;ILjava/lang/Object;)Ljava/lang/String;
+	public static final fun encodeURLQueryComponent (Ljava/lang/String;ZZ)Ljava/lang/String;
+	public static synthetic fun encodeURLQueryComponent$default (Ljava/lang/String;ZZILjava/lang/Object;)Ljava/lang/String;
 }
 
 public final class io/ktor/http/ContentDisposition : io/ktor/http/HeaderValueWithParameters {
@@ -1168,7 +1168,7 @@ public final class io/ktor/http/content/ChannelWriterContent : io/ktor/http/cont
 	public fun getContentLength ()Ljava/lang/Long;
 	public fun getContentType ()Lio/ktor/http/ContentType;
 	public fun getStatus ()Lio/ktor/http/HttpStatusCode;
-	public fun writeTo (Lio/ktor/utils/io/ByteWriteChannel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun writeTo (Lio/ktor/io/ByteWriteChannel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class io/ktor/http/content/EntityTagVersion : io/ktor/http/content/Version {
@@ -1255,18 +1255,18 @@ public abstract class io/ktor/http/content/OutgoingContent$NoContent : io/ktor/h
 public abstract class io/ktor/http/content/OutgoingContent$ProtocolUpgrade : io/ktor/http/content/OutgoingContent {
 	public fun <init> ()V
 	public final fun getStatus ()Lio/ktor/http/HttpStatusCode;
-	public abstract fun upgrade (Lio/ktor/utils/io/ByteReadChannel;Lio/ktor/utils/io/ByteWriteChannel;Lkotlin/coroutines/CoroutineContext;Lkotlin/coroutines/CoroutineContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun upgrade (Lio/ktor/io/ByteReadChannel;Lio/ktor/io/ByteWriteChannel;Lkotlin/coroutines/CoroutineContext;Lkotlin/coroutines/CoroutineContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public abstract class io/ktor/http/content/OutgoingContent$ReadChannelContent : io/ktor/http/content/OutgoingContent {
 	public fun <init> ()V
-	public abstract fun readFrom ()Lio/ktor/utils/io/ByteReadChannel;
-	public fun readFrom (Lkotlin/ranges/LongRange;)Lio/ktor/utils/io/ByteReadChannel;
+	public abstract fun readFrom ()Lio/ktor/io/ByteReadChannel;
+	public fun readFrom (Lkotlin/ranges/LongRange;)Lio/ktor/io/ByteReadChannel;
 }
 
 public abstract class io/ktor/http/content/OutgoingContent$WriteChannelContent : io/ktor/http/content/OutgoingContent {
 	public fun <init> ()V
-	public abstract fun writeTo (Lio/ktor/utils/io/ByteWriteChannel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun writeTo (Lio/ktor/io/ByteWriteChannel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class io/ktor/http/content/OutputStreamContent : io/ktor/http/content/OutgoingContent$WriteChannelContent {
@@ -1275,7 +1275,7 @@ public final class io/ktor/http/content/OutputStreamContent : io/ktor/http/conte
 	public fun getContentLength ()Ljava/lang/Long;
 	public fun getContentType ()Lio/ktor/http/ContentType;
 	public fun getStatus ()Lio/ktor/http/HttpStatusCode;
-	public fun writeTo (Lio/ktor/utils/io/ByteWriteChannel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun writeTo (Lio/ktor/io/ByteWriteChannel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public abstract class io/ktor/http/content/PartData {
@@ -1329,7 +1329,7 @@ public final class io/ktor/http/content/URIFileContent : io/ktor/http/content/Ou
 	public fun getContentLength ()Ljava/lang/Long;
 	public fun getContentType ()Lio/ktor/http/ContentType;
 	public final fun getUri ()Ljava/net/URI;
-	public fun readFrom ()Lio/ktor/utils/io/ByteReadChannel;
+	public fun readFrom ()Lio/ktor/io/ByteReadChannel;
 }
 
 public abstract interface class io/ktor/http/content/Version {
@@ -1363,7 +1363,7 @@ public final class io/ktor/http/content/WriterContent : io/ktor/http/content/Out
 	public fun getContentLength ()Ljava/lang/Long;
 	public fun getContentType ()Lio/ktor/http/ContentType;
 	public fun getStatus ()Lio/ktor/http/HttpStatusCode;
-	public fun writeTo (Lio/ktor/utils/io/ByteWriteChannel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun writeTo (Lio/ktor/io/ByteWriteChannel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class io/ktor/http/parsing/ParseException : java/lang/IllegalArgumentException {

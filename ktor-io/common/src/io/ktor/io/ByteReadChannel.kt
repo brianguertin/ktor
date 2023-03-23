@@ -17,6 +17,13 @@ public interface ByteReadChannel {
     public val readablePacket: Packet
 
     /**
+     * Return `true` if channel is closed for reading and there are no more bytes available for reading.
+     *
+     * if [closedCause] is not `null` it will be thrown.
+     */
+    public fun isClosedForRead(): Boolean
+
+    /**
      * Wait more bytes from source until [predicate] returns true or channel is closed.
      *
      * @return `true` if there are bytes available for reading or `false` if EOF reached.

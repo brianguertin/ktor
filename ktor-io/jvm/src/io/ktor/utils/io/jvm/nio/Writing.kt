@@ -1,7 +1,6 @@
 package io.ktor.utils.io.jvm.nio
 
 import io.ktor.io.*
-import java.nio.*
 import java.nio.channels.*
 
 /**
@@ -17,41 +16,15 @@ public suspend fun ByteReadChannel.copyTo(channel: WritableByteChannel, limit: L
         throw IllegalArgumentException("Non-blocking channels are not supported")
     }
 
-    if (isClosedForRead) {
-        closedCause?.let { throw it }
-        return 0
-    }
-
     var copied = 0L
-    val copy = { bb: ByteBuffer ->
-        val rem = limit - copied
-
-        if (rem < bb.remaining()) {
-            val l = bb.limit()
-            bb.limit(bb.position() + rem.toInt())
-
-            while (bb.hasRemaining()) {
-                channel.write(bb)
-            }
-
-            bb.limit(l)
-            copied += rem
-        } else {
-            var written = 0L
-            while (bb.hasRemaining()) {
-                written += channel.write(bb)
-            }
-
-            copied += written
+    while (copied < limit) {
+        if (availableForRead == 0) awaitBytes()
+        val size = minOf(limit - copied, availableForRead.toLong()).toInt()
+        val packet = readPacket(size)
+        while (packet.isNotEmpty) {
+            copied += channel.write(packet.readByteBuffer())
         }
     }
-
-    while (copied < limit) {
-        read(min = 0, consumer = copy)
-        if (isClosedForRead) break
-    }
-
-    closedCause?.let { throw it }
 
     return copied
 }

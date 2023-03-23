@@ -12,10 +12,14 @@ public fun ByteReadChannel.limited(length: Long): ByteReadChannel = object : Byt
 
     override val readablePacket: Packet = Packet()
 
+    override fun isClosedForRead(): Boolean {
+        closedCause?.let { throw it }
+        return readablePacket.isEmpty && remaining <= 0
+    }
+
     override suspend fun awaitBytes(predicate: () -> Boolean): Boolean {
         try {
             while (!predicate() && remaining > 0) {
-                if (remaining <= 0) return readablePacket.isNotEmpty
                 if (this@limited.readablePacket.isEmpty) this@limited.awaitBytes()
                 if (remaining > this@limited.readablePacket.availableForRead) {
                     remaining -= this@limited.readablePacket.availableForRead

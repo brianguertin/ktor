@@ -6,6 +6,8 @@ package io.ktor.client.engine.apache5
 
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import io.ktor.io.*
+import io.ktor.io.internal.EmptyBuffer.capacity
 import io.ktor.util.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.pool.*
@@ -17,90 +19,31 @@ import org.apache.hc.client5.http.async.methods.*
 import org.apache.hc.core5.concurrent.*
 import org.apache.hc.core5.function.*
 import org.apache.hc.core5.http.*
-import org.apache.hc.core5.http.HttpResponse
 import org.apache.hc.core5.http.nio.*
 import org.apache.hc.core5.http.nio.entity.*
 import org.apache.hc.core5.http.protocol.*
 import org.apache.hc.core5.util.*
 import java.io.*
 import java.nio.*
+import java.nio.channels.*
 import java.util.concurrent.atomic.*
 import kotlin.coroutines.*
 
 private object CloseChannel
 
-internal class BasicResponseConsumer(private val dataConsumer: ApacheResponseConsumer) :
-    AsyncResponseConsumer<Unit> {
-
-    internal val responseDeferred = CompletableDeferred<HttpResponse>()
-
-    override fun consumeResponse(
-        response: HttpResponse,
-        entityDetails: EntityDetails?,
-        httpContext: HttpContext,
-        resultCallback: FutureCallback<Unit>
-    ) {
-        responseDeferred.complete(response)
-        if (entityDetails != null) {
-            dataConsumer.streamStart(
-                entityDetails,
-                object : CallbackContribution<Unit>(resultCallback) {
-                    override fun completed(body: Unit) {
-                        resultCallback.completed(Unit)
-                    }
-                }
-            )
-        } else {
-            dataConsumer.close()
-            resultCallback.completed(Unit)
-        }
-    }
-
-    override fun informationResponse(response: HttpResponse, httpContext: HttpContext) {
-    }
-
-    override fun updateCapacity(capacityChannel: CapacityChannel) {
-        dataConsumer.updateCapacity(capacityChannel)
-    }
-
-    override fun consume(src: ByteBuffer) {
-        dataConsumer.consume(src)
-    }
-
-    override fun streamEnd(trailers: List<Header>?) {
-        dataConsumer.streamEnd(trailers)
-    }
-
-    override fun failed(cause: Exception) {
-        responseDeferred.completeExceptionally(cause)
-        dataConsumer.failed(cause)
-    }
-
-    override fun releaseResources() {
-        dataConsumer.releaseResources()
-    }
-}
-
 @OptIn(InternalCoroutinesApi::class)
 internal class ApacheResponseConsumer(
     parentContext: CoroutineContext,
     private val requestData: HttpRequestData
-) : AsyncEntityConsumer<Unit>, CoroutineScope {
+) : AsyncEntityConsumer<Unit>, CoroutineScope, ByteReadChannel {
 
     private val consumerJob = Job(parentContext[Job])
     override val coroutineContext: CoroutineContext = parentContext + consumerJob
-
-    private val channel = ByteChannel().also {
-        it.attachJob(consumerJob)
-    }
 
     @Volatile
     private var capacityChannel: CapacityChannel? = null
 
     private val messagesQueue = Channel<Any>(capacity = UNLIMITED)
-
-    internal val responseChannel: ByteReadChannel = channel
-    private val capacity = atomic(channel.availableForWrite)
 
     init {
         coroutineContext[Job]?.invokeOnCompletion(onCancelling = true) { cause ->
@@ -160,9 +103,26 @@ internal class ApacheResponseConsumer(
     }
 
     internal fun close() {
-        channel.close()
         consumerJob.complete()
     }
 
     override fun getContent() = Unit
+
+    override val closedCause: Throwable?
+        get() = TODO("Not yet implemented")
+
+    override val readablePacket: Packet
+        get() = TODO("Not yet implemented")
+
+    override fun isClosedForRead(): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun awaitBytes(predicate: () -> Boolean): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun cancel(cause: Throwable?): Boolean {
+        TODO("Not yet implemented")
+    }
 }
