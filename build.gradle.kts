@@ -7,6 +7,22 @@ import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.targets.js.*
 import org.jetbrains.kotlin.konan.target.*
 
+kotlinCommunityPatch {
+    println ("kotlinCommunityPatch block start")
+    extra["kotlin_version"] = rootProject.properties["kotlin_version"]
+    extra["kotlin_language_version"] = rootProject.properties["kotlin_language_version"]
+    extra["kotlin_repo_url"] = rootProject.properties["kotlin_repo_url"]
+    val kotlin_version: String? by extra
+    val kotlin_repo_url: String? by extra
+    val kotlin_language_version: String? by extra
+
+
+    kotlinVersion = kotlin_version
+    kotlinLanguageVersion = kotlin_repo_url
+    kotlin_repo_url = kotlin_language_version
+    println ("kotlinCommunityPatch block end")
+}
+
 buildscript {
     /*
      * These property group is used to build ktor against Kotlin compiler snapshot.
@@ -98,6 +114,7 @@ plugins {
     id("org.jetbrains.dokka") version "1.7.20" apply false
     id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.12.1"
     id("com.osacky.doctor") version "0.8.1"
+    `java-gradle-plugin`
 }
 
 val kotlinVersion = libs.versions.kotlin.version.get()
